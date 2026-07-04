@@ -54,18 +54,17 @@ load_env_file() {
 }
 load_env_file "$PROJECT_DIR/.env"
 export ADMIN_PASSWORD="${ADMIN_PASSWORD:-04J27}"
-export SMTP_HOST="${SMTP_HOST:-smtp.gmail.com}"
-export SMTP_PORT="${SMTP_PORT:-587}"
-export SMTP_USER="${SMTP_USER:-hello@zavinteriorclean.com}"
+export SMTP_HOST="${SMTP_HOST:-smtp.hostinger.com}"
+export SMTP_PORT="${SMTP_PORT:-465}"
+export SMTP_USER="${SMTP_USER:-info@renace.tech}"
 export SMTP_PASS="${SMTP_PASS:-}"
 export SMTP_FROM_NAME="${SMTP_FROM_NAME:-ZAV Interior & Clean}"
+export SMTP_REPLY_TO="${SMTP_REPLY_TO:-hello@zavinteriorclean.com}"
+export PUBLIC_SITE_URL="${PUBLIC_SITE_URL:-https://zavinteriorclean.com}"
 export ADMIN_EMAIL="${ADMIN_EMAIL:-azhaliaestepan@gmail.com}"
 
 if [ -z "$SMTP_PASS" ] || [[ "$SMTP_PASS" =~ TU_APP_PASSWORD|YOUR_GOOGLE|changeme ]]; then
-  red "WARNING: SMTP_PASS is missing or still a placeholder."
-  red "Google blocks the normal account password for SMTP."
-  red "Create an App Password for hello@zavinteriorclean.com and set it in /opt/zuv/.env"
-  red "  https://myaccount.google.com/apppasswords"
+  red "WARNING: SMTP_PASS is missing or still a placeholder in /opt/zuv/.env"
 fi
 if [ -n "$SMTP_PASS" ]; then
   cyan "   SMTP user: $SMTP_USER  pass: set (${#SMTP_PASS} chars)"

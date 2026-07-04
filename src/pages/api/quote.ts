@@ -1,33 +1,39 @@
 import type { APIRoute } from 'astro';
 import { sendQuoteNotifications } from '../../lib/mail';
+import { publicError, publicJson, rateLimit } from '../../lib/security';
 import { addQuote } from '../../lib/store';
 
 export const prerender = false;
 
-export const POST: APIRoute = async ({ request }) => {
+export const POST: APIRoute = async ({ request, clientAddress }) => {
+  const ip = clientAddress || request.headers.get('x-forwarded-for') || 'unknown';
+  if (!rateLimit(`quote:${ip}`, 12, 60_000)) {
+    return publicError('Too many requests. Try again shortly.', 429);
+  }
+
   let body: Record<string, unknown>;
   try {
     body = await request.json();
   } catch {
-    return json({ error: 'Invalid JSON' }, 400);
+    return publicError('Invalid request', 400);
   }
 
   const service = String(body.service || '').trim();
   const size = String(body.size || '').trim();
   const frequency = String(body.frequency || '').trim();
-  const name = String(body.name || '').trim();
-  const phone = String(body.phone || '').trim();
-  const email = String(body.email || '').trim();
-  const zip = String(body.zip || '').trim();
-  const notes = String(body.notes || '').trim();
-  const locale = String(body.locale || 'en').trim();
+  const name = String(body.name || '').trim().slice(0, 120);
+  const phone = String(body.phone || '').trim().slice(0, 40);
+  const email = String(body.email || '').trim().slice(0, 160);
+  const zip = String(body.zip || '').trim().slice(0, 20);
+  const notes = String(body.notes || '').trim().slice(0, 1000);
+  const locale = String(body.locale || 'en').trim().slice(0, 8);
 
   if (!service || !size || !frequency || !name || !phone || !email || !zip) {
-    return json({ error: 'Missing required fields' }, 400);
+    return publicError('Missing required fields', 400);
   }
 
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    return json({ error: 'Invalid email' }, 400);
+    return publicError('Invalid email', 400);
   }
 
   let quote;
@@ -42,28 +48,24 @@ export const POST: APIRoute = async ({ request }) => {
       zip,
       notes: notes || undefined,
       locale,
-      userAgent: request.headers.get('user-agent') || undefined,
+      userAgent: (request.headers.get('user-agent') || '').slice(0, 240) || undefined,
     });
-  } catch (err) {
-    console.error('[quote] store failed', err);
-    // Still acknowledge so the client can continue on WhatsApp
-    return json({ ok: true, id: `local_${Date.now()}`, stored: false }, 201);
+  } catch {
+    console.error('[quote] store failed');
+    return publicJson({ ok: true, id: `local_${Date.now()}`, stored: false }, 201);
   }
 
-  // Notify client + admin; never fail the quote if mail has issues
-  let mail = { sent: false as boolean };
+  let mail = { sent: false as boolean, client: false, admin: false };
   try {
     mail = await sendQuoteNotifications(quote);
-  } catch (err) {
-    console.error('[quote] mail failed', err);
+  } catch {
+    console.error('[quote] mail failed');
   }
 
-  return json({ ok: true, id: quote.id, mail, stored: true }, 201);
+  return publicJson({
+    ok: true,
+    id: quote.id,
+    stored: true,
+    mail: { sent: mail.sent, client: mail.client, admin: mail.admin },
+  }, 201);
 };
-
-function json(data: unknown, status = 200) {
-  return new Response(JSON.stringify(data), {
-    status,
-    headers: { 'Content-Type': 'application/json' },
-  });
-}

@@ -99,6 +99,31 @@
 
   .hero-logo {
     filter: drop-shadow(0 10px 28px rgba(27, 58, 92, 0.1));
+    margin-inline: auto;
+  }
+
+  @media (min-width: 1024px) {
+    .hero-logo {
+      margin-inline: 0;
+    }
+  }
+
+  .hero-card-cta {
+    display: inline-flex;
+    margin-top: 0.75rem;
+    border-radius: 999px;
+    padding: 0.45rem 0.9rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--color-mustard), var(--color-mustard-deep));
+    color: var(--color-ink);
+    text-decoration: none;
+    pointer-events: auto;
+    touch-action: manipulation;
+  }
+
+  .hero-card-cta:hover {
+    filter: brightness(1.05);
   }
 
   .btn-primary {

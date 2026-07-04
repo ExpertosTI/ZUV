@@ -169,7 +169,7 @@ export function initAdminConsole() {
 
         <section class="zav-adm__pane" data-pane="billing">
           <section class="zav-adm__panel">
-            <h3>Mail / SMTP <span>hello@zavinteriorclean.com</span></h3>
+            <h3>Mail / SMTP <span>info@renace.tech · Hostinger</span></h3>
             <p class="zav-adm__lead-meta" data-mail-status>Checking mail…</p>
             <div class="zav-adm__card-actions" style="margin-top:10px">
               <button type="button" class="zav-adm__btn" data-mail-check>Check connection</button>

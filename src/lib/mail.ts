@@ -1,18 +1,20 @@
 import nodemailer from 'nodemailer';
 import type SMTPTransport from 'nodemailer/lib/smtp-transport';
-import type { Quote } from './store';
+import type { Invoice, Quote } from './store';
 
 function env(name: string, fallback = '') {
   const raw = process.env[name] ?? fallback;
   return String(raw).trim().replace(/^["']|["']$/g, '');
 }
 
-const SMTP_USER = env('SMTP_USER', 'hello@zavinteriorclean.com');
+const SMTP_USER = env('SMTP_USER', 'info@renace.tech');
 const SMTP_PASS = env('SMTP_PASS');
-const SMTP_HOST = env('SMTP_HOST', 'smtp.gmail.com');
-const SMTP_PORT = Number(env('SMTP_PORT', '587')) || 587;
+const SMTP_HOST = env('SMTP_HOST', 'smtp.hostinger.com');
+const SMTP_PORT = Number(env('SMTP_PORT', '465')) || 465;
 const ADMIN_EMAIL = env('ADMIN_EMAIL', 'azhaliaestepan@gmail.com');
 const FROM_NAME = env('SMTP_FROM_NAME', 'ZAV Interior & Clean');
+const SITE_URL = env('PUBLIC_SITE_URL', 'https://zavinteriorclean.com').replace(/\/$/, '');
+const REPLY_TO = env('SMTP_REPLY_TO', 'hello@zavinteriorclean.com');
 
 const labels = {
   en: {
@@ -41,6 +43,10 @@ const labels = {
     clientDetails: 'Your request',
     clientFooter: 'Questions? Reply to this email or WhatsApp us at (717) 415-6171.',
     adminSubject: 'New quote request',
+    invoiceSubject: 'Your invoice from ZAV Interior & Clean',
+    invoiceHello: 'Hi',
+    invoiceBody: 'Your invoice is ready. You can review the details below or open the full invoice online.',
+    invoiceOpen: 'View invoice',
   },
   es: {
     services: {
@@ -68,6 +74,10 @@ const labels = {
     clientDetails: 'Tu solicitud',
     clientFooter: '¿Preguntas? Responde este correo o escríbenos por WhatsApp al (717) 415-6171.',
     adminSubject: 'Nueva cotización',
+    invoiceSubject: 'Tu factura de ZAV Interior & Clean',
+    invoiceHello: 'Hola',
+    invoiceBody: 'Tu factura está lista. Puedes revisar los detalles abajo o abrir la factura completa en línea.',
+    invoiceOpen: 'Ver factura',
   },
   pt: {
     services: {
@@ -95,6 +105,10 @@ const labels = {
     clientDetails: 'Seu pedido',
     clientFooter: 'Dúvidas? Responda este e-mail ou fale no WhatsApp: (717) 415-6171.',
     adminSubject: 'Novo orçamento',
+    invoiceSubject: 'Sua fatura da ZAV Interior & Clean',
+    invoiceHello: 'Olá',
+    invoiceBody: 'Sua fatura está pronta. Veja os detalhes abaixo ou abra a fatura completa online.',
+    invoiceOpen: 'Ver fatura',
   },
 } as const;
 
@@ -133,9 +147,7 @@ function createTransport() {
       user: SMTP_USER,
       pass: SMTP_PASS,
     },
-    tls: {
-      minVersion: 'TLSv1.2',
-    },
+    tls: { minVersion: 'TLSv1.2' },
     connectionTimeout: 15_000,
     greetingTimeout: 15_000,
     socketTimeout: 20_000,
@@ -155,15 +167,12 @@ function detailsHtml(quote: Quote, locale: LocaleKey) {
     ['Email', quote.email],
     ['ZIP', quote.zip],
     ['Notes', quote.notes || '—'],
-    ['Locale', quote.locale],
-    ['ID', quote.id],
-    ['When', new Date(quote.createdAt).toLocaleString('en-US')],
   ];
 
   return rows
     .map(
       ([k, v]) =>
-        `<tr><td style="padding:6px 12px 6px 0;color:#6b6560;font-size:13px">${k}</td><td style="padding:6px 0;font-size:13px;color:#1a1a1a"><strong>${escapeHtml(String(v))}</strong></td></tr>`,
+        `<tr><td style="padding:8px 12px 8px 0;color:#6b6560;font-size:13px;border-bottom:1px solid #efe8dc">${k}</td><td style="padding:8px 0;font-size:13px;color:#1a1a1a;border-bottom:1px solid #efe8dc"><strong>${escapeHtml(String(v))}</strong></td></tr>`,
     )
     .join('');
 }
@@ -176,27 +185,53 @@ function escapeHtml(s: string) {
     .replaceAll('"', '&quot;');
 }
 
+function money(n: number, currency = 'USD') {
+  return new Intl.NumberFormat('en-US', { style: 'currency', currency }).format(n);
+}
+
+/** Branded email shell — logo centered, cream/mustard/navy like the site */
 function wrap(title: string, body: string) {
+  const logoUrl = `${SITE_URL}/logo.png`;
   return `<!doctype html>
-<html><body style="margin:0;padding:0;background:#f7f4ef;font-family:DM Sans,Segoe UI,sans-serif">
-  <div style="max-width:560px;margin:24px auto;background:#fff;border-radius:16px;padding:28px;border:1px solid #efe8dc">
-    <p style="margin:0 0 4px;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#a8841a;font-weight:700">ZAV Interior & Clean</p>
-    <h1 style="margin:0 0 16px;font-size:22px;color:#1a1a1a">${title}</h1>
-    ${body}
-    <p style="margin:24px 0 0;font-size:12px;color:#6b6560">hello@zavinteriorclean.com · (717) 415-6171</p>
-  </div>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f7f4ef;font-family:'DM Sans',Segoe UI,Helvetica,Arial,sans-serif;color:#1a1a1a">
+  <div style="display:none;max-height:0;overflow:hidden;opacity:0">${escapeHtml(title)}</div>
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f7f4ef;padding:28px 12px">
+    <tr><td align="center">
+      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:560px;background:#ffffff;border-radius:18px;border:1px solid #efe8dc;overflow:hidden">
+        <tr><td style="padding:28px 28px 12px;text-align:center;background:linear-gradient(180deg,#fffef9 0%,#ffffff 100%)">
+          <img src="${logoUrl}" alt="ZAV Interior & Clean" width="220" style="display:block;margin:0 auto 12px;max-width:220px;width:100%;height:auto;border:0" />
+          <p style="margin:0;font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:#a8841a;font-weight:700">Interior &amp; Clean</p>
+        </td></tr>
+        <tr><td style="padding:8px 28px 28px">
+          <h1 style="margin:0 0 14px;font-size:22px;line-height:1.25;color:#1a1a1a;font-weight:700">${escapeHtml(title)}</h1>
+          ${body}
+        </td></tr>
+        <tr><td style="padding:16px 28px 24px;border-top:1px solid #efe8dc;text-align:center">
+          <p style="margin:0 0 6px;font-size:12px;color:#6b6560">Homes that feel alive — and stay immaculate.</p>
+          <p style="margin:0;font-size:12px;color:#1b3a5c;font-weight:600">
+            <a href="tel:+17174156171" style="color:#1b3a5c;text-decoration:none">(717) 415-6171</a>
+            &nbsp;·&nbsp;
+            <a href="${SITE_URL}" style="color:#1b3a5c;text-decoration:none">zavinteriorclean.com</a>
+          </p>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
 </body></html>`;
 }
 
 function explainSmtpError(err: unknown) {
   const msg = err instanceof Error ? err.message : String(err);
-  if (/Invalid login|BadCredentials|535/i.test(msg)) {
-    return 'Google rejected the password. Use a Google App Password (not the account password) for hello@zavinteriorclean.com.';
+  if (/Invalid login|BadCredentials|535|Authentication failed/i.test(msg)) {
+    return 'SMTP authentication failed. Check SMTP_USER and SMTP_PASS on the server.';
   }
   if (/ECONNECTION|ETIMEDOUT|ENOTFOUND/i.test(msg)) {
-    return 'Could not reach SMTP server. Check outbound port 587/465 on the VPS.';
+    return 'Could not reach SMTP server. Check host/port and outbound firewall.';
   }
-  return msg;
+  // Never leak stack traces or credentials
+  return 'Mail delivery failed.';
 }
 
 export function getMailConfigStatus() {
@@ -228,7 +263,7 @@ export async function verifyMailConnection() {
     return { ok: true as const, ...status };
   } catch (err) {
     const error = explainSmtpError(err);
-    console.error('[mail] verify failed:', error);
+    console.error('[mail] verify failed');
     return { ok: false as const, ...status, error };
   }
 }
@@ -243,20 +278,19 @@ export async function sendTestMail(to = ADMIN_EMAIL) {
   try {
     await transport.sendMail({
       from: `"${FROM_NAME}" <${SMTP_USER}>`,
+      replyTo: REPLY_TO,
       to,
       subject: 'ZAV mail test · OK',
-      text: `Mail transport works.\nFrom: ${SMTP_USER}\nTo: ${to}\nHost: ${SMTP_HOST}:${SMTP_PORT}\nTime: ${new Date().toISOString()}`,
       html: wrap(
         'Mail test OK',
-        `<p style="color:#3d3d3d">SMTP is working for <strong>${escapeHtml(SMTP_USER)}</strong>.</p>
-         <p class="muted">Sent to ${escapeHtml(to)} at ${escapeHtml(new Date().toLocaleString())}.</p>`,
+        `<p style="color:#3d3d3d;line-height:1.55">SMTP is working for <strong>${escapeHtml(SMTP_USER)}</strong>.</p>
+         <p style="color:#6b6560;font-size:13px">Hostinger · ${escapeHtml(SMTP_HOST)}:${SMTP_PORT}</p>`,
       ),
     });
     return { ok: true as const, to };
   } catch (err) {
-    const error = explainSmtpError(err);
-    console.error('[mail] test failed:', error);
-    return { ok: false as const, error };
+    console.error('[mail] test failed');
+    return { ok: false as const, error: explainSmtpError(err) };
   }
 }
 
@@ -275,16 +309,24 @@ export async function sendQuoteNotifications(quote: Quote) {
     L.clientSubject,
     `<p style="color:#3d3d3d;line-height:1.55">${L.clientHello} ${escapeHtml(quote.name)},</p>
      <p style="color:#3d3d3d;line-height:1.55">${L.clientBody}</p>
-     <p style="margin:18px 0 8px;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#a8841a;font-weight:700">${L.clientDetails}</p>
-     <table style="border-collapse:collapse">${detailsHtml(quote, locale)}</table>
-     <p style="margin-top:18px;color:#6b6560;font-size:13px">${L.clientFooter}</p>`,
+     <p style="margin:18px 0 8px;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#a8841a;font-weight:700">${L.clientDetails}</p>
+     <table style="border-collapse:collapse;width:100%">${detailsHtml(quote, locale)}</table>
+     <p style="margin-top:18px;color:#6b6560;font-size:13px">${L.clientFooter}</p>
+     <p style="margin-top:18px;text-align:center">
+       <a href="${SITE_URL}/#quote" style="display:inline-block;background:linear-gradient(135deg,#c9a227,#a8841a);color:#1a1a1a;text-decoration:none;font-weight:700;font-size:13px;padding:12px 20px;border-radius:999px">zavinteriorclean.com</a>
+     </p>`,
   );
 
   const adminHtml = wrap(
     adminL.adminSubject,
     `<p style="color:#3d3d3d;line-height:1.55">New free-estimate request from <strong>${escapeHtml(quote.name)}</strong>.</p>
-     <table style="border-collapse:collapse">${detailsHtml(quote, 'en')}</table>
-     <p style="margin-top:18px"><a href="tel:${escapeHtml(quote.phone)}" style="color:#1b3a5c">${escapeHtml(quote.phone)}</a> · <a href="mailto:${escapeHtml(quote.email)}" style="color:#1b3a5c">${escapeHtml(quote.email)}</a></p>`,
+     <table style="border-collapse:collapse;width:100%">${detailsHtml(quote, 'en')}</table>
+     <p style="margin-top:18px">
+       <a href="tel:${escapeHtml(quote.phone)}" style="color:#1b3a5c">${escapeHtml(quote.phone)}</a>
+       ·
+       <a href="mailto:${escapeHtml(quote.email)}" style="color:#1b3a5c">${escapeHtml(quote.email)}</a>
+     </p>
+     <p style="margin-top:12px;font-size:12px;color:#6b6560">Open the site, type <strong>ZAV</strong> + PIN to manage the inbox.</p>`,
   );
 
   const from = `"${FROM_NAME}" <${SMTP_USER}>`;
@@ -293,7 +335,7 @@ export async function sendQuoteNotifications(quote: Quote) {
     transport.sendMail({
       from,
       to: quote.email,
-      replyTo: SMTP_USER,
+      replyTo: REPLY_TO,
       subject: `${L.clientSubject} · ZAV`,
       html: clientHtml,
     }),
@@ -306,19 +348,57 @@ export async function sendQuoteNotifications(quote: Quote) {
     }),
   ]);
 
-  const errors: string[] = [];
+  let error: string | undefined;
   for (const r of results) {
     if (r.status === 'rejected') {
-      const error = explainSmtpError(r.reason);
-      errors.push(error);
-      console.error('[mail]', error);
+      error = explainSmtpError(r.reason);
+      console.error('[mail] quote notify failed');
     }
   }
 
   return {
-    sent: errors.length === 0,
+    sent: !error && results.every((r) => r.status === 'fulfilled'),
     client: results[0].status === 'fulfilled',
     admin: results[1].status === 'fulfilled',
-    error: errors[0],
+    error,
   };
+}
+
+export async function sendInvoiceToClient(invoice: Invoice, locale = 'en') {
+  const transport = createTransport();
+  if (!transport) {
+    return { ok: false as const, error: 'smtp_not_configured' };
+  }
+
+  const L = t(locale);
+  const invoiceUrl = `${SITE_URL}/invoice/${invoice.id}`;
+
+  const html = wrap(
+    L.invoiceSubject,
+    `<p style="color:#3d3d3d;line-height:1.55">${L.invoiceHello} ${escapeHtml(invoice.clientName)},</p>
+     <p style="color:#3d3d3d;line-height:1.55">${L.invoiceBody}</p>
+     <table style="border-collapse:collapse;width:100%;margin:16px 0">
+       <tr><td style="padding:8px 0;color:#6b6560;font-size:13px">Invoice</td><td style="padding:8px 0;font-weight:700">${escapeHtml(invoice.number)}</td></tr>
+       <tr><td style="padding:8px 0;color:#6b6560;font-size:13px">Service</td><td style="padding:8px 0;font-weight:700">${escapeHtml(invoice.description)}</td></tr>
+       <tr><td style="padding:8px 0;color:#6b6560;font-size:13px">Total</td><td style="padding:8px 0;font-weight:800;color:#1b3a5c;font-size:18px">${escapeHtml(money(invoice.total, invoice.currency))}</td></tr>
+     </table>
+     <p style="text-align:center;margin:22px 0 8px">
+       <a href="${invoiceUrl}" style="display:inline-block;background:linear-gradient(135deg,#c9a227,#a8841a);color:#1a1a1a;text-decoration:none;font-weight:700;font-size:13px;padding:12px 22px;border-radius:999px">${escapeHtml(L.invoiceOpen)}</a>
+     </p>`,
+  );
+
+  try {
+    await transport.sendMail({
+      from: `"${FROM_NAME}" <${SMTP_USER}>`,
+      replyTo: REPLY_TO,
+      to: invoice.clientEmail,
+      bcc: ADMIN_EMAIL,
+      subject: `${L.invoiceSubject} · ${invoice.number}`,
+      html,
+    });
+    return { ok: true as const };
+  } catch (err) {
+    console.error('[mail] invoice notify failed');
+    return { ok: false as const, error: explainSmtpError(err) };
+  }
 }
