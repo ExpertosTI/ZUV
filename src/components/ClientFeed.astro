@@ -1,0 +1,48 @@
+---
+import type { Messages } from '../i18n/messages';
+import type { ClientWork } from '../lib/store';
+
+interface Props {
+  m: Messages;
+  clients: ClientWork[];
+}
+
+const { m, clients } = Astro.props;
+---
+
+<section id="work" class="section-block px-4 py-14 sm:px-6 sm:py-20">
+  <div class="mx-auto max-w-6xl">
+    <div class="reveal mb-8 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+      <div>
+        <p class="text-[11px] font-semibold uppercase tracking-[0.2em] text-mustard-deep">{m.navWork}</p>
+        <h2 class="font-display mt-2 text-3xl font-semibold tracking-tight text-ink sm:text-4xl">{m.feedTitle}</h2>
+        <p class="mt-2 text-sm text-muted sm:text-base">{m.feedSub}</p>
+      </div>
+    </div>
+
+    {clients.length === 0 ? (
+      <p class="reveal text-center text-muted">{m.feedEmpty}</p>
+    ) : (
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {clients.map((client, i) => (
+          <article class:list={['feed-card tilt-card reveal', i === 1 && 'reveal-delay-1', i === 2 && 'reveal-delay-2']}>
+            <div class="mb-3 flex items-center justify-between gap-3">
+              <div>
+                <p class="font-semibold text-ink">{client.name}</p>
+                <p class="text-xs text-muted">{client.city}</p>
+              </div>
+              <span class="rounded-full bg-mustard/20 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-mustard-deep">
+                {client.service}
+              </span>
+            </div>
+            <p class="text-sm leading-relaxed text-ink-soft">“{client.blurb}”</p>
+            <div class="mt-4 flex items-center justify-between text-xs text-muted">
+              <span aria-label={`${client.rating} stars`}>{'★'.repeat(client.rating)}</span>
+              <time datetime={client.date}>{client.date}</time>
+            </div>
+          </article>
+        ))}
+      </div>
+    )}
+  </div>
+</section>

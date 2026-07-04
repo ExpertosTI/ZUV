@@ -1,0 +1,131 @@
+---
+import type { Messages } from '../i18n/messages';
+import { formatStep } from '../i18n/messages';
+
+interface Props {
+  m: Messages;
+  locale: string;
+}
+
+const { m, locale } = Astro.props;
+const totalSteps = 4;
+---
+
+<section id="quote" class="section-block relative px-4 py-14 sm:px-6 sm:py-20">
+  <div class="mx-auto max-w-xl">
+    <div class="reveal mb-6 text-center">
+      <p class="text-[11px] font-semibold uppercase tracking-[0.2em] text-mustard-deep">{m.navQuote}</p>
+      <h2 class="font-display mt-2 text-3xl font-semibold tracking-tight text-ink sm:text-4xl">{m.formTitle}</h2>
+      <p class="mt-2 text-sm text-muted sm:text-base">{m.formSub}</p>
+    </div>
+
+    <div
+      id="quote-wizard"
+      class="reveal reveal-delay-1 glass relative overflow-hidden rounded-[1.75rem] p-5 sm:p-7"
+      data-locale={locale}
+      data-total={totalSteps}
+    >
+      <div class="mb-5 flex gap-2" aria-hidden="true">
+        {[1, 2, 3, 4].map((n) => (
+          <div class="step-dot" data-step-dot={n}></div>
+        ))}
+      </div>
+
+      <p id="step-label" class="mb-4 text-xs font-semibold uppercase tracking-[0.16em] text-muted">
+        {formatStep(m.stepOf, 1, totalSteps)}
+      </p>
+
+      <form id="quote-form" novalidate>
+        <!-- Step 1: Service -->
+        <fieldset data-step="1" class="step-panel space-y-3">
+          <legend class="mb-3 font-display text-xl font-semibold text-ink">{m.step1Title}</legend>
+          <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            {Object.entries(m.services).map(([value, label]) => (
+              <label class="choice-card interactive cursor-pointer">
+                <input type="radio" name="service" value={value} class="sr-only" required />
+                <span class="text-sm font-semibold text-ink">{label}</span>
+              </label>
+            ))}
+          </div>
+        </fieldset>
+
+        <!-- Step 2: Size -->
+        <fieldset data-step="2" class="step-panel hidden space-y-3">
+          <legend class="mb-3 font-display text-xl font-semibold text-ink">{m.step2Title}</legend>
+          <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            {Object.entries(m.sizes).map(([value, label]) => (
+              <label class="choice-card interactive cursor-pointer">
+                <input type="radio" name="size" value={value} class="sr-only" required />
+                <span class="text-sm font-semibold text-ink">{label}</span>
+              </label>
+            ))}
+          </div>
+        </fieldset>
+
+        <!-- Step 3: Frequency -->
+        <fieldset data-step="3" class="step-panel hidden space-y-3">
+          <legend class="mb-3 font-display text-xl font-semibold text-ink">{m.step3Title}</legend>
+          <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            {Object.entries(m.frequencies).map(([value, label]) => (
+              <label class="choice-card interactive cursor-pointer">
+                <input type="radio" name="frequency" value={value} class="sr-only" required />
+                <span class="text-sm font-semibold text-ink">{label}</span>
+              </label>
+            ))}
+          </div>
+        </fieldset>
+
+        <!-- Step 4: Contact -->
+        <fieldset data-step="4" class="step-panel hidden space-y-3">
+          <legend class="mb-3 font-display text-xl font-semibold text-ink">{m.step4Title}</legend>
+          <div class="space-y-3">
+            <label class="block">
+              <span class="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-muted">{m.fields.name}</span>
+              <input class="field" type="text" name="name" autocomplete="name" placeholder={m.placeholders.name} required />
+            </label>
+            <label class="block">
+              <span class="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-muted">{m.fields.phone}</span>
+              <input class="field" type="tel" name="phone" autocomplete="tel" placeholder={m.placeholders.phone} required />
+            </label>
+            <label class="block">
+              <span class="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-muted">{m.fields.email}</span>
+              <input class="field" type="email" name="email" autocomplete="email" placeholder={m.placeholders.email} required />
+            </label>
+            <label class="block">
+              <span class="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-muted">{m.fields.zip}</span>
+              <input class="field" type="text" name="zip" autocomplete="postal-code" placeholder={m.placeholders.zip} required />
+            </label>
+            <label class="block">
+              <span class="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-muted">{m.fields.notes}</span>
+              <textarea class="field min-h-[88px] resize-y" name="notes" placeholder={m.placeholders.notes}></textarea>
+            </label>
+          </div>
+        </fieldset>
+
+        <p id="form-error" class="mt-4 hidden text-sm font-medium text-red-600" role="alert"></p>
+
+        <div class="mt-6 flex items-center gap-3">
+          <button type="button" id="btn-back" class="btn-ghost hidden flex-1">{m.back}</button>
+          <button type="button" id="btn-next" class="magnet btn-primary flex-1">
+            <span class="magnet__inner">{m.next}</span>
+          </button>
+          <button type="submit" id="btn-submit" class="magnet btn-accent hidden flex-1">
+            <span class="magnet__inner" data-label-default={m.submit} data-label-loading={m.submitting}>{m.submit}</span>
+          </button>
+        </div>
+      </form>
+
+      <div id="quote-success" class="hidden py-8 text-center">
+        <div class="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-mustard/20 text-2xl">✓</div>
+        <h3 class="font-display text-2xl font-semibold text-ink">{m.successTitle}</h3>
+        <p class="mx-auto mt-2 max-w-sm text-sm text-muted">{m.successBody}</p>
+        <button type="button" id="btn-again" class="btn-ghost mt-6">{m.successAgain}</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+  import { initQuoteWizard } from '../scripts/quote-form.js';
+  initQuoteWizard();
+</script>

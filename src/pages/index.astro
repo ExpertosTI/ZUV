@@ -1,0 +1,45 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Header from '../components/Header.astro';
+import Hero from '../components/Hero.astro';
+import QuoteWizard from '../components/QuoteWizard.astro';
+import ClientFeed from '../components/ClientFeed.astro';
+import Footer from '../components/Footer.astro';
+import WhatsAppFab from '../components/WhatsAppFab.astro';
+import { detectLocale, t } from '../i18n/messages';
+import { getClients, trackVisit } from '../lib/store';
+
+export const prerender = false;
+
+const cookieLang = Astro.cookies.get('zav_lang')?.value ?? null;
+const accept = Astro.request.headers.get('accept-language');
+const locale = detectLocale(accept, cookieLang);
+const m = t(locale);
+
+let visitorKey = Astro.cookies.get('zav_vid')?.value;
+if (!visitorKey) {
+  visitorKey = `v_${crypto.randomUUID()}`;
+  Astro.cookies.set('zav_vid', visitorKey, {
+    path: '/',
+    httpOnly: true,
+    sameSite: 'lax',
+    maxAge: 60 * 60 * 24 * 365,
+    secure: Astro.url.protocol === 'https:',
+  });
+}
+
+await trackVisit(visitorKey);
+
+const clients = await getClients();
+---
+
+<BaseLayout title={`${m.brand} | Free Estimates`} description={m.heroSub} locale={locale}>
+  <Header locale={locale} m={m} />
+  <main>
+    <Hero m={m} />
+    <QuoteWizard m={m} locale={locale} />
+    <ClientFeed m={m} clients={clients} />
+  </main>
+  <Footer m={m} />
+  <WhatsAppFab m={m} />
+</BaseLayout>

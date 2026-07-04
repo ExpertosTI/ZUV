@@ -1,0 +1,53 @@
+---
+import '../styles/global.css';
+import type { Locale } from '../i18n/messages';
+
+interface Props {
+  title: string;
+  description: string;
+  locale: Locale;
+}
+
+const { title, description, locale } = Astro.props;
+---
+
+<!DOCTYPE html>
+<html lang={locale}>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <meta name="theme-color" content="#f7f4ef" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Outfit:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/admin-console.css" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://zavinteriorclean.com/" />
+    <meta property="og:image" content="/logo.svg" />
+  </head>
+  <body class="text-ink antialiased">
+    <div class="cursor-ring" id="cursor-ring" aria-hidden="true"></div>
+    <div id="life-layer" class="pointer-events-none fixed inset-0 z-0 overflow-hidden" aria-hidden="true"></div>
+    <div class="relative z-10">
+      <slot />
+    </div>
+
+    <script>
+      import { initInteract } from '../scripts/interact.js';
+      import { initFloatingLife } from '../scripts/floating-life.js';
+      import { initAdminConsole } from '../scripts/admin-console.js';
+
+      initInteract();
+      initFloatingLife();
+      initAdminConsole();
+    </script>
+  </body>
+</html>

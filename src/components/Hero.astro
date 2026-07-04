@@ -1,0 +1,91 @@
+---
+import type { Messages } from '../i18n/messages';
+import { PHONE_DISPLAY, PHONE_E164, whatsappUrl } from '../lib/contact';
+
+interface Props {
+  m: Messages;
+}
+
+const { m } = Astro.props;
+const wa = whatsappUrl(m.whatsappMsg);
+---
+
+<section class="hero-section relative overflow-hidden px-4 pb-12 pt-8 sm:px-6 sm:pb-20 sm:pt-14" id="top">
+  <div class="mx-auto grid max-w-6xl items-center gap-10 lg:grid-cols-[1.05fr_0.95fr] lg:gap-14">
+    <div class="hero-copy">
+      <div class="offer-ribbon reveal mb-5 inline-flex max-w-full items-center rounded-full px-4 py-2 text-xs font-semibold tracking-wide sm:text-sm">
+        <span class="truncate">{m.offer}</span>
+      </div>
+
+      <p class="reveal reveal-delay-1 mb-3 text-[11px] font-semibold uppercase tracking-[0.22em] text-mustard-deep">
+        {m.brand}
+      </p>
+
+      <h1 class="reveal reveal-delay-1 font-display text-4xl font-semibold leading-[1.06] tracking-tight text-ink sm:text-5xl lg:text-[3.35rem]">
+        {m.heroTitle}
+      </h1>
+
+      <p class="reveal reveal-delay-2 mt-4 max-w-xl text-base leading-relaxed text-muted sm:text-lg">
+        {m.heroSub}
+      </p>
+
+      <div class="reveal reveal-delay-2 mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+        <a href="#quote" class="magnet btn-accent">
+          <span class="magnet__inner">{m.heroCta}</span>
+        </a>
+        <a href={wa} target="_blank" rel="noopener noreferrer" class="btn-wa">
+          <svg class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M20.52 3.48A11.86 11.86 0 0 0 12.04 0C5.5 0 .2 5.3.2 11.82c0 2.08.54 4.1 1.58 5.9L0 24l6.45-1.69a11.8 11.8 0 0 0 5.59 1.42h.01c6.54 0 11.84-5.3 11.84-11.82 0-3.16-1.23-6.13-3.37-8.43ZM12.05 21.5h-.01a9.8 9.8 0 0 1-5-1.37l-.36-.21-3.83 1 1.02-3.73-.23-.38a9.8 9.8 0 0 1-1.5-5.23c0-5.42 4.42-9.83 9.86-9.83a9.8 9.8 0 0 1 6.97 2.89 9.76 9.76 0 0 1 2.88 6.95c0 5.42-4.42 9.84-9.8 9.84Z" />
+          </svg>
+          {m.whatsappCta}
+        </a>
+      </div>
+
+      <a
+        href={`tel:${PHONE_E164}`}
+        class="reveal reveal-delay-3 interactive mt-5 inline-flex items-center gap-2 text-sm font-medium text-navy"
+      >
+        <span class="text-muted">{m.heroPhone}</span>
+        <span>{PHONE_DISPLAY}</span>
+      </a>
+
+      <p class="reveal reveal-delay-3 mt-5 max-w-md text-sm text-muted">{m.tagline}</p>
+    </div>
+
+    <div class="hero-visual reveal reveal-delay-2 relative">
+      <div class="hero-frame tilt-card">
+        <div class="hero-shine" aria-hidden="true"></div>
+        <img
+          src="/hero-bedroom.jpg"
+          alt="Bright modern bedroom with clean white linens"
+          class="hero-photo"
+          width="1600"
+          height="1600"
+          loading="eager"
+          fetchpriority="high"
+        />
+        <div class="hero-overlay" aria-hidden="true"></div>
+
+        <div class="hero-chip hero-chip--top">
+          <span class="hero-chip__dot"></span>
+          {m.heroBadge}
+        </div>
+
+        <div class="hero-card glass">
+          <p class="text-[10px] font-bold uppercase tracking-[0.18em] text-mustard-deep">{m.heroCardTitle}</p>
+          <p class="mt-1 text-sm font-medium leading-snug text-ink">{m.heroCardBody}</p>
+        </div>
+
+        <div class="hero-chip hero-chip--accent">
+          {m.heroFloat}
+        </div>
+      </div>
+
+      <!-- Clean architecture line accents -->
+      <svg class="hero-lines" viewBox="0 0 320 320" fill="none" aria-hidden="true">
+        <path class="hero-line" d="M20 260 C80 200, 120 180, 160 200 C220 230, 260 160, 300 120" />
+        <path class="hero-line hero-line--delay" d="M40 40 H280 V280 H40 Z" />
+      </svg>
+    </div>
+  </div>
+</section>
