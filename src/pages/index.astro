@@ -6,6 +6,7 @@ import QuoteWizard from '../components/QuoteWizard.astro';
 import ClientFeed from '../components/ClientFeed.astro';
 import Footer from '../components/Footer.astro';
 import WhatsAppFab from '../components/WhatsAppFab.astro';
+import ThemeMotifs from '../components/ThemeMotifs.astro';
 import { detectLocale, t } from '../i18n/messages';
 import { getClients, trackVisit } from '../lib/store';
 
@@ -35,6 +36,7 @@ const clients = await getClients();
 
 <BaseLayout title={`${m.brand} | Free Estimates`} description={m.heroSub} locale={locale}>
   <Header locale={locale} m={m} />
+  <ThemeMotifs />
   <main>
     <Hero m={m} />
     <QuoteWizard m={m} locale={locale} />
