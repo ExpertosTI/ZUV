@@ -2,6 +2,7 @@
 import type { Locale, Messages } from '../i18n/messages';
 import { LOCALES, localeLabels } from '../i18n/messages';
 import { whatsappUrl } from '../lib/contact';
+import BrandLogo from './BrandLogo.astro';
 
 interface Props {
   locale: Locale;
@@ -20,15 +21,9 @@ const links = [
 <header id="site-header" class="site-header sticky top-0 z-50">
   <div class="header-progress" id="scroll-progress" aria-hidden="true"></div>
 
-  <div class="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
-    <a href="#top" class="interactive flex min-w-0 items-center gap-2 sm:gap-3">
-      <img
-        src="/logo.svg"
-        alt={m.brand}
-        class="h-10 w-auto max-w-[132px] object-contain object-left sm:h-11 sm:max-w-[168px]"
-        width="180"
-        height="120"
-      />
+  <div class="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3 sm:px-6 sm:py-4">
+    <a href="#top" class="brand-link interactive flex min-w-0 items-center" aria-label={m.brand}>
+      <BrandLogo size="md" priority class="max-w-[200px] sm:max-w-[240px] md:max-w-[280px]" />
     </a>
 
     <nav class="hidden items-center gap-1 lg:flex" aria-label="Primary">

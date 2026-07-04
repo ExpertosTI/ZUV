@@ -1,0 +1,27 @@
+---
+interface Props {
+  class?: string;
+  priority?: boolean;
+  size?: 'sm' | 'md' | 'lg' | 'xl';
+}
+
+const { class: className = '', priority = false, size = 'md' } = Astro.props;
+
+const sizes = {
+  sm: 'h-12 sm:h-14',
+  md: 'h-14 sm:h-16 md:h-[4.5rem]',
+  lg: 'h-20 sm:h-24 md:h-28',
+  xl: 'h-28 sm:h-32 md:h-36',
+};
+---
+
+<img
+  src="/logo.png"
+  alt="ZAV Interior & Clean"
+  class:list={['brand-logo', sizes[size], className]}
+  width="720"
+  height="377"
+  loading={priority ? 'eager' : 'lazy'}
+  fetchpriority={priority ? 'high' : undefined}
+  decoding="async"
+/>
