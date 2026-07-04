@@ -86,8 +86,21 @@ cyan "── 5. Deploy stack ($STACK_NAME → $DOMAIN) ────"
 docker tag zuv-web:latest zuv-web:latest 2>/dev/null || true
 docker stack deploy -c docker-compose.yml "$STACK_NAME"
 
-cyan "── 6. Force service update ────────────────────"
-docker service update --force "$SERVICE_NAME" >/dev/null 2>&1 || true
+cyan "── 6. Inject mail secrets into service ─────────"
+# Swarm often drops env_file; force SMTP vars onto the running service
+sleep 2
+docker service update \
+  --env-add "SMTP_HOST=${SMTP_HOST}" \
+  --env-add "SMTP_PORT=${SMTP_PORT}" \
+  --env-add "SMTP_USER=${SMTP_USER}" \
+  --env-add "SMTP_PASS=${SMTP_PASS}" \
+  --env-add "SMTP_FROM_NAME=${SMTP_FROM_NAME}" \
+  --env-add "SMTP_REPLY_TO=${SMTP_REPLY_TO}" \
+  --env-add "ADMIN_EMAIL=${ADMIN_EMAIL}" \
+  --env-add "PUBLIC_SITE_URL=${PUBLIC_SITE_URL}" \
+  --env-add "ADMIN_PASSWORD=${ADMIN_PASSWORD}" \
+  --force \
+  "$SERVICE_NAME" >/dev/null
 
 cyan "── 7. Cleanup dangling images ─────────────────"
 docker image prune -f >/dev/null

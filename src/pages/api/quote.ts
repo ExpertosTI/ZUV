@@ -55,11 +55,18 @@ export const POST: APIRoute = async ({ request, clientAddress }) => {
     return publicJson({ ok: true, id: `local_${Date.now()}`, stored: false }, 201);
   }
 
-  let mail = { sent: false as boolean, client: false, admin: false };
+  let mail = { sent: false as boolean, client: false, admin: false, error: undefined as string | undefined };
   try {
     mail = await sendQuoteNotifications(quote);
+    if (!mail.sent) {
+      console.error('[quote] mail partial/fail', {
+        client: mail.client,
+        admin: mail.admin,
+        error: mail.error,
+      });
+    }
   } catch {
-    console.error('[quote] mail failed');
+    console.error('[quote] mail exception');
   }
 
   return publicJson({

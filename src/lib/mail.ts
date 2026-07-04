@@ -2,19 +2,24 @@ import nodemailer from 'nodemailer';
 import type SMTPTransport from 'nodemailer/lib/smtp-transport';
 import type { Invoice, Quote } from './store';
 
+/** Read env at call-time (never bake empty values at build). */
 function env(name: string, fallback = '') {
   const raw = process.env[name] ?? fallback;
   return String(raw).trim().replace(/^["']|["']$/g, '');
 }
 
-const SMTP_USER = env('SMTP_USER', 'info@renace.tech');
-const SMTP_PASS = env('SMTP_PASS');
-const SMTP_HOST = env('SMTP_HOST', 'smtp.hostinger.com');
-const SMTP_PORT = Number(env('SMTP_PORT', '465')) || 465;
-const ADMIN_EMAIL = env('ADMIN_EMAIL', 'azhaliaestepan@gmail.com');
-const FROM_NAME = env('SMTP_FROM_NAME', 'ZAV Interior & Clean');
-const SITE_URL = env('PUBLIC_SITE_URL', 'https://zavinteriorclean.com').replace(/\/$/, '');
-const REPLY_TO = env('SMTP_REPLY_TO', 'hello@zavinteriorclean.com');
+function mailEnv() {
+  return {
+    user: env('SMTP_USER', 'info@renace.tech'),
+    pass: env('SMTP_PASS'),
+    host: env('SMTP_HOST', 'smtp.hostinger.com'),
+    port: Number(env('SMTP_PORT', '465')) || 465,
+    admin: env('ADMIN_EMAIL', 'azhaliaestepan@gmail.com'),
+    fromName: env('SMTP_FROM_NAME', 'ZAV Interior & Clean'),
+    siteUrl: env('PUBLIC_SITE_URL', 'https://zavinteriorclean.com').replace(/\/$/, ''),
+    replyTo: env('SMTP_REPLY_TO', 'hello@zavinteriorclean.com'),
+  };
+}
 
 const labels = {
   en: {
@@ -124,8 +129,9 @@ function labelOf(map: Record<string, string>, key: string) {
 }
 
 function mailConfigured() {
-  if (!SMTP_PASS) return { ok: false as const, reason: 'SMTP_PASS is empty' };
-  if (/TU_APP_PASSWORD|YOUR_GOOGLE|changeme|xxx/i.test(SMTP_PASS)) {
+  const { pass } = mailEnv();
+  if (!pass) return { ok: false as const, reason: 'SMTP_PASS is empty' };
+  if (/TU_APP_PASSWORD|YOUR_GOOGLE|changeme|xxx/i.test(pass)) {
     return { ok: false as const, reason: 'SMTP_PASS is still a placeholder' };
   }
   return { ok: true as const };
@@ -138,14 +144,15 @@ function createTransport() {
     return null;
   }
 
+  const m = mailEnv();
   const options: SMTPTransport.Options = {
-    host: SMTP_HOST,
-    port: SMTP_PORT,
-    secure: SMTP_PORT === 465,
-    requireTLS: SMTP_PORT === 587,
+    host: m.host,
+    port: m.port,
+    secure: m.port === 465,
+    requireTLS: m.port === 587,
     auth: {
-      user: SMTP_USER,
-      pass: SMTP_PASS,
+      user: m.user,
+      pass: m.pass,
     },
     tls: { minVersion: 'TLSv1.2' },
     connectionTimeout: 15_000,
@@ -191,7 +198,8 @@ function money(n: number, currency = 'USD') {
 
 /** Branded email shell — logo centered, cream/mustard/navy like the site */
 function wrap(title: string, body: string) {
-  const logoUrl = `${SITE_URL}/logo.png`;
+  const siteUrl = mailEnv().siteUrl;
+  const logoUrl = `${siteUrl}/logo.png`;
   return `<!doctype html>
 <html lang="en">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
@@ -213,7 +221,7 @@ function wrap(title: string, body: string) {
           <p style="margin:0;font-size:12px;color:#1b3a5c;font-weight:600">
             <a href="tel:+17174156171" style="color:#1b3a5c;text-decoration:none">(717) 415-6171</a>
             &nbsp;·&nbsp;
-            <a href="${SITE_URL}" style="color:#1b3a5c;text-decoration:none">zavinteriorclean.com</a>
+            <a href="${siteUrl}" style="color:#1b3a5c;text-decoration:none">zavinteriorclean.com</a>
           </p>
         </td></tr>
       </table>
@@ -262,28 +270,30 @@ export async function verifyMailConnection() {
   }
 }
 
-export async function sendTestMail(to = ADMIN_EMAIL) {
+export async function sendTestMail(to?: string) {
+  const m = mailEnv();
   const transport = createTransport();
   const status = getMailConfigStatus();
   if (!transport) {
     return { ok: false as const, error: status.reason || 'not_configured' };
   }
 
+  const dest = to || m.admin;
+
   try {
     await transport.sendMail({
-      from: `"${FROM_NAME}" <${SMTP_USER}>`,
-      replyTo: REPLY_TO,
-      to,
+      from: `"${m.fromName}" <${m.user}>`,
+      replyTo: m.replyTo,
+      to: dest,
       subject: 'ZAV mail test · OK',
       html: wrap(
         'Mail test OK',
-        `<p style="color:#3d3d3d;line-height:1.55">SMTP is working for <strong>${escapeHtml(SMTP_USER)}</strong>.</p>
-         <p style="color:#6b6560;font-size:13px">Notification channel is ready.</p>`,
+        `<p style="color:#3d3d3d;line-height:1.55">Notification channel is ready.</p>`,
       ),
     });
-    return { ok: true as const, to };
-  } catch {
-    console.error('[mail] test failed');
+    return { ok: true as const, to: dest };
+  } catch (err) {
+    console.error('[mail] test failed:', explainSmtpError(err));
     return { ok: false as const, error: 'Could not send test notification.' };
   }
 }
@@ -291,7 +301,9 @@ export async function sendTestMail(to = ADMIN_EMAIL) {
 export async function sendQuoteNotifications(quote: Quote) {
   const status = getMailConfigStatus();
   const transport = createTransport();
+  const m = mailEnv();
   if (!transport) {
+    console.error('[mail] skip quote notify:', status.reason || 'not configured');
     return { sent: false, client: false, admin: false, error: status.reason || 'smtp_not_configured' };
   }
 
@@ -307,7 +319,7 @@ export async function sendQuoteNotifications(quote: Quote) {
      <table style="border-collapse:collapse;width:100%">${detailsHtml(quote, locale)}</table>
      <p style="margin-top:18px;color:#6b6560;font-size:13px">${L.clientFooter}</p>
      <p style="margin-top:18px;text-align:center">
-       <a href="${SITE_URL}/#quote" style="display:inline-block;background:linear-gradient(135deg,#c9a227,#a8841a);color:#1a1a1a;text-decoration:none;font-weight:700;font-size:13px;padding:12px 20px;border-radius:999px">zavinteriorclean.com</a>
+       <a href="${m.siteUrl}/#quote" style="display:inline-block;background:linear-gradient(135deg,#c9a227,#a8841a);color:#1a1a1a;text-decoration:none;font-weight:700;font-size:13px;padding:12px 20px;border-radius:999px">zavinteriorclean.com</a>
      </p>`,
   );
 
@@ -323,49 +335,58 @@ export async function sendQuoteNotifications(quote: Quote) {
      <p style="margin-top:12px;font-size:12px;color:#6b6560">Open the site, type <strong>ZAV</strong> + PIN to manage the inbox.</p>`,
   );
 
-  const from = `"${FROM_NAME}" <${SMTP_USER}>`;
+  const from = `"${m.fromName}" <${m.user}>`;
 
-  const results = await Promise.allSettled([
-    transport.sendMail({
+  // Send sequentially — more reliable on shared SMTP than parallel
+  let clientOk = false;
+  let adminOk = false;
+  let error: string | undefined;
+
+  try {
+    await transport.sendMail({
       from,
       to: quote.email,
-      replyTo: REPLY_TO,
+      replyTo: m.replyTo,
       subject: `${L.clientSubject} · ZAV`,
       html: clientHtml,
-    }),
-    transport.sendMail({
+    });
+    clientOk = true;
+  } catch (err) {
+    error = explainSmtpError(err);
+    console.error('[mail] client notify failed:', error);
+  }
+
+  try {
+    await transport.sendMail({
       from,
-      to: ADMIN_EMAIL,
+      to: m.admin,
       replyTo: quote.email,
       subject: `${adminL.adminSubject}: ${quote.name} · ZAV`,
       html: adminHtml,
-    }),
-  ]);
-
-  let error: string | undefined;
-  for (const r of results) {
-    if (r.status === 'rejected') {
-      error = explainSmtpError(r.reason);
-      console.error('[mail] quote notify failed');
-    }
+    });
+    adminOk = true;
+  } catch (err) {
+    error = explainSmtpError(err);
+    console.error('[mail] admin notify failed:', error);
   }
 
   return {
-    sent: !error && results.every((r) => r.status === 'fulfilled'),
-    client: results[0].status === 'fulfilled',
-    admin: results[1].status === 'fulfilled',
+    sent: clientOk && adminOk,
+    client: clientOk,
+    admin: adminOk,
     error,
   };
 }
 
 export async function sendInvoiceToClient(invoice: Invoice, locale = 'en') {
   const transport = createTransport();
+  const m = mailEnv();
   if (!transport) {
     return { ok: false as const, error: 'smtp_not_configured' };
   }
 
   const L = t(locale);
-  const invoiceUrl = `${SITE_URL}/invoice/${invoice.id}?t=${encodeURIComponent(invoice.accessToken || '')}`;
+  const invoiceUrl = `${m.siteUrl}/invoice/${invoice.id}?t=${encodeURIComponent(invoice.accessToken || '')}`;
 
   const recurringNote = invoice.recurring
     ? `<p style="margin:12px 0;padding:10px 12px;border-radius:12px;background:#faf7f1;border:1px solid #efe8dc;font-size:13px;color:#3d3d3d">
@@ -391,16 +412,16 @@ export async function sendInvoiceToClient(invoice: Invoice, locale = 'en') {
 
   try {
     await transport.sendMail({
-      from: `"${FROM_NAME}" <${SMTP_USER}>`,
-      replyTo: REPLY_TO,
+      from: `"${m.fromName}" <${m.user}>`,
+      replyTo: m.replyTo,
       to: invoice.clientEmail,
-      bcc: ADMIN_EMAIL,
+      bcc: m.admin,
       subject: `${L.invoiceSubject} · ${invoice.number}`,
       html,
     });
     return { ok: true as const };
   } catch (err) {
-    console.error('[mail] invoice notify failed');
+    console.error('[mail] invoice notify failed:', explainSmtpError(err));
     return { ok: false as const, error: explainSmtpError(err) };
   }
 }
