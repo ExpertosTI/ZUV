@@ -12,13 +12,16 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    # Host .env is read at deploy time (run ./deploy.sh from /opt/zuv)
+    env_file:
+      - .env
     environment:
       HOST: 0.0.0.0
       PORT: 4321
       ZAV_DATA_DIR: /app/data
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:-04J27}
       SMTP_HOST: ${SMTP_HOST:-smtp.gmail.com}
-      SMTP_PORT: ${SMTP_PORT:-465}
+      SMTP_PORT: ${SMTP_PORT:-587}
       SMTP_USER: ${SMTP_USER:-hello@zavinteriorclean.com}
       SMTP_PASS: ${SMTP_PASS}
       SMTP_FROM_NAME: ${SMTP_FROM_NAME:-ZAV Interior & Clean}

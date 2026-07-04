@@ -169,6 +169,15 @@ export function initAdminConsole() {
 
         <section class="zav-adm__pane" data-pane="billing">
           <section class="zav-adm__panel">
+            <h3>Mail / SMTP <span>hello@zavinteriorclean.com</span></h3>
+            <p class="zav-adm__lead-meta" data-mail-status>Checking mail…</p>
+            <div class="zav-adm__card-actions" style="margin-top:10px">
+              <button type="button" class="zav-adm__btn" data-mail-check>Check connection</button>
+              <button type="button" class="zav-adm__btn zav-adm__btn--accent" data-mail-test>Send test email</button>
+            </div>
+            <p class="zav-adm__msg" data-mail-msg></p>
+          </section>
+          <section class="zav-adm__panel">
             <h3>Billing profile <span>used on invoices</span></h3>
             <form class="zav-adm__form" data-billing-form>
               <input name="businessName" placeholder="Business name" required />
@@ -581,6 +590,7 @@ export function initAdminConsole() {
         clients: data.clients || [],
       });
     }
+    refreshMailStatus().catch(() => {});
   }
 
   const setTab = (id) => {
@@ -792,6 +802,47 @@ export function initAdminConsole() {
       billingMsg.textContent = res.ok ? 'Billing data saved.' : 'Could not save billing data.';
     }
     if (res.ok) loadMetrics().catch(() => {});
+  });
+
+  const mailStatusEl = root.querySelector('[data-mail-status]');
+  const mailMsgEl = root.querySelector('[data-mail-msg]');
+
+  const refreshMailStatus = async () => {
+    try {
+      const res = await fetch('/api/mail/test', { headers: { Authorization: `Bearer ${token}` } });
+      const data = await res.json();
+      if (!mailStatusEl) return;
+      if (data.verify?.ok) {
+        mailStatusEl.textContent = `SMTP OK · ${data.status?.user} → ${data.status?.admin}`;
+      } else {
+        mailStatusEl.textContent = `SMTP error · ${data.verify?.error || data.status?.reason || 'not configured'}`;
+      }
+    } catch {
+      if (mailStatusEl) mailStatusEl.textContent = 'SMTP status unavailable';
+    }
+  };
+
+  root.querySelector('[data-mail-check]')?.addEventListener('click', () => {
+    if (mailMsgEl) mailMsgEl.textContent = 'Checking…';
+    refreshMailStatus().then(() => {
+      if (mailMsgEl) mailMsgEl.textContent = mailStatusEl?.textContent || '';
+    });
+  });
+
+  root.querySelector('[data-mail-test]')?.addEventListener('click', async () => {
+    if (mailMsgEl) mailMsgEl.textContent = 'Sending test…';
+    const res = await fetch('/api/mail/test', {
+      method: 'POST',
+      headers: authHeaders(),
+      body: JSON.stringify({}),
+    });
+    const data = await res.json();
+    if (mailMsgEl) {
+      mailMsgEl.textContent = data.ok
+        ? `Test sent to ${data.to}`
+        : `Test failed: ${data.error || 'unknown'}`;
+    }
+    refreshMailStatus();
   });
 
   const checkHash = () => {

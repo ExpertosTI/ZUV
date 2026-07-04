@@ -1,12 +1,18 @@
 import nodemailer from 'nodemailer';
+import type SMTPTransport from 'nodemailer/lib/smtp-transport';
 import type { Quote } from './store';
 
-const SMTP_USER = process.env.SMTP_USER || 'hello@zavinteriorclean.com';
-const SMTP_PASS = process.env.SMTP_PASS || '';
-const SMTP_HOST = process.env.SMTP_HOST || 'smtp.gmail.com';
-const SMTP_PORT = Number(process.env.SMTP_PORT || 465);
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'azhaliaestepan@gmail.com';
-const FROM_NAME = process.env.SMTP_FROM_NAME || 'ZAV Interior & Clean';
+function env(name: string, fallback = '') {
+  const raw = process.env[name] ?? fallback;
+  return String(raw).trim().replace(/^["']|["']$/g, '');
+}
+
+const SMTP_USER = env('SMTP_USER', 'hello@zavinteriorclean.com');
+const SMTP_PASS = env('SMTP_PASS');
+const SMTP_HOST = env('SMTP_HOST', 'smtp.gmail.com');
+const SMTP_PORT = Number(env('SMTP_PORT', '587')) || 587;
+const ADMIN_EMAIL = env('ADMIN_EMAIL', 'azhaliaestepan@gmail.com');
+const FROM_NAME = env('SMTP_FROM_NAME', 'ZAV Interior & Clean');
 
 const labels = {
   en: {
@@ -80,7 +86,7 @@ const labels = {
       once: 'Uma vez',
       biweekly: 'A cada 2 semanas',
       weekly: 'Semanal',
-      monthly: 'Mensual',
+      monthly: 'Mensal',
     },
     clientSubject: 'Recebemos seu pedido de orçamento grátis',
     clientHello: 'Olá',
@@ -99,32 +105,43 @@ function t(locale: string) {
   return labels.en;
 }
 
-function labelOf(
-  map: Record<string, string>,
-  key: string,
-) {
+function labelOf(map: Record<string, string>, key: string) {
   return map[key] || key;
 }
 
+function mailConfigured() {
+  if (!SMTP_PASS) return { ok: false as const, reason: 'SMTP_PASS is empty' };
+  if (/TU_APP_PASSWORD|YOUR_GOOGLE|changeme|xxx/i.test(SMTP_PASS)) {
+    return { ok: false as const, reason: 'SMTP_PASS is still a placeholder' };
+  }
+  return { ok: true as const };
+}
+
 function createTransport() {
-  if (!SMTP_PASS) {
-    console.warn('[mail] SMTP_PASS not set — emails disabled');
+  const cfg = mailConfigured();
+  if (!cfg.ok) {
+    console.warn('[mail]', cfg.reason);
     return null;
   }
 
-  // Strip accidental quotes from env files
-  const pass = SMTP_PASS.replace(/^["']|["']$/g, '');
-
-  return nodemailer.createTransport({
+  const options: SMTPTransport.Options = {
     host: SMTP_HOST,
     port: SMTP_PORT,
     secure: SMTP_PORT === 465,
     requireTLS: SMTP_PORT === 587,
     auth: {
       user: SMTP_USER,
-      pass,
+      pass: SMTP_PASS,
     },
-  });
+    tls: {
+      minVersion: 'TLSv1.2',
+    },
+    connectionTimeout: 15_000,
+    greetingTimeout: 15_000,
+    socketTimeout: 20_000,
+  };
+
+  return nodemailer.createTransport(options);
 }
 
 function detailsHtml(quote: Quote, locale: LocaleKey) {
@@ -171,9 +188,84 @@ function wrap(title: string, body: string) {
 </body></html>`;
 }
 
-export async function sendQuoteNotifications(quote: Quote) {
+function explainSmtpError(err: unknown) {
+  const msg = err instanceof Error ? err.message : String(err);
+  if (/Invalid login|BadCredentials|535/i.test(msg)) {
+    return 'Google rejected the password. Use a Google App Password (not the account password) for hello@zavinteriorclean.com.';
+  }
+  if (/ECONNECTION|ETIMEDOUT|ENOTFOUND/i.test(msg)) {
+    return 'Could not reach SMTP server. Check outbound port 587/465 on the VPS.';
+  }
+  return msg;
+}
+
+export function getMailConfigStatus() {
+  const cfg = mailConfigured();
+  return {
+    configured: cfg.ok,
+    reason: cfg.ok ? undefined : cfg.reason,
+    user: SMTP_USER,
+    host: SMTP_HOST,
+    port: SMTP_PORT,
+    admin: ADMIN_EMAIL,
+    fromName: FROM_NAME,
+  };
+}
+
+export async function verifyMailConnection() {
+  const status = getMailConfigStatus();
+  if (!status.configured) {
+    return { ok: false as const, ...status, error: status.reason };
+  }
+
   const transport = createTransport();
-  if (!transport) return { sent: false, reason: 'smtp_not_configured' as const };
+  if (!transport) {
+    return { ok: false as const, ...status, error: 'transport_failed' };
+  }
+
+  try {
+    await transport.verify();
+    return { ok: true as const, ...status };
+  } catch (err) {
+    const error = explainSmtpError(err);
+    console.error('[mail] verify failed:', error);
+    return { ok: false as const, ...status, error };
+  }
+}
+
+export async function sendTestMail(to = ADMIN_EMAIL) {
+  const transport = createTransport();
+  const status = getMailConfigStatus();
+  if (!transport) {
+    return { ok: false as const, error: status.reason || 'not_configured' };
+  }
+
+  try {
+    await transport.sendMail({
+      from: `"${FROM_NAME}" <${SMTP_USER}>`,
+      to,
+      subject: 'ZAV mail test · OK',
+      text: `Mail transport works.\nFrom: ${SMTP_USER}\nTo: ${to}\nHost: ${SMTP_HOST}:${SMTP_PORT}\nTime: ${new Date().toISOString()}`,
+      html: wrap(
+        'Mail test OK',
+        `<p style="color:#3d3d3d">SMTP is working for <strong>${escapeHtml(SMTP_USER)}</strong>.</p>
+         <p class="muted">Sent to ${escapeHtml(to)} at ${escapeHtml(new Date().toLocaleString())}.</p>`,
+      ),
+    });
+    return { ok: true as const, to };
+  } catch (err) {
+    const error = explainSmtpError(err);
+    console.error('[mail] test failed:', error);
+    return { ok: false as const, error };
+  }
+}
+
+export async function sendQuoteNotifications(quote: Quote) {
+  const status = getMailConfigStatus();
+  const transport = createTransport();
+  if (!transport) {
+    return { sent: false, client: false, admin: false, error: status.reason || 'smtp_not_configured' };
+  }
 
   const locale = (quote.locale === 'es' || quote.locale === 'pt' ? quote.locale : 'en') as LocaleKey;
   const L = t(locale);
@@ -214,16 +306,19 @@ export async function sendQuoteNotifications(quote: Quote) {
     }),
   ]);
 
-  const failed = results.filter((r) => r.status === 'rejected');
-  if (failed.length) {
-    for (const f of failed) {
-      if (f.status === 'rejected') console.error('[mail]', f.reason);
+  const errors: string[] = [];
+  for (const r of results) {
+    if (r.status === 'rejected') {
+      const error = explainSmtpError(r.reason);
+      errors.push(error);
+      console.error('[mail]', error);
     }
   }
 
   return {
-    sent: failed.length === 0,
+    sent: errors.length === 0,
     client: results[0].status === 'fulfilled',
     admin: results[1].status === 'fulfilled',
+    error: errors[0],
   };
 }

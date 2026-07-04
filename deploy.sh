@@ -61,6 +61,18 @@ export SMTP_PASS="${SMTP_PASS:-}"
 export SMTP_FROM_NAME="${SMTP_FROM_NAME:-ZAV Interior & Clean}"
 export ADMIN_EMAIL="${ADMIN_EMAIL:-azhaliaestepan@gmail.com}"
 
+if [ -z "$SMTP_PASS" ] || [[ "$SMTP_PASS" =~ TU_APP_PASSWORD|YOUR_GOOGLE|changeme ]]; then
+  red "WARNING: SMTP_PASS is missing or still a placeholder."
+  red "Google blocks the normal account password for SMTP."
+  red "Create an App Password for hello@zavinteriorclean.com and set it in /opt/zuv/.env"
+  red "  https://myaccount.google.com/apppasswords"
+fi
+if [ -n "$SMTP_PASS" ]; then
+  cyan "   SMTP user: $SMTP_USER  pass: set (${#SMTP_PASS} chars)"
+else
+  red "   SMTP pass: NOT SET — quote emails will not send"
+fi
+
 cyan "── 3. Build image (low priority) ──────────────"
 export DOCKER_BUILDKIT=1
 nice -n 19 ionice -c 3 docker compose build --pull
