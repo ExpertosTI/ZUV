@@ -1,6 +1,7 @@
 import nodemailer from 'nodemailer';
 import type SMTPTransport from 'nodemailer/lib/smtp-transport';
 import type { Invoice, Quote } from './store';
+import { formatSchedule } from './schedule';
 
 /** Read env at call-time (never bake empty values at build). */
 function env(name: string, fallback = '') {
@@ -41,13 +42,16 @@ const labels = {
       weekly: 'Weekly',
       monthly: 'Monthly',
     },
-    clientSubject: 'We received your free estimate request',
+    clientSubject: 'We confirmed your preferred schedule',
     clientHello: 'Hi',
     clientBody:
-      'Thanks for requesting a free estimate with ZAV Interior & Clean. We will contact you shortly.',
+      'Thanks for booking a preferred visit window with ZAV Interior & Clean. We received your request and will honor this schedule as closely as possible.',
     clientDetails: 'Your request',
     clientFooter: 'Questions? Reply to this email or WhatsApp us at (717) 415-6171.',
-    adminSubject: 'New quote request',
+    adminSubject: 'New quote + schedule',
+    reminderSubject: 'Reminder: your cleaning visit is coming up',
+    reminderBody: 'This is a friendly reminder about your preferred visit window with ZAV Interior & Clean.',
+    scheduleLabel: 'Preferred schedule',
     invoiceSubject: 'Your invoice from ZAV Interior & Clean',
     invoiceHello: 'Hi',
     invoiceBody: 'Your invoice is ready. You can review the details below or open the full invoice online.',
@@ -72,13 +76,16 @@ const labels = {
       weekly: 'Semanal',
       monthly: 'Mensual',
     },
-    clientSubject: 'Recibimos tu solicitud de cotización gratis',
+    clientSubject: 'Confirmamos tu horario preferido',
     clientHello: 'Hola',
     clientBody:
-      'Gracias por solicitar una cotización gratis con ZAV Interior & Clean. Te contactaremos pronto.',
+      'Gracias por agendar una ventana de visita con ZAV Interior & Clean. Recibimos tu solicitud y respetaremos este horario lo más posible.',
     clientDetails: 'Tu solicitud',
     clientFooter: '¿Preguntas? Responde este correo o escríbenos por WhatsApp al (717) 415-6171.',
-    adminSubject: 'Nueva cotización',
+    adminSubject: 'Nueva cotización + horario',
+    reminderSubject: 'Recordatorio: tu visita de limpieza se acerca',
+    reminderBody: 'Este es un recordatorio amable de tu ventana de visita preferida con ZAV Interior & Clean.',
+    scheduleLabel: 'Horario preferido',
     invoiceSubject: 'Tu factura de ZAV Interior & Clean',
     invoiceHello: 'Hola',
     invoiceBody: 'Tu factura está lista. Puedes revisar los detalles abajo o abrir la factura completa en línea.',
@@ -103,13 +110,16 @@ const labels = {
       weekly: 'Semanal',
       monthly: 'Mensal',
     },
-    clientSubject: 'Recebemos seu pedido de orçamento grátis',
+    clientSubject: 'Confirmamos seu horário preferido',
     clientHello: 'Olá',
     clientBody:
-      'Obrigado por solicitar um orçamento grátis com a ZAV Interior & Clean. Entraremos em contato em breve.',
+      'Obrigado por agendar uma janela de visita com a ZAV Interior & Clean. Recebemos seu pedido e vamos respeitar esse horário o máximo possível.',
     clientDetails: 'Seu pedido',
     clientFooter: 'Dúvidas? Responda este e-mail ou fale no WhatsApp: (717) 415-6171.',
-    adminSubject: 'Novo orçamento',
+    adminSubject: 'Novo orçamento + horário',
+    reminderSubject: 'Lembrete: sua visita de limpeza está chegando',
+    reminderBody: 'Este é um lembrete amigável da sua janela de visita preferida com a ZAV Interior & Clean.',
+    scheduleLabel: 'Horário preferido',
     invoiceSubject: 'Sua fatura da ZAV Interior & Clean',
     invoiceHello: 'Olá',
     invoiceBody: 'Sua fatura está pronta. Veja os detalhes abaixo ou abra a fatura completa online.',
@@ -165,7 +175,12 @@ function createTransport() {
 
 function detailsHtml(quote: Quote, locale: LocaleKey) {
   const L = t(locale);
+  const schedule =
+    quote.preferredDate && quote.preferredSlot
+      ? formatSchedule(quote.preferredDate, quote.preferredSlot, locale)
+      : '—';
   const rows = [
+    [L.scheduleLabel, schedule],
     ['Service', labelOf(L.services, quote.service)],
     ['Home size', labelOf(L.sizes, quote.size)],
     ['Frequency', labelOf(L.frequencies, quote.frequency)],
@@ -376,6 +391,92 @@ export async function sendQuoteNotifications(quote: Quote) {
     admin: adminOk,
     error,
   };
+}
+
+export async function sendScheduleReminder(quote: Quote) {
+  const transport = createTransport();
+  const m = mailEnv();
+  if (!transport || !quote.preferredDate || !quote.preferredSlot) {
+    return { sent: false, client: false, admin: false, error: 'not_ready' };
+  }
+
+  const locale = (quote.locale === 'es' || quote.locale === 'pt' ? quote.locale : 'en') as LocaleKey;
+  const L = t(locale);
+  const schedule = formatSchedule(quote.preferredDate, quote.preferredSlot, locale);
+
+  const clientHtml = wrap(
+    L.reminderSubject,
+    `<p style="color:#3d3d3d;line-height:1.55">${L.clientHello} ${escapeHtml(quote.name)},</p>
+     <p style="color:#3d3d3d;line-height:1.55">${L.reminderBody}</p>
+     <p style="margin:16px 0;padding:12px 14px;border-radius:12px;background:#faf7f1;border:1px solid #efe8dc;font-weight:700;color:#1b3a5c">${escapeHtml(schedule)}</p>
+     <table style="border-collapse:collapse;width:100%">${detailsHtml(quote, locale)}</table>
+     <p style="margin-top:18px;color:#6b6560;font-size:13px">${L.clientFooter}</p>`,
+  );
+
+  const adminHtml = wrap(
+    `Reminder · ${quote.name}`,
+    `<p style="color:#3d3d3d;line-height:1.55">Upcoming preferred visit for <strong>${escapeHtml(quote.name)}</strong>.</p>
+     <p style="margin:16px 0;padding:12px 14px;border-radius:12px;background:#faf7f1;border:1px solid #efe8dc;font-weight:700;color:#1b3a5c">${escapeHtml(schedule)}</p>
+     <table style="border-collapse:collapse;width:100%">${detailsHtml(quote, 'en')}</table>`,
+  );
+
+  const from = `"${m.fromName}" <${m.user}>`;
+  let clientOk = false;
+  let adminOk = false;
+
+  try {
+    await transport.sendMail({
+      from,
+      to: quote.email,
+      replyTo: m.replyTo,
+      subject: `${L.reminderSubject} · ZAV`,
+      html: clientHtml,
+    });
+    clientOk = true;
+  } catch (err) {
+    console.error('[mail] reminder client failed:', explainSmtpError(err));
+  }
+
+  try {
+    await transport.sendMail({
+      from,
+      to: m.admin,
+      replyTo: quote.email,
+      subject: `Reminder: ${quote.name} · ${schedule}`,
+      html: adminHtml,
+    });
+    adminOk = true;
+  } catch (err) {
+    console.error('[mail] reminder admin failed:', explainSmtpError(err));
+  }
+
+  return { sent: clientOk && adminOk, client: clientOk, admin: adminOk };
+}
+
+/** Send reminders for visits within the next 24 hours (once per quote). */
+export async function processDueReminders() {
+  const { getQuotes, updateQuote } = await import('./store');
+  const { REMINDER_WINDOW_MS } = await import('./schedule');
+  const quotes = await getQuotes();
+  const now = Date.now();
+  let sent = 0;
+
+  for (const quote of quotes) {
+    if (!quote.scheduledAt || quote.reminderSentAt) continue;
+    if (quote.status === 'done') continue;
+    const when = new Date(quote.scheduledAt).getTime();
+    if (!Number.isFinite(when)) continue;
+    // Between now and +24h
+    if (when < now || when > now + REMINDER_WINDOW_MS) continue;
+
+    const result = await sendScheduleReminder(quote);
+    if (result.client || result.admin) {
+      await updateQuote(quote.id, { reminderSentAt: new Date().toISOString() });
+      sent += 1;
+    }
+  }
+
+  return { checked: quotes.length, sent };
 }
 
 export async function sendInvoiceToClient(invoice: Invoice, locale = 'en') {

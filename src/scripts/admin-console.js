@@ -454,6 +454,7 @@ export function initAdminConsole() {
         <span class="zav-adm__badge zav-adm__badge--gold">${escapeHtml(size)}</span>
         <span class="zav-adm__badge zav-adm__badge--sky">${escapeHtml(freq)}</span>
       </div>
+      ${q.preferredDate ? `<p class="zav-adm__card-notes" style="font-weight:700;color:var(--za-gold-lt)">📅 ${escapeHtml(q.preferredDate)} · ${escapeHtml(q.preferredSlot || '')}</p>` : ''}
       <p class="zav-adm__card-notes">${escapeHtml(q.notes || 'No notes')}</p>
       <div class="zav-adm__card-contact">
         <a href="tel:${escapeHtml(q.phone)}">${escapeHtml(q.phone)}</a>

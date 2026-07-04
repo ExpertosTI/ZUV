@@ -38,7 +38,8 @@ const messages = {
     step1Title: 'What do you need?',
     step2Title: 'How big is your home?',
     step3Title: 'How often?',
-    step4Title: 'Where can we reach you?',
+    step4Title: 'When should we come?',
+    step5Title: 'Where can we reach you?',
     services: {
       home: 'Home cleaning',
       deep: 'Deep cleaning',
@@ -57,12 +58,20 @@ const messages = {
       weekly: 'Weekly',
       monthly: 'Monthly',
     },
+    slots: {
+      morning: 'Morning · 9:00 AM',
+      midday: 'Midday · 12:00 PM',
+      afternoon: 'Afternoon · 3:00 PM',
+      evening: 'Evening · 6:00 PM',
+    },
     fields: {
       name: 'Full name',
       phone: 'Phone',
       email: 'Email',
       zip: 'ZIP code',
       notes: 'Anything we should know? (optional)',
+      date: 'Preferred date',
+      slot: 'Time window',
     },
     placeholders: {
       name: 'Alex Rivera',
@@ -77,7 +86,7 @@ const messages = {
     submitting: 'Sending…',
     successTitle: 'You are on the list!',
     successBody:
-      'Thanks — send your request on WhatsApp so we can reply faster.',
+      'We emailed your confirmation (and a reminder before your visit). You can also send it on WhatsApp.',
     successWhatsapp: 'Send on WhatsApp',
     successAgain: 'Request another estimate',
     metricsTitle: 'Trusted in real homes',
@@ -124,7 +133,8 @@ const messages = {
     step1Title: '¿Qué necesitas?',
     step2Title: '¿Qué tan grande es tu hogar?',
     step3Title: '¿Con qué frecuencia?',
-    step4Title: '¿Cómo te contactamos?',
+    step4Title: '¿Cuándo te visitamos?',
+    step5Title: '¿Cómo te contactamos?',
     services: {
       home: 'Limpieza del hogar',
       deep: 'Limpieza profunda',
@@ -143,12 +153,20 @@ const messages = {
       weekly: 'Semanal',
       monthly: 'Mensual',
     },
+    slots: {
+      morning: 'Mañana · 9:00 AM',
+      midday: 'Mediodía · 12:00 PM',
+      afternoon: 'Tarde · 3:00 PM',
+      evening: 'Noche · 6:00 PM',
+    },
     fields: {
       name: 'Nombre completo',
       phone: 'Teléfono',
       email: 'Correo',
       zip: 'Código postal',
       notes: '¿Algo que debamos saber? (opcional)',
+      date: 'Fecha preferida',
+      slot: 'Horario',
     },
     placeholders: {
       name: 'Alex Rivera',
@@ -163,7 +181,7 @@ const messages = {
     submitting: 'Enviando…',
     successTitle: '¡Listo!',
     successBody:
-      'Gracias — envía tu solicitud por WhatsApp para responderte más rápido.',
+      'Te enviamos confirmación por correo (y un recordatorio antes de la visita). También puedes mandarlo por WhatsApp.',
     successWhatsapp: 'Enviar por WhatsApp',
     successAgain: 'Pedir otra cotización',
     metricsTitle: 'Confianza en hogares reales',
@@ -210,7 +228,8 @@ const messages = {
     step1Title: 'Do que você precisa?',
     step2Title: 'Qual o tamanho do seu lar?',
     step3Title: 'Com que frequência?',
-    step4Title: 'Como podemos falar com você?',
+    step4Title: 'Quando podemos ir?',
+    step5Title: 'Como podemos falar com você?',
     services: {
       home: 'Limpeza residencial',
       deep: 'Limpeza profunda',
@@ -229,12 +248,20 @@ const messages = {
       weekly: 'Semanal',
       monthly: 'Mensal',
     },
+    slots: {
+      morning: 'Manhã · 9:00 AM',
+      midday: 'Meio-dia · 12:00 PM',
+      afternoon: 'Tarde · 3:00 PM',
+      evening: 'Noite · 6:00 PM',
+    },
     fields: {
       name: 'Nome completo',
       phone: 'Telefone',
       email: 'E-mail',
       zip: 'CEP / ZIP',
       notes: 'Algo que devemos saber? (opcional)',
+      date: 'Data preferida',
+      slot: 'Horário',
     },
     placeholders: {
       name: 'Alex Rivera',
@@ -249,7 +276,7 @@ const messages = {
     submitting: 'Enviando…',
     successTitle: 'Pronto!',
     successBody:
-      'Obrigado — envie seu pedido no WhatsApp para respondermos mais rápido.',
+      'Enviamos sua confirmação por e-mail (e um lembrete antes da visita). Também pode mandar no WhatsApp.',
     successWhatsapp: 'Enviar no WhatsApp',
     successAgain: 'Pedir outro orçamento',
     metricsTitle: 'Confiança em lares reais',

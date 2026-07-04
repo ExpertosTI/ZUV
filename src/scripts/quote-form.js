@@ -29,9 +29,17 @@ function buildWhatsAppMessage(payload, locale) {
         ? 'Olá ZAV Interior & Clean! Quero um orçamento grátis:'
         : 'Hi ZAV Interior & Clean! I would like a free estimate:';
 
+  const slots = {
+    en: { morning: 'Morning 9AM', midday: 'Midday 12PM', afternoon: 'Afternoon 3PM', evening: 'Evening 6PM' },
+    es: { morning: 'Mañana 9AM', midday: 'Mediodía 12PM', afternoon: 'Tarde 3PM', evening: 'Noche 6PM' },
+    pt: { morning: 'Manhã 9AM', midday: 'Meio-dia 12PM', afternoon: 'Tarde 3PM', evening: 'Noite 6PM' },
+  };
+  const SL = slots[locale] || slots.en;
+
   return [
     intro,
     '',
+    `• ${locale === 'es' ? 'Horario' : locale === 'pt' ? 'Horário' : 'Schedule'}: ${payload.preferredDate || ''} · ${SL[payload.preferredSlot] || payload.preferredSlot || ''}`,
     `• ${locale === 'es' ? 'Servicio' : locale === 'pt' ? 'Serviço' : 'Service'}: ${L[payload.service] || payload.service}`,
     `• ${locale === 'es' ? 'Hogar' : locale === 'pt' ? 'Lar' : 'Home'}: ${S[payload.size] || payload.size}`,
     `• ${locale === 'es' ? 'Frecuencia' : locale === 'pt' ? 'Frequência' : 'Frequency'}: ${F[payload.frequency] || payload.frequency}`,
@@ -91,7 +99,8 @@ export function initQuoteWizard() {
       e.preventDefault();
       input.checked = true;
       input.dispatchEvent(new Event('change', { bubbles: true }));
-      if (step < total) {
+      // Auto-advance only on simple choice steps (not schedule step 4)
+      if (step < 4 && step < total) {
         setTimeout(() => go(step + 1), 180);
       }
     });
@@ -133,6 +142,23 @@ export function initQuoteWizard() {
           setError(locale === 'es' ? 'Correo inválido' : locale === 'pt' ? 'E-mail inválido' : 'Invalid email');
           return false;
         }
+        if (field.type === 'date' && field.name === 'preferredDate') {
+          const picked = new Date(`${field.value}T12:00:00`);
+          const min = new Date();
+          min.setHours(0, 0, 0, 0);
+          min.setDate(min.getDate() + 1);
+          if (picked < min) {
+            field.focus();
+            setError(
+              locale === 'es'
+                ? 'Elige una fecha a partir de mañana'
+                : locale === 'pt'
+                  ? 'Escolha uma data a partir de amanhã'
+                  : 'Pick a date from tomorrow onward',
+            );
+            return false;
+          }
+        }
       }
     }
     setError('');
@@ -173,6 +199,17 @@ export function initQuoteWizard() {
     if (btnWaQuote instanceof HTMLAnchorElement) {
       btnWaQuote.href = wa;
     }
+    const scheduleEl = document.getElementById('success-schedule');
+    if (scheduleEl && payload.preferredDate && payload.preferredSlot) {
+      const slots = {
+        en: { morning: 'Morning 9AM', midday: 'Midday 12PM', afternoon: 'Afternoon 3PM', evening: 'Evening 6PM' },
+        es: { morning: 'Mañana 9AM', midday: 'Mediodía 12PM', afternoon: 'Tarde 3PM', evening: 'Noche 6PM' },
+        pt: { morning: 'Manhã 9AM', midday: 'Meio-dia 12PM', afternoon: 'Tarde 3PM', evening: 'Noite 6PM' },
+      };
+      const sl = (slots[locale] || slots.en)[payload.preferredSlot] || payload.preferredSlot;
+      scheduleEl.textContent = `${payload.preferredDate} · ${sl}`;
+      scheduleEl.classList.remove('hidden');
+    }
     form.classList.add('hidden');
     successEl?.classList.remove('hidden');
     root.querySelector('.step-dot')?.parentElement?.classList.add('hidden');
@@ -211,6 +248,8 @@ export function initQuoteWizard() {
       service: String(data.get('service') || ''),
       size: String(data.get('size') || ''),
       frequency: String(data.get('frequency') || ''),
+      preferredDate: String(data.get('preferredDate') || ''),
+      preferredSlot: String(data.get('preferredSlot') || ''),
       name: String(data.get('name') || '').trim(),
       phone: String(data.get('phone') || '').trim(),
       email: String(data.get('email') || '').trim(),

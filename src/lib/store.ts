@@ -22,6 +22,12 @@ export type Quote = {
   status?: QuoteStatus;
   completedAt?: string;
   invoiceId?: string;
+  /** Preferred visit schedule */
+  preferredDate?: string;
+  preferredSlot?: string;
+  scheduledAt?: string;
+  confirmationSentAt?: string;
+  reminderSentAt?: string | null;
 };
 
 export type BillingProfile = {
@@ -242,7 +248,20 @@ export async function addQuote(input: Omit<Quote, 'id' | 'createdAt' | 'status'>
 
 export async function updateQuote(
   id: string,
-  patch: Partial<Pick<Quote, 'status' | 'completedAt' | 'invoiceId' | 'notes'>>,
+  patch: Partial<
+    Pick<
+      Quote,
+      | 'status'
+      | 'completedAt'
+      | 'invoiceId'
+      | 'notes'
+      | 'confirmationSentAt'
+      | 'reminderSentAt'
+      | 'preferredDate'
+      | 'preferredSlot'
+      | 'scheduledAt'
+    >
+  >,
 ): Promise<Quote | null> {
   const quotes = await getQuotes();
   const idx = quotes.findIndex((q) => q.id === id);
