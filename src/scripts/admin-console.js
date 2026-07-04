@@ -74,9 +74,10 @@ export function initAdminConsole() {
           <small>Live leads &amp; performance</small>
         </div>
         <nav class="zav-adm__tabs" role="tablist">
-          <button type="button" class="zav-adm__tab is-active" data-tab="overview">Overview</button>
-          <button type="button" class="zav-adm__tab" data-tab="leads">Leads</button>
-          <button type="button" class="zav-adm__tab" data-tab="insights">Insights</button>
+          <button type="button" class="zav-adm__tab is-active" data-tab="inbox">Inbox</button>
+          <button type="button" class="zav-adm__tab" data-tab="overview">Overview</button>
+          <button type="button" class="zav-adm__tab" data-tab="invoices">Invoices</button>
+          <button type="button" class="zav-adm__tab" data-tab="billing">Billing</button>
           <button type="button" class="zav-adm__tab" data-tab="clients">Clients</button>
         </nav>
         <div class="zav-adm__actions">
@@ -86,7 +87,23 @@ export function initAdminConsole() {
       </header>
 
       <main class="zav-adm__body">
-        <section class="zav-adm__pane is-active" data-pane="overview">
+        <section class="zav-adm__pane is-active" data-pane="inbox">
+          <div class="zav-adm__kpis">
+            <article class="zav-adm__kpi"><div class="zav-adm__kpi-label">New</div><strong data-m="inbox-new">—</strong><em>unread requests</em></article>
+            <article class="zav-adm__kpi"><div class="zav-adm__kpi-label">In progress</div><strong data-m="inbox-viewed">—</strong><em>viewed</em></article>
+            <article class="zav-adm__kpi"><div class="zav-adm__kpi-label">Done</div><strong data-m="inbox-done">—</strong><em>jobs completed</em></article>
+            <article class="zav-adm__kpi"><div class="zav-adm__kpi-label">Invoices</div><strong data-m="invoices-count">—</strong><em>generated</em></article>
+          </div>
+          <div class="zav-adm__filters">
+            <button type="button" class="zav-adm__chip is-active" data-filter="all">All</button>
+            <button type="button" class="zav-adm__chip" data-filter="new">New</button>
+            <button type="button" class="zav-adm__chip" data-filter="viewed">In progress</button>
+            <button type="button" class="zav-adm__chip" data-filter="done">Done</button>
+          </div>
+          <div class="zav-adm__inbox" data-inbox></div>
+        </section>
+
+        <section class="zav-adm__pane" data-pane="overview">
           <div class="zav-adm__kpis">
             <article class="zav-adm__kpi">
               <div class="zav-adm__kpi-label">${ICONS.users} Visits</div>
@@ -136,49 +153,40 @@ export function initAdminConsole() {
           </section>
         </section>
 
-        <section class="zav-adm__pane" data-pane="leads">
-          <div class="zav-adm__kpis">
-            <article class="zav-adm__kpi"><div class="zav-adm__kpi-label">Total leads</div><strong data-m="leads-2">—</strong><em>all time</em></article>
-            <article class="zav-adm__kpi"><div class="zav-adm__kpi-label">Today</div><strong data-m="leads-today-2">—</strong><em>new requests</em></article>
-            <article class="zav-adm__kpi"><div class="zav-adm__kpi-label">7 days</div><strong data-m="leads-week-2">—</strong><em>this week</em></article>
-            <article class="zav-adm__kpi"><div class="zav-adm__kpi-label">30 days</div><strong data-m="leads-month">—</strong><em>this month</em></article>
-          </div>
+        <section class="zav-adm__pane" data-pane="invoices">
           <section class="zav-adm__panel">
-            <h3>Lead pipeline</h3>
+            <h3>Invoices</h3>
             <div class="zav-adm__table-wrap">
               <table class="zav-adm__table">
                 <thead>
-                  <tr>
-                    <th>When</th><th>Lead</th><th>Service</th><th>Home</th><th>Frequency</th><th>Contact</th><th>ZIP</th><th>Lang</th><th>Notes</th>
-                  </tr>
+                  <tr><th>#</th><th>Client</th><th>Service</th><th>Total</th><th>Status</th><th>Date</th><th></th></tr>
                 </thead>
-                <tbody data-quotes></tbody>
+                <tbody data-invoices></tbody>
               </table>
             </div>
           </section>
         </section>
 
-        <section class="zav-adm__pane" data-pane="insights">
-          <div class="zav-adm__grid-2">
-            <section class="zav-adm__panel">
-              <h3>By service</h3>
-              <div class="zav-adm__rows" data-by-service></div>
-            </section>
-            <section class="zav-adm__panel">
-              <h3>By home size</h3>
-              <div class="zav-adm__rows" data-by-size></div>
-            </section>
-          </div>
-          <div class="zav-adm__grid-2">
-            <section class="zav-adm__panel">
-              <h3>By frequency</h3>
-              <div class="zav-adm__rows" data-by-freq></div>
-            </section>
-            <section class="zav-adm__panel">
-              <h3>By language</h3>
-              <div class="zav-adm__rows" data-by-locale></div>
-            </section>
-          </div>
+        <section class="zav-adm__pane" data-pane="billing">
+          <section class="zav-adm__panel">
+            <h3>Billing profile <span>used on invoices</span></h3>
+            <form class="zav-adm__form" data-billing-form>
+              <input name="businessName" placeholder="Business name" required />
+              <input name="legalName" placeholder="Legal name" />
+              <input name="email" placeholder="Billing email" type="email" required />
+              <input name="phone" placeholder="Phone" />
+              <input name="address" placeholder="Address" />
+              <input name="city" placeholder="City" />
+              <input name="taxId" placeholder="Tax ID / EIN" />
+              <input name="website" placeholder="Website" />
+              <input name="invoicePrefix" placeholder="Invoice prefix (ZAV)" />
+              <input name="defaultTaxRate" type="number" min="0" step="0.01" placeholder="Default tax %" />
+              <input name="currency" placeholder="Currency (USD)" />
+              <textarea name="notes" placeholder="Invoice footer notes"></textarea>
+              <button type="submit">Save billing data</button>
+            </form>
+            <p class="zav-adm__msg" data-billing-msg></p>
+          </section>
         </section>
 
         <section class="zav-adm__pane" data-pane="clients">
@@ -209,9 +217,28 @@ export function initAdminConsole() {
       </main>
 
       <footer class="zav-adm__foot">
-        <span class="zav-adm__live"><i></i> Live ops · type ZAV to open</span>
+        <span class="zav-adm__live"><i data-insforge-dot></i> <span data-insforge-status>Checking Insforge…</span></span>
         <span data-clock></span>
       </footer>
+    </div>
+
+    <div class="zav-adm__modal" data-invoice-modal hidden>
+      <div class="zav-adm__modal-card">
+        <h3>Generate invoice</h3>
+        <p class="zav-adm__lead-meta" data-invoice-client></p>
+        <form data-invoice-form class="zav-adm__form">
+          <input type="hidden" name="quoteId" />
+          <input name="amount" type="number" min="0" step="0.01" placeholder="Amount" required />
+          <input name="taxRate" type="number" min="0" step="0.01" placeholder="Tax %" />
+          <input name="clientAddress" placeholder="Client address" />
+          <textarea name="description" placeholder="Description"></textarea>
+          <textarea name="notes" placeholder="Notes"></textarea>
+          <div class="zav-adm__modal-actions">
+            <button type="button" class="zav-adm__btn" data-invoice-cancel>Cancel</button>
+            <button type="submit">Create invoice</button>
+          </div>
+        </form>
+      </div>
     </div>
   `;
 
@@ -364,68 +391,148 @@ export function initAdminConsole() {
       .join('');
   };
 
-  const leadRow = (q, full = false) => {
+  let inboxFilter = 'all';
+
+  const statusBadge = (status) => {
+    const s = status || 'new';
+    const cls =
+      s === 'done' ? 'zav-adm__badge' : s === 'viewed' ? 'zav-adm__badge zav-adm__badge--gold' : 'zav-adm__badge zav-adm__badge--sky';
+    return `<span class="${cls}">${escapeHtml(s)}</span>`;
+  };
+
+  const leadRow = (q) => {
     const when = new Date(q.createdAt).toLocaleString();
     const service = label(SERVICE_LABEL, q.service);
-    const size = label(SIZE_LABEL, q.size);
     const freq = label(FREQ_LABEL, q.frequency);
-    const base = `<tr>
+    return `<tr>
       <td>${escapeHtml(when)}</td>
       <td><div class="zav-adm__lead-name">${escapeHtml(q.name)}</div>
           <div class="zav-adm__lead-meta">${escapeHtml(q.zip || '')}</div></td>
-      <td><span class="zav-adm__badge">${escapeHtml(service)}</span></td>`;
-    if (!full) {
-      return `${base}
-        <td><span class="zav-adm__badge zav-adm__badge--gold">${escapeHtml(freq)}</span></td>
-        <td>${escapeHtml(q.phone)}<div class="zav-adm__lead-meta">${escapeHtml(q.email)}</div></td>
-        <td><span class="zav-adm__badge zav-adm__badge--sky">${escapeHtml(q.locale)}</span></td>
-      </tr>`;
-    }
-    return `${base}
-      <td>${escapeHtml(size)}</td>
+      <td><span class="zav-adm__badge">${escapeHtml(service)}</span></td>
       <td><span class="zav-adm__badge zav-adm__badge--gold">${escapeHtml(freq)}</span></td>
       <td>${escapeHtml(q.phone)}<div class="zav-adm__lead-meta">${escapeHtml(q.email)}</div></td>
-      <td>${escapeHtml(q.zip)}</td>
       <td><span class="zav-adm__badge zav-adm__badge--sky">${escapeHtml(q.locale)}</span></td>
-      <td>${escapeHtml(q.notes || '—')}</td>
     </tr>`;
+  };
+
+  const inboxCard = (q) => {
+    const service = label(SERVICE_LABEL, q.service);
+    const size = label(SIZE_LABEL, q.size);
+    const freq = label(FREQ_LABEL, q.frequency);
+    const status = q.status || 'new';
+    return `<article class="zav-adm__card" data-status="${escapeHtml(status)}">
+      <div class="zav-adm__card-top">
+        <div>
+          <div class="zav-adm__lead-name">${escapeHtml(q.name)}</div>
+          <div class="zav-adm__lead-meta">${new Date(q.createdAt).toLocaleString()} · ${escapeHtml(q.zip || '')}</div>
+        </div>
+        ${statusBadge(status)}
+      </div>
+      <div class="zav-adm__card-meta">
+        <span class="zav-adm__badge">${escapeHtml(service)}</span>
+        <span class="zav-adm__badge zav-adm__badge--gold">${escapeHtml(size)}</span>
+        <span class="zav-adm__badge zav-adm__badge--sky">${escapeHtml(freq)}</span>
+      </div>
+      <p class="zav-adm__card-notes">${escapeHtml(q.notes || 'No notes')}</p>
+      <div class="zav-adm__card-contact">
+        <a href="tel:${escapeHtml(q.phone)}">${escapeHtml(q.phone)}</a>
+        <a href="mailto:${escapeHtml(q.email)}">${escapeHtml(q.email)}</a>
+        <a href="https://wa.me/${escapeHtml(String(q.phone).replace(/\D/g, ''))}" target="_blank" rel="noopener">WhatsApp</a>
+      </div>
+      <div class="zav-adm__card-actions">
+        ${status === 'new' ? `<button type="button" class="zav-adm__btn" data-act="viewed" data-id="${escapeHtml(q.id)}">Mark viewed</button>` : ''}
+        ${status !== 'done' ? `<button type="button" class="zav-adm__btn" data-act="done" data-id="${escapeHtml(q.id)}">✓ Work done</button>` : ''}
+        <button type="button" class="zav-adm__btn zav-adm__btn--accent" data-act="invoice" data-id="${escapeHtml(q.id)}">Generate invoice</button>
+        ${q.invoiceId ? `<a class="zav-adm__btn" href="/invoice/${escapeHtml(q.invoiceId)}" target="_blank">Open invoice</a>` : ''}
+      </div>
+    </article>`;
+  };
+
+  const renderInbox = (quotes) => {
+    const el = root.querySelector('[data-inbox]');
+    if (!el) return;
+    const list = (quotes || []).filter((q) => inboxFilter === 'all' || (q.status || 'new') === inboxFilter);
+    el.innerHTML = list.length
+      ? list.map(inboxCard).join('')
+      : `<div class="zav-adm__empty">No requests in this tray.</div>`;
+  };
+
+  const renderInsforge = (status) => {
+    const labelEl = root.querySelector('[data-insforge-status]');
+    const dot = root.querySelector('[data-insforge-dot]');
+    if (!labelEl) return;
+    if (!status) {
+      labelEl.textContent = 'Insforge unknown';
+      return;
+    }
+    if (status.connected) {
+      labelEl.textContent = `Insforge connected · ${status.endpoint.replace(/^https?:\/\//, '')}`;
+      dot?.classList.add('is-on');
+    } else if (status.enabled) {
+      labelEl.textContent = `Insforge offline (${status.error || 'error'}) · local data active`;
+      dot?.classList.remove('is-on');
+    } else {
+      labelEl.textContent = 'Insforge not configured · local data active';
+      dot?.classList.remove('is-on');
+    }
+  };
+
+  const fillBillingForm = (billing) => {
+    const form = root.querySelector('[data-billing-form]');
+    if (!form || !billing) return;
+    for (const [key, value] of Object.entries(billing)) {
+      setFormValue(form, key, value);
+    }
   };
 
   function renderDashboard(data) {
     dashboard = data;
-    const k = data.kpis;
-    setText('[data-m="visits"]', k.visits);
-    setText('[data-m="unique"]', `${k.uniqueVisitors} unique`);
-    setText('[data-m="leads"]', k.leads);
-    setText('[data-m="leads-2"]', k.leads);
-    setText('[data-m="leads-today"]', `${k.leadsToday} today`);
-    setText('[data-m="leads-today-2"]', k.leadsToday);
-    setText('[data-m="leads-week"]', `${k.leadsWeek} leads / 7d`);
-    setText('[data-m="leads-week-2"]', k.leadsWeek);
-    setText('[data-m="leads-month"]', k.leadsMonth);
-    setText('[data-m="conversion"]', `${k.conversion}%`);
-    setText('[data-m="homes"]', k.homes);
-    setText('[data-m="homes-2"]', `${k.homes} published`);
+    const k = data.kpis || {};
+    setText('[data-m="visits"]', k.visits ?? 0);
+    setText('[data-m="unique"]', `${k.uniqueVisitors ?? 0} unique`);
+    setText('[data-m="leads"]', k.leads ?? 0);
+    setText('[data-m="leads-today"]', `${k.leadsToday ?? 0} today`);
+    setText('[data-m="leads-week"]', `${k.leadsWeek ?? 0} leads / 7d`);
+    setText('[data-m="conversion"]', `${k.conversion ?? 0}%`);
+    setText('[data-m="homes"]', k.homes ?? 0);
+    setText('[data-m="homes-2"]', `${k.homes ?? 0} published`);
+    setText('[data-m="inbox-new"]', k.inboxNew ?? 0);
+    setText('[data-m="inbox-viewed"]', k.inboxViewed ?? 0);
+    setText('[data-m="inbox-done"]', k.inboxDone ?? 0);
+    setText('[data-m="invoices-count"]', k.invoices ?? 0);
 
     renderTrend(data.trend || []);
-    renderBars('[data-top-services]', data.breakdown.service, SERVICE_LABEL);
-    renderBars('[data-by-service]', data.breakdown.service, SERVICE_LABEL);
-    renderBars('[data-by-size]', data.breakdown.size, SIZE_LABEL);
-    renderBars('[data-by-freq]', data.breakdown.frequency, FREQ_LABEL);
-    renderBars('[data-by-locale]', data.breakdown.locale);
+    renderBars('[data-top-services]', data.breakdown?.service || [], SERVICE_LABEL);
+    renderInbox(data.quotes || []);
+    renderInsforge(data.insforge);
+    fillBillingForm(data.billing);
 
-    const quotes = data.quotes || [];
     const preview = root.querySelector('[data-quotes-preview]');
-    const full = root.querySelector('[data-quotes]');
     if (preview) {
+      const quotes = data.quotes || [];
       preview.innerHTML = quotes.length
-        ? quotes.slice(0, 8).map((q) => leadRow(q, false)).join('')
-        : `<tr><td colspan="6" class="zav-adm__empty">No leads yet. New quote requests will appear here.</td></tr>`;
+        ? quotes.slice(0, 8).map((q) => leadRow(q)).join('')
+        : `<tr><td colspan="6" class="zav-adm__empty">No leads yet.</td></tr>`;
     }
-    if (full) {
-      full.innerHTML = quotes.length
-        ? quotes.slice(0, 100).map((q) => leadRow(q, true)).join('')
-        : `<tr><td colspan="9" class="zav-adm__empty">No leads yet.</td></tr>`;
+
+    const invBody = root.querySelector('[data-invoices]');
+    if (invBody) {
+      const invoices = data.invoices || [];
+      invBody.innerHTML = invoices.length
+        ? invoices
+            .map(
+              (inv) => `<tr>
+                <td>${escapeHtml(inv.number)}</td>
+                <td>${escapeHtml(inv.clientName)}</td>
+                <td>${escapeHtml(inv.service)}</td>
+                <td>${escapeHtml(String(inv.total))} ${escapeHtml(inv.currency || '')}</td>
+                <td>${statusBadge(inv.status)}</td>
+                <td>${new Date(inv.createdAt).toLocaleDateString()}</td>
+                <td><a class="zav-adm__btn" href="/invoice/${escapeHtml(inv.id)}" target="_blank">Open</a></td>
+              </tr>`,
+            )
+            .join('')
+        : `<tr><td colspan="7" class="zav-adm__empty">No invoices yet. Mark work done from Inbox.</td></tr>`;
     }
 
     const clientsBody = root.querySelector('[data-clients]');
@@ -574,6 +681,117 @@ export function initAdminConsole() {
     } else if (clientMsg) {
       clientMsg.textContent = 'Could not publish.';
     }
+  });
+
+  const authHeaders = () => ({
+    'Content-Type': 'application/json',
+    Authorization: `Bearer ${token}`,
+  });
+
+  const patchQuote = async (id, status) => {
+    const res = await fetch(`/api/quotes/${id}`, {
+      method: 'PATCH',
+      headers: authHeaders(),
+      body: JSON.stringify({ status }),
+    });
+    if (!res.ok) throw new Error('patch');
+    await loadMetrics();
+  };
+
+  const invoiceModal = root.querySelector('[data-invoice-modal]');
+  const invoiceForm = root.querySelector('[data-invoice-form]');
+  const invoiceClient = root.querySelector('[data-invoice-client]');
+
+  const setFormValue = (form, name, value) => {
+    const el = form.querySelector(`[name="${name}"]`);
+    if (el) el.value = value ?? '';
+  };
+
+  const openInvoiceModal = (quoteId) => {
+    const quote = (dashboard?.quotes || []).find((q) => q.id === quoteId);
+    if (!quote || !invoiceForm) return;
+    setFormValue(invoiceForm, 'quoteId', quoteId);
+    setFormValue(
+      invoiceForm,
+      'description',
+      `${label(SERVICE_LABEL, quote.service)} · ${label(SIZE_LABEL, quote.size)} · ${label(FREQ_LABEL, quote.frequency)}`,
+    );
+    setFormValue(invoiceForm, 'clientAddress', quote.zip || '');
+    setFormValue(invoiceForm, 'taxRate', dashboard?.billing?.defaultTaxRate ?? 0);
+    setFormValue(invoiceForm, 'amount', '');
+    setFormValue(invoiceForm, 'notes', '');
+    if (invoiceClient) invoiceClient.textContent = `${quote.name} · ${quote.email} · ${quote.phone}`;
+    invoiceModal?.removeAttribute('hidden');
+  };
+
+  const closeInvoiceModal = () => invoiceModal?.setAttribute('hidden', '');
+
+  root.querySelector('[data-invoice-cancel]')?.addEventListener('click', closeInvoiceModal);
+
+  invoiceForm?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const fd = new FormData(invoiceForm);
+    const payload = {
+      quoteId: String(fd.get('quoteId') || ''),
+      amount: Number(fd.get('amount') || 0),
+      taxRate: Number(fd.get('taxRate') || 0),
+      description: String(fd.get('description') || ''),
+      clientAddress: String(fd.get('clientAddress') || ''),
+      notes: String(fd.get('notes') || ''),
+    };
+    const res = await fetch('/api/invoices', {
+      method: 'POST',
+      headers: authHeaders(),
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) return;
+    const data = await res.json();
+    closeInvoiceModal();
+    await loadMetrics();
+    if (data.invoice?.id) window.open(`/invoice/${data.invoice.id}`, '_blank', 'noopener');
+  });
+
+  root.querySelector('[data-inbox]')?.addEventListener('click', async (e) => {
+    const btn = e.target.closest('[data-act]');
+    if (!btn) return;
+    const id = btn.getAttribute('data-id');
+    const act = btn.getAttribute('data-act');
+    if (!id || !act) return;
+    try {
+      if (act === 'viewed') await patchQuote(id, 'viewed');
+      if (act === 'done') await patchQuote(id, 'done');
+      if (act === 'invoice') openInvoiceModal(id);
+    } catch {
+      /* ignore */
+    }
+  });
+
+  root.querySelectorAll('[data-filter]').forEach((chip) => {
+    chip.addEventListener('click', () => {
+      inboxFilter = chip.getAttribute('data-filter') || 'all';
+      root.querySelectorAll('[data-filter]').forEach((c) => {
+        c.classList.toggle('is-active', c === chip);
+      });
+      renderInbox(dashboard?.quotes || []);
+    });
+  });
+
+  const billingForm = root.querySelector('[data-billing-form]');
+  const billingMsg = root.querySelector('[data-billing-msg]');
+  billingForm?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const fd = new FormData(billingForm);
+    const payload = Object.fromEntries(fd.entries());
+    payload.defaultTaxRate = Number(payload.defaultTaxRate || 0);
+    const res = await fetch('/api/billing', {
+      method: 'PUT',
+      headers: authHeaders(),
+      body: JSON.stringify(payload),
+    });
+    if (billingMsg) {
+      billingMsg.textContent = res.ok ? 'Billing data saved.' : 'Could not save billing data.';
+    }
+    if (res.ok) loadMetrics().catch(() => {});
   });
 
   const checkHash = () => {

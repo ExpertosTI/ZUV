@@ -23,6 +23,9 @@ services:
       SMTP_PASS: ${SMTP_PASS}
       SMTP_FROM_NAME: ${SMTP_FROM_NAME:-ZAV Interior & Clean}
       ADMIN_EMAIL: ${ADMIN_EMAIL:-azhaliaestepan@gmail.com}
+      INSFORGE_URL: ${INSFORGE_URL:-https://insforge.renace.tech}
+      INSFORGE_ANON_KEY: ${INSFORGE_ANON_KEY:-eyJhbGciOiAiSFMyNTYiLCAidHlwIjogIkpXVCJ9.eyJyb2xlIjogImFub24ifQ.YTrshWNWGSWsmc6DUhitFQSXDICh9BTIiz4CK0GX0Cw}
+      INSFORGE_SERVICE_KEY: ${INSFORGE_SERVICE_KEY:-}
     volumes:
       - zav_data:/app/data
     networks:
