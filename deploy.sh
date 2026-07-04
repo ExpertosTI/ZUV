@@ -84,6 +84,7 @@ docker image prune -f >/dev/null
 green ""
 green "✅ ZAV Interior & Clean deployed."
 green "   Site:    https://$DOMAIN"
+green "   Alias:   https://zav.renace.tech"
 green "   Service: $SERVICE_NAME"
 green "   Network: RenaceNet"
 green "   Commit:  $(git rev-parse --short HEAD)"

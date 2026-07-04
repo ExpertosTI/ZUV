@@ -1,5 +1,6 @@
 # ── ZAV Interior & Clean — Docker Swarm + Traefik (RenaceNet) ──
-#  Stack name: zuv  ·  Domain: zavinteriorclean.com
+#  Stack name: zuv
+#  Domains:    zavinteriorclean.com · www · zav.renace.tech
 #  Repo:       https://github.com/ExpertosTI/ZUV
 #  Network:    RenaceNet (external overlay)
 #  Entrypoints: web (:80), websecure (:443)
@@ -51,12 +52,12 @@ services:
         - traefik.constraint-label=traefik-public
 
         # ── HTTP → HTTPS redirect ───────────────────────────────
-        - traefik.http.routers.zuv-http.rule=Host(`zavinteriorclean.com`) || Host(`www.zavinteriorclean.com`)
+        - traefik.http.routers.zuv-http.rule=Host(`zavinteriorclean.com`) || Host(`www.zavinteriorclean.com`) || Host(`zav.renace.tech`)
         - traefik.http.routers.zuv-http.entrypoints=web
         - traefik.http.routers.zuv-http.middlewares=zuv-redirect-https
 
-        # ── HTTPS canonical (apex) ──────────────────────────────
-        - traefik.http.routers.zuv.rule=Host(`zavinteriorclean.com`)
+        # ── HTTPS (apex + renace) ───────────────────────────────
+        - traefik.http.routers.zuv.rule=Host(`zavinteriorclean.com`) || Host(`zav.renace.tech`)
         - traefik.http.routers.zuv.entrypoints=websecure
         - traefik.http.routers.zuv.tls=true
         - traefik.http.routers.zuv.tls.certresolver=letsencryptresolver

@@ -81,7 +81,7 @@ export $(grep -v '^#' .env | xargs)
 ```
 
 - Stack: `zuv` · Service: `zuv_web`
-- Domain: `https://zavinteriorclean.com`
+- Domains: `https://zavinteriorclean.com` · `https://zav.renace.tech`
 - Network: `RenaceNet` (overlay)
 - Traefik: `web` / `websecure`, cert resolver `letsencryptresolver`
 - Health: `/healthz`
