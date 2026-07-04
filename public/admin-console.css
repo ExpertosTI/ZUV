@@ -320,6 +320,26 @@
   background: rgba(94, 234, 212, 0.1);
 }
 
+.zav-adm__tab-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.15rem;
+  height: 1.15rem;
+  margin-left: 4px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: #fb7185;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.zav-adm__tab-badge[hidden] {
+  display: none !important;
+}
+
 .zav-adm__actions {
   display: flex;
   gap: 8px;

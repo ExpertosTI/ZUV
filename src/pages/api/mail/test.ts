@@ -1,6 +1,6 @@
 import type { APIRoute } from 'astro';
 import { authorized } from '../../../lib/auth';
-import { getMailConfigStatus, sendTestMail, verifyMailConnection } from '../../../lib/mail';
+import { sendTestMail, verifyMailConnection } from '../../../lib/mail';
 
 export const prerender = false;
 
@@ -9,9 +9,13 @@ export const GET: APIRoute = async ({ request }) => {
     return json({ error: 'Unauthorized' }, 401);
   }
 
-  const status = getMailConfigStatus();
   const verify = await verifyMailConnection();
-  return json({ status, verify });
+  return json({
+    verify: {
+      ok: verify.ok,
+      error: verify.ok ? undefined : 'Mail notifications need attention.',
+    },
+  });
 };
 
 export const POST: APIRoute = async ({ request }) => {
@@ -28,7 +32,8 @@ export const POST: APIRoute = async ({ request }) => {
   }
 
   const result = await sendTestMail(to);
-  return json(result, result.ok ? 200 : 502);
+  if (result.ok) return json({ ok: true, to: result.to });
+  return json({ ok: false, error: 'Could not send test notification.' }, 502);
 };
 
 function json(data: unknown, status = 200) {

@@ -74,7 +74,9 @@ export function initAdminConsole() {
           <small>Live leads &amp; performance</small>
         </div>
         <nav class="zav-adm__tabs" role="tablist">
-          <button type="button" class="zav-adm__tab is-active" data-tab="inbox">Inbox</button>
+          <button type="button" class="zav-adm__tab is-active" data-tab="inbox">
+            Inbox <span class="zav-adm__tab-badge" data-m="inbox-badge" hidden>0</span>
+          </button>
           <button type="button" class="zav-adm__tab" data-tab="overview">Overview</button>
           <button type="button" class="zav-adm__tab" data-tab="invoices">Invoices</button>
           <button type="button" class="zav-adm__tab" data-tab="billing">Billing</button>
@@ -169,7 +171,7 @@ export function initAdminConsole() {
 
         <section class="zav-adm__pane" data-pane="billing">
           <section class="zav-adm__panel">
-            <h3>Mail / SMTP <span>info@renace.tech · Hostinger</span></h3>
+            <h3>Mail notifications <span>outbound alerts</span></h3>
             <p class="zav-adm__lead-meta" data-mail-status>Checking mail…</p>
             <div class="zav-adm__card-actions" style="margin-top:10px">
               <button type="button" class="zav-adm__btn" data-mail-check>Check connection</button>
@@ -226,7 +228,7 @@ export function initAdminConsole() {
       </main>
 
       <footer class="zav-adm__foot">
-        <span class="zav-adm__live"><i data-insforge-dot></i> <span data-insforge-status>Checking Insforge…</span></span>
+        <span class="zav-adm__live"><i data-live-dot class="is-on"></i> <span data-live-status>Live ops</span></span>
         <span data-clock></span>
       </footer>
     </div>
@@ -466,26 +468,6 @@ export function initAdminConsole() {
       : `<div class="zav-adm__empty">No requests in this tray.</div>`;
   };
 
-  const renderInsforge = (status) => {
-    const labelEl = root.querySelector('[data-insforge-status]');
-    const dot = root.querySelector('[data-insforge-dot]');
-    if (!labelEl) return;
-    if (!status) {
-      labelEl.textContent = 'Insforge unknown';
-      return;
-    }
-    if (status.connected) {
-      labelEl.textContent = `Insforge connected · ${status.endpoint.replace(/^https?:\/\//, '')}`;
-      dot?.classList.add('is-on');
-    } else if (status.enabled) {
-      labelEl.textContent = `Insforge offline (${status.error || 'error'}) · local data active`;
-      dot?.classList.remove('is-on');
-    } else {
-      labelEl.textContent = 'Insforge not configured · local data active';
-      dot?.classList.remove('is-on');
-    }
-  };
-
   const fillBillingForm = (billing) => {
     const form = root.querySelector('[data-billing-form]');
     if (!form || !billing) return;
@@ -513,8 +495,25 @@ export function initAdminConsole() {
     renderTrend(data.trend || []);
     renderBars('[data-top-services]', data.breakdown?.service || [], SERVICE_LABEL);
     renderInbox(data.quotes || []);
-    renderInsforge(data.insforge);
     fillBillingForm(data.billing);
+
+    const badge = root.querySelector('[data-m="inbox-badge"]');
+    const newCount = k.inboxNew ?? 0;
+    if (badge) {
+      if (newCount > 0) {
+        badge.hidden = false;
+        badge.textContent = String(newCount);
+      } else {
+        badge.hidden = true;
+      }
+    }
+
+    const liveStatus = root.querySelector('[data-live-status]');
+    if (liveStatus) {
+      liveStatus.textContent = newCount > 0
+        ? `${newCount} new notification${newCount === 1 ? '' : 's'}`
+        : 'Live ops';
+    }
 
     const preview = root.querySelector('[data-quotes-preview]');
     if (preview) {
@@ -846,12 +845,12 @@ export function initAdminConsole() {
       const data = await res.json();
       if (!mailStatusEl) return;
       if (data.verify?.ok) {
-        mailStatusEl.textContent = `SMTP OK · ${data.status?.user} → ${data.status?.admin}`;
+        mailStatusEl.textContent = 'Mail notifications are active.';
       } else {
-        mailStatusEl.textContent = `SMTP error · ${data.verify?.error || data.status?.reason || 'not configured'}`;
+        mailStatusEl.textContent = 'Mail notifications need attention. Check server mail settings.';
       }
     } catch {
-      if (mailStatusEl) mailStatusEl.textContent = 'SMTP status unavailable';
+      if (mailStatusEl) mailStatusEl.textContent = 'Mail status unavailable.';
     }
   };
 

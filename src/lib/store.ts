@@ -589,16 +589,10 @@ export async function getDashboard() {
     getBilling(),
   ]);
 
-  let insforge = {
-    enabled: false,
-    connected: false,
-    endpoint: '',
-    error: 'unchecked',
-    checkedAt: new Date().toISOString(),
-  };
+  // Silent background sync probe — never exposed to the client UI
   try {
     const { probeInsforge } = await import('./insforge');
-    insforge = await probeInsforge();
+    await probeInsforge();
   } catch {
     /* ignore */
   }
@@ -649,7 +643,6 @@ export async function getDashboard() {
     clients,
     invoices,
     billing,
-    insforge,
     generatedAt: new Date(now).toISOString(),
   };
 }

@@ -238,33 +238,27 @@ export function getMailConfigStatus() {
   const cfg = mailConfigured();
   return {
     configured: cfg.ok,
-    reason: cfg.ok ? undefined : cfg.reason,
-    user: SMTP_USER,
-    host: SMTP_HOST,
-    port: SMTP_PORT,
-    admin: ADMIN_EMAIL,
-    fromName: FROM_NAME,
+    reason: cfg.ok ? undefined : 'Mail is not configured on the server.',
   };
 }
 
 export async function verifyMailConnection() {
   const status = getMailConfigStatus();
   if (!status.configured) {
-    return { ok: false as const, ...status, error: status.reason };
+    return { ok: false as const, error: status.reason };
   }
 
   const transport = createTransport();
   if (!transport) {
-    return { ok: false as const, ...status, error: 'transport_failed' };
+    return { ok: false as const, error: 'Mail is not available.' };
   }
 
   try {
     await transport.verify();
-    return { ok: true as const, ...status };
-  } catch (err) {
-    const error = explainSmtpError(err);
+    return { ok: true as const };
+  } catch {
     console.error('[mail] verify failed');
-    return { ok: false as const, ...status, error };
+    return { ok: false as const, error: 'Mail notifications need attention.' };
   }
 }
 
@@ -284,13 +278,13 @@ export async function sendTestMail(to = ADMIN_EMAIL) {
       html: wrap(
         'Mail test OK',
         `<p style="color:#3d3d3d;line-height:1.55">SMTP is working for <strong>${escapeHtml(SMTP_USER)}</strong>.</p>
-         <p style="color:#6b6560;font-size:13px">Hostinger · ${escapeHtml(SMTP_HOST)}:${SMTP_PORT}</p>`,
+         <p style="color:#6b6560;font-size:13px">Notification channel is ready.</p>`,
       ),
     });
     return { ok: true as const, to };
-  } catch (err) {
+  } catch {
     console.error('[mail] test failed');
-    return { ok: false as const, error: explainSmtpError(err) };
+    return { ok: false as const, error: 'Could not send test notification.' };
   }
 }
 
