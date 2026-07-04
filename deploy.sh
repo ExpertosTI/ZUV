@@ -32,12 +32,27 @@ else
 fi
 
 cyan "── 2. Load secrets (.env) ─────────────────────"
-if [ -f "$PROJECT_DIR/.env" ]; then
-  set -a
-  # shellcheck disable=SC1091
-  . "$PROJECT_DIR/.env"
-  set +a
-fi
+# Safe KEY=VALUE loader (handles spaces, &, quotes — never `source`s the file)
+load_env_file() {
+  local file="$1" line key val
+  [ -f "$file" ] || return 0
+  while IFS= read -r line || [ -n "$line" ]; do
+    line="${line%$'\r'}"
+    case "$line" in
+      ''|\#*) continue ;;
+    esac
+    key="${line%%=*}"
+    val="${line#*=}"
+    key="${key%"${key##*[![:space:]]}"}"
+    key="${key#"${key%%[![:space:]]*}"}"
+    [[ "$key" =~ ^[A-Za-z_][A-Za-z0-9_]*$ ]] || continue
+    if [[ "$val" =~ ^\"(.*)\"$ ]]; then val="${BASH_REMATCH[1]}"
+    elif [[ "$val" =~ ^\'(.*)\'$ ]]; then val="${BASH_REMATCH[1]}"
+    fi
+    export "$key=$val"
+  done < "$file"
+}
+load_env_file "$PROJECT_DIR/.env"
 export ADMIN_PASSWORD="${ADMIN_PASSWORD:-04J27}"
 export SMTP_HOST="${SMTP_HOST:-smtp.gmail.com}"
 export SMTP_PORT="${SMTP_PORT:-587}"

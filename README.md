@@ -71,7 +71,7 @@ SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
 SMTP_USER=hello@zavinteriorclean.com
 SMTP_PASS=YOUR_GOOGLE_APP_PASSWORD
-SMTP_FROM_NAME=ZAV Interior & Clean
+SMTP_FROM_NAME="ZAV Interior & Clean"
 ADMIN_EMAIL=azhaliaestepan@gmail.com
 EOF
 
