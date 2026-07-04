@@ -30,18 +30,25 @@ export const POST: APIRoute = async ({ request }) => {
     return json({ error: 'Invalid email' }, 400);
   }
 
-  const quote = await addQuote({
-    service,
-    size,
-    frequency,
-    name,
-    phone,
-    email,
-    zip,
-    notes: notes || undefined,
-    locale,
-    userAgent: request.headers.get('user-agent') || undefined,
-  });
+  let quote;
+  try {
+    quote = await addQuote({
+      service,
+      size,
+      frequency,
+      name,
+      phone,
+      email,
+      zip,
+      notes: notes || undefined,
+      locale,
+      userAgent: request.headers.get('user-agent') || undefined,
+    });
+  } catch (err) {
+    console.error('[quote] store failed', err);
+    // Still acknowledge so the client can continue on WhatsApp
+    return json({ ok: true, id: `local_${Date.now()}`, stored: false }, 201);
+  }
 
   // Notify client + admin; never fail the quote if mail has issues
   let mail = { sent: false as boolean };
@@ -51,7 +58,7 @@ export const POST: APIRoute = async ({ request }) => {
     console.error('[quote] mail failed', err);
   }
 
-  return json({ ok: true, id: quote.id, mail }, 201);
+  return json({ ok: true, id: quote.id, mail, stored: true }, 201);
 };
 
 function json(data: unknown, status = 200) {

@@ -104,13 +104,13 @@ const totalSteps = 4;
 
         <p id="form-error" class="mt-4 hidden text-sm font-medium text-red-600" role="alert"></p>
 
-        <div class="mt-6 flex items-center gap-3">
+        <div class="quote-actions mt-6 flex items-center gap-3">
           <button type="button" id="btn-back" class="btn-ghost hidden flex-1">{m.back}</button>
-          <button type="button" id="btn-next" class="magnet btn-primary flex-1">
-            <span class="magnet__inner">{m.next}</span>
+          <button type="button" id="btn-next" class="btn-primary flex-1">
+            {m.next}
           </button>
-          <button type="submit" id="btn-submit" class="magnet btn-accent hidden flex-1">
-            <span class="magnet__inner" data-label-default={m.submit} data-label-loading={m.submitting}>{m.submit}</span>
+          <button type="submit" id="btn-submit" class="btn-accent hidden flex-1">
+            <span data-label-default={m.submit} data-label-loading={m.submitting}>{m.submit}</span>
           </button>
         </div>
       </form>
@@ -119,7 +119,21 @@ const totalSteps = 4;
         <div class="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-mustard/20 text-2xl">✓</div>
         <h3 class="font-display text-2xl font-semibold text-ink">{m.successTitle}</h3>
         <p class="mx-auto mt-2 max-w-sm text-sm text-muted">{m.successBody}</p>
-        <button type="button" id="btn-again" class="btn-ghost mt-6">{m.successAgain}</button>
+        <div class="mt-6 flex flex-col gap-3 sm:mx-auto sm:max-w-sm">
+          <a
+            id="btn-wa-quote"
+            class="btn-wa w-full"
+            href="#"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path d="M20.52 3.48A11.86 11.86 0 0 0 12.04 0C5.5 0 .2 5.3.2 11.82c0 2.08.54 4.1 1.58 5.9L0 24l6.45-1.69a11.8 11.8 0 0 0 5.59 1.42h.01c6.54 0 11.84-5.3 11.84-11.82 0-3.16-1.23-6.13-3.37-8.43ZM12.05 21.5h-.01a9.8 9.8 0 0 1-5-1.37l-.36-.21-3.83 1 1.02-3.73-.23-.38a9.8 9.8 0 0 1-1.5-5.23c0-5.42 4.42-9.83 9.86-9.83a9.8 9.8 0 0 1 6.97 2.89 9.76 9.76 0 0 1 2.88 6.95c0 5.42-4.42 9.84-9.8 9.84Z" />
+            </svg>
+            {m.successWhatsapp}
+          </a>
+          <button type="button" id="btn-again" class="btn-ghost w-full">{m.successAgain}</button>
+        </div>
       </div>
     </div>
   </div>

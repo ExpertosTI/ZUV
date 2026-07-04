@@ -1,6 +1,6 @@
 import type { APIRoute } from 'astro';
 import { authorized } from '../../lib/auth';
-import { getMetrics, getQuotes, getClients } from '../../lib/store';
+import { getDashboard } from '../../lib/store';
 
 export const prerender = false;
 
@@ -12,21 +12,10 @@ export const GET: APIRoute = async ({ request }) => {
     });
   }
 
-  const [metrics, quotes, clients] = await Promise.all([
-    getMetrics(),
-    getQuotes(),
-    getClients(),
-  ]);
+  const dashboard = await getDashboard();
 
-  return new Response(
-    JSON.stringify({
-      metrics,
-      quotes,
-      clients,
-    }),
-    {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' },
-    },
-  );
+  return new Response(JSON.stringify(dashboard), {
+    status: 200,
+    headers: { 'Content-Type': 'application/json' },
+  });
 };

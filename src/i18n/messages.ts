@@ -77,7 +77,8 @@ const messages = {
     submitting: 'Sending…',
     successTitle: 'You are on the list!',
     successBody:
-      'Thanks — we will contact you shortly with your free estimate.',
+      'Thanks — send your request on WhatsApp so we can reply faster.',
+    successWhatsapp: 'Send on WhatsApp',
     successAgain: 'Request another estimate',
     metricsTitle: 'Trusted in real homes',
     metricsVisits: 'Visits',
@@ -162,7 +163,8 @@ const messages = {
     submitting: 'Enviando…',
     successTitle: '¡Listo!',
     successBody:
-      'Gracias — te contactaremos pronto con tu cotización gratis.',
+      'Gracias — envía tu solicitud por WhatsApp para responderte más rápido.',
+    successWhatsapp: 'Enviar por WhatsApp',
     successAgain: 'Pedir otra cotización',
     metricsTitle: 'Confianza en hogares reales',
     metricsVisits: 'Visitas',
@@ -247,7 +249,8 @@ const messages = {
     submitting: 'Enviando…',
     successTitle: 'Pronto!',
     successBody:
-      'Obrigado — entraremos em contato em breve com seu orçamento.',
+      'Obrigado — envie seu pedido no WhatsApp para respondermos mais rápido.',
+    successWhatsapp: 'Enviar no WhatsApp',
     successAgain: 'Pedir outro orçamento',
     metricsTitle: 'Confiança em lares reais',
     metricsVisits: 'Visitas',

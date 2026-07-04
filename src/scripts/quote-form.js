@@ -1,3 +1,54 @@
+const WA_PHONE = '17174156171';
+
+const SERVICE = {
+  en: { home: 'Home cleaning', deep: 'Deep cleaning', move: 'Move-in / move-out', interior: 'Interior refresh' },
+  es: { home: 'Limpieza del hogar', deep: 'Limpieza profunda', move: 'Mudanza', interior: 'Refresco de interiores' },
+  pt: { home: 'Limpeza residencial', deep: 'Limpeza profunda', move: 'Mudança', interior: 'Refresh de interiores' },
+};
+
+const SIZE = {
+  en: { studio: 'Studio / 1 bed', small: '2 bedrooms', medium: '3 bedrooms', large: '4+ bedrooms' },
+  es: { studio: 'Estudio / 1 hab', small: '2 habitaciones', medium: '3 habitaciones', large: '4+ habitaciones' },
+  pt: { studio: 'Studio / 1 quarto', small: '2 quartos', medium: '3 quartos', large: '4+ quartos' },
+};
+
+const FREQ = {
+  en: { once: 'One-time', biweekly: 'Every 2 weeks', weekly: 'Weekly', monthly: 'Monthly' },
+  es: { once: 'Una vez', biweekly: 'Cada 2 semanas', weekly: 'Semanal', monthly: 'Mensual' },
+  pt: { once: 'Uma vez', biweekly: 'A cada 2 semanas', weekly: 'Semanal', monthly: 'Mensal' },
+};
+
+function buildWhatsAppMessage(payload, locale) {
+  const L = SERVICE[locale] || SERVICE.en;
+  const S = SIZE[locale] || SIZE.en;
+  const F = FREQ[locale] || FREQ.en;
+  const intro =
+    locale === 'es'
+      ? '¡Hola ZAV Interior & Clean! Quiero una cotización gratis:'
+      : locale === 'pt'
+        ? 'Olá ZAV Interior & Clean! Quero um orçamento grátis:'
+        : 'Hi ZAV Interior & Clean! I would like a free estimate:';
+
+  return [
+    intro,
+    '',
+    `• ${locale === 'es' ? 'Servicio' : locale === 'pt' ? 'Serviço' : 'Service'}: ${L[payload.service] || payload.service}`,
+    `• ${locale === 'es' ? 'Hogar' : locale === 'pt' ? 'Lar' : 'Home'}: ${S[payload.size] || payload.size}`,
+    `• ${locale === 'es' ? 'Frecuencia' : locale === 'pt' ? 'Frequência' : 'Frequency'}: ${F[payload.frequency] || payload.frequency}`,
+    `• ${locale === 'es' ? 'Nombre' : locale === 'pt' ? 'Nome' : 'Name'}: ${payload.name}`,
+    `• ${locale === 'es' ? 'Teléfono' : locale === 'pt' ? 'Telefone' : 'Phone'}: ${payload.phone}`,
+    `• Email: ${payload.email}`,
+    `• ZIP: ${payload.zip}`,
+    payload.notes ? `• Notes: ${payload.notes}` : null,
+  ]
+    .filter(Boolean)
+    .join('\n');
+}
+
+function whatsappQuoteUrl(payload, locale) {
+  return `https://wa.me/${WA_PHONE}?text=${encodeURIComponent(buildWhatsAppMessage(payload, locale))}`;
+}
+
 export function initQuoteWizard() {
   const root = document.getElementById('quote-wizard');
   const form = document.getElementById('quote-form');
@@ -12,6 +63,7 @@ export function initQuoteWizard() {
   const btnNext = document.getElementById('btn-next');
   const btnSubmit = document.getElementById('btn-submit');
   const btnAgain = document.getElementById('btn-again');
+  const btnWaQuote = document.getElementById('btn-wa-quote');
   const errorEl = document.getElementById('form-error');
   const successEl = document.getElementById('quote-success');
 
@@ -35,7 +87,8 @@ export function initQuoteWizard() {
     };
 
     input.addEventListener('change', sync);
-    card.addEventListener('click', () => {
+    card.addEventListener('click', (e) => {
+      e.preventDefault();
       input.checked = true;
       input.dispatchEvent(new Event('change', { bubbles: true }));
       if (step < total) {
@@ -111,10 +164,40 @@ export function initQuoteWizard() {
   function go(n) {
     step = Math.min(Math.max(n, 1), total);
     render();
+    // keep actions above the WhatsApp FAB
+    root.querySelector('.quote-actions')?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
   }
 
-  btnBack?.addEventListener('click', () => go(step - 1));
-  btnNext?.addEventListener('click', () => {
+  function showSuccess(payload) {
+    const wa = whatsappQuoteUrl(payload, locale);
+    if (btnWaQuote instanceof HTMLAnchorElement) {
+      btnWaQuote.href = wa;
+    }
+    form.classList.add('hidden');
+    successEl?.classList.remove('hidden');
+    root.querySelector('.step-dot')?.parentElement?.classList.add('hidden');
+    stepLabel?.classList.add('hidden');
+    document.dispatchEvent(new CustomEvent('zav:quote-submitted'));
+
+    // Prefer WhatsApp app / web for the lead
+    try {
+      const opened = window.open(wa, '_blank', 'noopener,noreferrer');
+      if (!opened) {
+        // Popup blocked — keep the on-page WhatsApp button as primary CTA
+        btnWaQuote?.focus();
+      }
+    } catch {
+      btnWaQuote?.focus();
+    }
+  }
+
+  btnBack?.addEventListener('click', (e) => {
+    e.preventDefault();
+    go(step - 1);
+  });
+
+  btnNext?.addEventListener('click', (e) => {
+    e.preventDefault();
     if (!validateStep(step)) return;
     go(step + 1);
   });
@@ -142,6 +225,7 @@ export function initQuoteWizard() {
 
     if (btnSubmit instanceof HTMLButtonElement) btnSubmit.disabled = true;
     if (label) label.textContent = loading;
+    setError('');
 
     try {
       const res = await fetch('/api/quote', {
@@ -149,34 +233,28 @@ export function initQuoteWizard() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
-      if (!res.ok) throw new Error('fail');
-
-      form.classList.add('hidden');
-      successEl?.classList.remove('hidden');
-      root.querySelector('.step-dot')?.parentElement?.classList.add('hidden');
-      stepLabel?.classList.add('hidden');
-      document.dispatchEvent(new CustomEvent('zav:quote-submitted'));
-    } catch {
-      setError(
-        locale === 'es'
-          ? 'Algo salió mal. Inténtalo de nuevo.'
-          : locale === 'pt'
-            ? 'Algo deu errado. Tente novamente.'
-            : 'Something went wrong. Please try again.',
-      );
+      // Even if API fails, still route the lead through WhatsApp
+      if (!res.ok) {
+        console.warn('[quote] API status', res.status);
+      }
+    } catch (err) {
+      console.warn('[quote] API error', err);
     } finally {
       if (btnSubmit instanceof HTMLButtonElement) btnSubmit.disabled = false;
       if (label) label.textContent = defaultLabel;
+      showSuccess(payload);
     }
   });
 
-  btnAgain?.addEventListener('click', () => {
+  btnAgain?.addEventListener('click', (e) => {
+    e.preventDefault();
     form.reset();
     form.querySelectorAll('.choice-card').forEach((c) => c.classList.remove('is-selected'));
     form.classList.remove('hidden');
     successEl?.classList.add('hidden');
     root.querySelector('.step-dot')?.parentElement?.classList.remove('hidden');
     stepLabel?.classList.remove('hidden');
+    if (btnWaQuote instanceof HTMLAnchorElement) btnWaQuote.href = '#';
     go(1);
   });
 

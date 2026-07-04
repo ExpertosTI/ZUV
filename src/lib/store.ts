@@ -175,3 +175,88 @@ export async function getPublicStats() {
     uniqueVisitors: metrics.uniqueVisitors,
   };
 }
+
+function startOfDay(d = new Date()) {
+  const x = new Date(d);
+  x.setHours(0, 0, 0, 0);
+  return x;
+}
+
+function daysAgo(n: number) {
+  const d = startOfDay();
+  d.setDate(d.getDate() - n);
+  return d;
+}
+
+function countBy(items: Quote[], key: keyof Quote) {
+  const map: Record<string, number> = {};
+  for (const item of items) {
+    const k = String(item[key] || 'unknown');
+    map[k] = (map[k] || 0) + 1;
+  }
+  return Object.entries(map)
+    .map(([name, count]) => ({ name, count }))
+    .sort((a, b) => b.count - a.count);
+}
+
+function leadsPerDay(quotes: Quote[], days = 14) {
+  const buckets: { date: string; count: number }[] = [];
+  for (let i = days - 1; i >= 0; i--) {
+    const d = daysAgo(i);
+    const key = d.toISOString().slice(0, 10);
+    buckets.push({ date: key, count: 0 });
+  }
+  const index = Object.fromEntries(buckets.map((b, i) => [b.date, i]));
+  for (const q of quotes) {
+    const key = q.createdAt.slice(0, 10);
+    if (key in index) buckets[index[key]].count += 1;
+  }
+  return buckets;
+}
+
+export async function getDashboard() {
+  const [metrics, quotes, clients] = await Promise.all([
+    getMetrics(),
+    getQuotes(),
+    getClients(),
+  ]);
+
+  const now = Date.now();
+  const day = startOfDay().getTime();
+  const week = daysAgo(7).getTime();
+  const month = daysAgo(30).getTime();
+
+  const leadsToday = quotes.filter((q) => new Date(q.createdAt).getTime() >= day).length;
+  const leadsWeek = quotes.filter((q) => new Date(q.createdAt).getTime() >= week).length;
+  const leadsMonth = quotes.filter((q) => new Date(q.createdAt).getTime() >= month).length;
+
+  const visits = metrics.visits || 0;
+  const leads = quotes.length;
+  const conversion = visits > 0 ? Math.round((leads / visits) * 1000) / 10 : 0;
+
+  return {
+    metrics,
+    kpis: {
+      visits,
+      uniqueVisitors: metrics.uniqueVisitors,
+      leads,
+      leadsToday,
+      leadsWeek,
+      leadsMonth,
+      homes: clients.length,
+      conversion,
+      lastVisitAt: metrics.lastVisitAt,
+      lastLeadAt: metrics.lastQuoteAt,
+    },
+    breakdown: {
+      service: countBy(quotes, 'service'),
+      size: countBy(quotes, 'size'),
+      frequency: countBy(quotes, 'frequency'),
+      locale: countBy(quotes, 'locale'),
+    },
+    trend: leadsPerDay(quotes, 14),
+    quotes,
+    clients,
+    generatedAt: new Date(now).toISOString(),
+  };
+}
