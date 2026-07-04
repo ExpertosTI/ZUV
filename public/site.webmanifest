@@ -1,0 +1,23 @@
+{
+  "name": "ZAV Interior & Clean",
+  "short_name": "ZAV Clean",
+  "description": "Professional home cleaning and free estimates in Pennsylvania.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f7f4ef",
+  "theme_color": "#f7f4ef",
+  "lang": "en",
+  "icons": [
+    {
+      "src": "/logo-mark.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}

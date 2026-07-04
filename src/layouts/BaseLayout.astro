@@ -1,41 +1,123 @@
 ---
 import '../styles/global.css';
 import type { Locale } from '../i18n/messages';
+import {
+  SEO_COPY,
+  SITE_NAME,
+  SITE_URL,
+  absoluteUrl,
+  buildFaqJsonLd,
+  buildLocalBusinessJsonLd,
+  buildWebsiteJsonLd,
+} from '../lib/seo';
 
 interface Props {
-  title: string;
-  description: string;
+  title?: string;
+  description?: string;
   locale: Locale;
+  canonicalPath?: string;
+  noindex?: boolean;
+  ogImage?: string;
+  jsonLd?: Record<string, unknown>[];
 }
 
-const { title, description, locale } = Astro.props;
+const {
+  locale,
+  canonicalPath = '/',
+  noindex = false,
+  ogImage = '/hero-bedroom.jpg',
+} = Astro.props;
+
+const seo = SEO_COPY[locale] || SEO_COPY.en;
+const title = Astro.props.title || seo.title;
+const description = Astro.props.description || seo.description;
+const canonical = absoluteUrl(canonicalPath);
+const image = absoluteUrl(ogImage);
+const logo = absoluteUrl('/logo.png');
+
+const jsonLdBlocks = Astro.props.jsonLd || [
+  buildLocalBusinessJsonLd(),
+  buildWebsiteJsonLd(),
+  buildFaqJsonLd(),
+];
 ---
 
 <!DOCTYPE html>
-<html lang={locale}>
+<html lang={locale} dir="ltr">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>{title}</title>
     <meta name="description" content={description} />
+    <meta name="keywords" content={seo.keywords} />
+    <meta name="author" content={SITE_NAME} />
     <meta name="theme-color" content="#f7f4ef" />
+    <meta name="color-scheme" content="light" />
     <meta name="referrer" content="strict-origin-when-cross-origin" />
+    <meta name="format-detection" content="telephone=yes" />
+    {noindex ? (
+      <meta name="robots" content="noindex, nofollow, noarchive" />
+    ) : (
+      <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+    )}
+    <meta name="googlebot" content={noindex ? 'noindex, nofollow' : 'index, follow'} />
+
+    <link rel="canonical" href={canonical} />
+    <link rel="alternate" hreflang="en" href={SITE_URL + '/'} />
+    <link rel="alternate" hreflang="es" href={SITE_URL + '/'} />
+    <link rel="alternate" hreflang="pt" href={SITE_URL + '/'} />
+    <link rel="alternate" hreflang="x-default" href={SITE_URL + '/'} />
+
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/png" href="/logo-mark.png" />
+    <link rel="apple-touch-icon" href="/logo-mark.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
     <link
       href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Outfit:wght@300;400;500;600;700&display=swap"
       rel="stylesheet"
     />
     <link rel="stylesheet" href="/admin-console.css" />
+
+    <!-- Open Graph -->
+    <meta property="og:site_name" content={SITE_NAME} />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://zavinteriorclean.com/" />
-    <meta property="og:image" content="/logo.png" />
-    <link rel="apple-touch-icon" href="/logo-mark.png" />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:locale" content={seo.ogLocale} />
+    <meta property="og:locale:alternate" content="en_US" />
+    <meta property="og:locale:alternate" content="es_US" />
+    <meta property="og:locale:alternate" content="pt_BR" />
+    <meta property="og:image" content={image} />
+    <meta property="og:image:secure_url" content={image} />
+    <meta property="og:image:type" content="image/jpeg" />
+    <meta property="og:image:width" content="1600" />
+    <meta property="og:image:height" content="1600" />
+    <meta property="og:image:alt" content={`${SITE_NAME} — professional home cleaning`} />
+    <meta property="og:logo" content={logo} />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={image} />
+    <meta name="twitter:image:alt" content={`${SITE_NAME} — professional home cleaning`} />
+
+    <!-- Geo / local -->
+    <meta name="geo.region" content="US-PA" />
+    <meta name="geo.placename" content="Pennsylvania" />
+    <meta name="ICBM" content="40.2732, -76.8867" />
+
+    {jsonLdBlocks.map((block) => (
+      <script type="application/ld+json" set:html={JSON.stringify(block)} />
+    ))}
   </head>
   <body class="text-ink antialiased">
+    <a class="skip-link" href="#main-content">Skip to content</a>
     <div class="cursor-ring" id="cursor-ring" aria-hidden="true"></div>
     <div id="life-layer" class="pointer-events-none fixed inset-0 z-0 overflow-hidden" aria-hidden="true"></div>
     <div class="relative z-10">

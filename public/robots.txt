@@ -1,0 +1,9 @@
+# ZAV Interior & Clean
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /api/
+Disallow: /invoice/
+
+Sitemap: https://zavinteriorclean.com/sitemap.xml
+Host: https://zavinteriorclean.com

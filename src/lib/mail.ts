@@ -1,7 +1,7 @@
 import nodemailer from 'nodemailer';
 import type SMTPTransport from 'nodemailer/lib/smtp-transport';
 import type { Invoice, Quote } from './store';
-import { formatSchedule } from './schedule';
+import { formatSchedule, REMINDER_WINDOW_MS } from './schedule';
 
 /** Read env at call-time (never bake empty values at build). */
 function env(name: string, fallback = '') {
@@ -456,7 +456,6 @@ export async function sendScheduleReminder(quote: Quote) {
 /** Send reminders for visits within the next 24 hours (once per quote). */
 export async function processDueReminders() {
   const { getQuotes, updateQuote } = await import('./store');
-  const { REMINDER_WINDOW_MS } = await import('./schedule');
   const quotes = await getQuotes();
   const now = Date.now();
   let sent = 0;

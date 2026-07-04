@@ -71,6 +71,25 @@
   ::selection {
     background: rgba(201, 162, 39, 0.35);
   }
+
+  .skip-link {
+    position: absolute;
+    left: 1rem;
+    top: -3rem;
+    z-index: 10000;
+    padding: 0.6rem 1rem;
+    border-radius: 999px;
+    background: var(--color-navy);
+    color: #fff;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: top 0.2s ease;
+  }
+
+  .skip-link:focus {
+    top: 1rem;
+  }
 }
 
 @layer components {

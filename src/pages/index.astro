@@ -8,6 +8,7 @@ import Footer from '../components/Footer.astro';
 import WhatsAppFab from '../components/WhatsAppFab.astro';
 import ThemeMotifs from '../components/ThemeMotifs.astro';
 import { detectLocale, t } from '../i18n/messages';
+import { SEO_COPY } from '../lib/seo';
 import { getClients, trackVisit } from '../lib/store';
 
 export const prerender = false;
@@ -34,10 +35,16 @@ await trackVisit(visitorKey);
 const clients = await getClients();
 ---
 
-<BaseLayout title={`${m.brand} | Free Estimates`} description={m.heroSub} locale={locale}>
+<BaseLayout
+  title={SEO_COPY[locale].title}
+  description={SEO_COPY[locale].description}
+  locale={locale}
+  canonicalPath="/"
+  ogImage="/hero-bedroom.jpg"
+>
   <Header locale={locale} m={m} />
   <ThemeMotifs />
-  <main>
+  <main id="main-content">
     <Hero m={m} />
     <QuoteWizard m={m} locale={locale} />
     <ClientFeed m={m} clients={clients} />
