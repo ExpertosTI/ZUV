@@ -38,6 +38,8 @@ export type BillingProfile = {
   notes: string;
 };
 
+export type RecurringFrequency = 'once' | 'weekly' | 'biweekly' | 'monthly';
+
 export type Invoice = {
   id: string;
   quoteId: string;
@@ -56,6 +58,15 @@ export type Invoice = {
   currency: string;
   notes?: string;
   billingSnapshot: BillingProfile;
+  /** Recurring billing */
+  recurring: boolean;
+  frequency: RecurringFrequency;
+  seriesId: string;
+  cycle: number;
+  periodStart: string;
+  periodEnd: string;
+  nextInvoiceAt: string | null;
+  parentInvoiceId?: string;
 };
 
 export type ClientWork = {
@@ -277,13 +288,74 @@ export async function saveBilling(profile: BillingProfile): Promise<BillingProfi
   return next;
 }
 
+function asFrequency(value: string | undefined): RecurringFrequency {
+  if (value === 'weekly' || value === 'biweekly' || value === 'monthly') return value;
+  return 'once';
+}
+
+function addPeriod(start: Date, frequency: RecurringFrequency): Date {
+  const end = new Date(start);
+  if (frequency === 'weekly') end.setDate(end.getDate() + 7);
+  else if (frequency === 'biweekly') end.setDate(end.getDate() + 14);
+  else if (frequency === 'monthly') end.setMonth(end.getMonth() + 1);
+  else end.setDate(end.getDate() + 1);
+  return end;
+}
+
+function frequencyLabel(frequency: RecurringFrequency) {
+  if (frequency === 'weekly') return 'Weekly';
+  if (frequency === 'biweekly') return 'Every 2 weeks';
+  if (frequency === 'monthly') return 'Monthly';
+  return 'One-time';
+}
+
+function buildInvoiceNumber(prefix: string, seq: number, cycle: number, recurring: boolean) {
+  const base = `${prefix}-${String(seq).padStart(4, '0')}`;
+  return recurring && cycle > 1 ? `${base}-C${cycle}` : base;
+}
+
+function normalizeInvoice(inv: Invoice): Invoice {
+  const frequency = asFrequency(inv.frequency || (inv.description?.toLowerCase().includes('monthly') ? 'monthly' : 'once'));
+  const recurring = inv.recurring ?? frequency !== 'once';
+  const periodStart = inv.periodStart || inv.createdAt;
+  const periodEnd = inv.periodEnd || addPeriod(new Date(periodStart), frequency).toISOString();
+  return {
+    ...inv,
+    recurring,
+    frequency,
+    seriesId: inv.seriesId || `series_${inv.quoteId}`,
+    cycle: inv.cycle || 1,
+    periodStart,
+    periodEnd,
+    nextInvoiceAt: inv.nextInvoiceAt === undefined
+      ? (recurring ? periodEnd : null)
+      : inv.nextInvoiceAt,
+  };
+}
+
 export async function getInvoices(): Promise<Invoice[]> {
-  return readJson<Invoice[]>('invoices.json', []);
+  const invoices = await readJson<Invoice[]>('invoices.json', []);
+  return invoices.map(normalizeInvoice);
 }
 
 export async function getInvoice(id: string): Promise<Invoice | null> {
   const invoices = await getInvoices();
   return invoices.find((i) => i.id === id) || null;
+}
+
+async function persistInvoice(invoice: Invoice) {
+  const invoices = await getInvoices();
+  invoices.unshift(invoice);
+  await writeJson('invoices.json', invoices.slice(0, 2000));
+
+  try {
+    const { insforgeUpsert, invoiceToInsforgeRow } = await import('./insforge');
+    await insforgeUpsert('zav_invoices', invoiceToInsforgeRow(invoice as unknown as Record<string, unknown>));
+  } catch {
+    /* offline ok */
+  }
+
+  return invoice;
 }
 
 export async function createInvoiceFromQuote(
@@ -308,10 +380,18 @@ export async function createInvoiceFromQuote(
   const tax = Math.round(amount * (taxRate / 100) * 100) / 100;
   const total = Math.round((amount + tax) * 100) / 100;
 
+  const frequency = asFrequency(quote.frequency);
+  const recurring = frequency !== 'once';
+  const periodStart = new Date();
+  const periodEnd = addPeriod(periodStart, frequency);
+  const seriesId = `series_${quote.id}`;
+  const cycle = 1;
+  const freqText = frequencyLabel(frequency);
+
   const invoice: Invoice = {
     id: `inv_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 6)}`,
     quoteId: quote.id,
-    number: `${billing.invoicePrefix}-${String(seq).padStart(4, '0')}`,
+    number: buildInvoiceNumber(billing.invoicePrefix, seq, cycle, recurring),
     createdAt: new Date().toISOString(),
     status: 'draft',
     clientName: quote.name,
@@ -321,17 +401,23 @@ export async function createInvoiceFromQuote(
     service: quote.service,
     description:
       overrides.description ||
-      `${quote.service} · ${quote.size} · ${quote.frequency}`,
+      `${quote.service} · ${quote.size} · ${freqText}`,
     amount,
     tax,
     total,
     currency: billing.currency || 'USD',
     notes: overrides.notes || billing.notes,
     billingSnapshot: billing,
+    recurring,
+    frequency,
+    seriesId,
+    cycle,
+    periodStart: periodStart.toISOString(),
+    periodEnd: periodEnd.toISOString(),
+    nextInvoiceAt: recurring ? periodEnd.toISOString() : null,
   };
 
-  invoices.unshift(invoice);
-  await writeJson('invoices.json', invoices.slice(0, 2000));
+  await persistInvoice(invoice);
 
   await updateQuote(quote.id, {
     status: 'done',
@@ -339,14 +425,66 @@ export async function createInvoiceFromQuote(
     invoiceId: invoice.id,
   });
 
-  try {
-    const { insforgeUpsert, invoiceToInsforgeRow } = await import('./insforge');
-    await insforgeUpsert('zav_invoices', invoiceToInsforgeRow(invoice as unknown as Record<string, unknown>));
-  } catch {
-    /* offline ok */
+  return invoice;
+}
+
+/** Create the next invoice in a recurring series (admin-triggered, never auto-charge). */
+export async function createNextRecurringInvoice(invoiceId: string): Promise<Invoice | null> {
+  const invoices = await getInvoices();
+  const current = invoices.find((i) => i.id === invoiceId);
+  if (!current || !current.recurring || !current.nextInvoiceAt) return null;
+
+  // Prevent duplicate cycle for same period
+  const series = invoices.filter((i) => i.seriesId === current.seriesId);
+  const nextCycle = current.cycle + 1;
+  if (series.some((i) => i.cycle === nextCycle)) {
+    return series.find((i) => i.cycle === nextCycle) || null;
   }
 
+  const billing = await getBilling();
+  const periodStart = new Date(current.nextInvoiceAt);
+  const periodEnd = addPeriod(periodStart, current.frequency);
+  const seq = invoices.length + 1;
+  const taxRate =
+    current.amount > 0 ? Math.round((current.tax / current.amount) * 10000) / 100 : billing.defaultTaxRate;
+  const amount = current.amount;
+  const tax = Math.round(amount * (taxRate / 100) * 100) / 100;
+  const total = Math.round((amount + tax) * 100) / 100;
+
+  const invoice: Invoice = {
+    ...current,
+    id: `inv_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 6)}`,
+    number: buildInvoiceNumber(billing.invoicePrefix, seq, nextCycle, true),
+    createdAt: new Date().toISOString(),
+    status: 'draft',
+    billingSnapshot: billing,
+    cycle: nextCycle,
+    periodStart: periodStart.toISOString(),
+    periodEnd: periodEnd.toISOString(),
+    nextInvoiceAt: periodEnd.toISOString(),
+    parentInvoiceId: current.id,
+    notes: current.notes || billing.notes,
+  };
+
+  await persistInvoice(invoice);
+
+  // Close the previous cycle pointer so only the latest open invoice is due
+  await updateInvoice(current.id, { nextInvoiceAt: null });
+
   return invoice;
+}
+
+export async function getRecurringDue(now = new Date()) {
+  const invoices = await getInvoices();
+  const ts = now.getTime();
+  // Latest invoice per series that still has a next date due
+  const bySeries = new Map<string, Invoice>();
+  for (const inv of invoices) {
+    if (!inv.recurring || !inv.nextInvoiceAt) continue;
+    const prev = bySeries.get(inv.seriesId);
+    if (!prev || inv.cycle > prev.cycle) bySeries.set(inv.seriesId, inv);
+  }
+  return [...bySeries.values()].filter((inv) => new Date(inv.nextInvoiceAt!).getTime() <= ts);
 }
 
 export async function updateInvoice(

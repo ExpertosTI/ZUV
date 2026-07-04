@@ -174,5 +174,13 @@ export function invoiceToInsforgeRow(invoice: Record<string, unknown>) {
     currency: invoice.currency,
     notes: invoice.notes || null,
     billing_snapshot: invoice.billingSnapshot || null,
+    recurring: invoice.recurring ?? false,
+    frequency: invoice.frequency || 'once',
+    series_id: invoice.seriesId || null,
+    cycle: invoice.cycle || 1,
+    period_start: invoice.periodStart || null,
+    period_end: invoice.periodEnd || null,
+    next_invoice_at: invoice.nextInvoiceAt || null,
+    parent_invoice_id: invoice.parentInvoiceId || null,
   };
 }

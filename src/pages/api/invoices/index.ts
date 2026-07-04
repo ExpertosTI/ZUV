@@ -2,7 +2,13 @@ import type { APIRoute } from 'astro';
 import { authorized } from '../../../lib/auth';
 import { sendInvoiceToClient } from '../../../lib/mail';
 import { publicError, publicJson } from '../../../lib/security';
-import { createInvoiceFromQuote, getInvoices, getQuotes, updateInvoice } from '../../../lib/store';
+import {
+  createInvoiceFromQuote,
+  createNextRecurringInvoice,
+  getInvoices,
+  getQuotes,
+  updateInvoice,
+} from '../../../lib/store';
 
 export const prerender = false;
 
@@ -17,6 +23,8 @@ export const POST: APIRoute = async ({ request }) => {
 
   let body: {
     quoteId?: string;
+    invoiceId?: string;
+    action?: 'create' | 'next_cycle';
     amount?: number;
     taxRate?: number;
     description?: string;
@@ -30,28 +38,40 @@ export const POST: APIRoute = async ({ request }) => {
     return publicError('Invalid request', 400);
   }
 
-  if (!body.quoteId) return publicError('quoteId required', 400);
-
-  const amount = Number(body.amount);
-  if (!Number.isFinite(amount) || amount < 0 || amount > 1_000_000) {
-    return publicError('Invalid amount', 400);
-  }
-
   let invoice;
-  try {
-    invoice = await createInvoiceFromQuote(body.quoteId, {
-      amount,
-      taxRate: body.taxRate,
-      description: body.description?.slice(0, 500),
-      clientAddress: body.clientAddress?.slice(0, 300),
-      notes: body.notes?.slice(0, 1000),
-    });
-  } catch {
-    console.error('[invoice] create failed');
-    return publicError('Could not create invoice', 500);
-  }
 
-  if (!invoice) return publicError('Quote not found', 404);
+  if (body.action === 'next_cycle') {
+    if (!body.invoiceId) return publicError('invoiceId required', 400);
+    try {
+      invoice = await createNextRecurringInvoice(body.invoiceId);
+    } catch {
+      console.error('[invoice] next cycle failed');
+      return publicError('Could not create next cycle', 500);
+    }
+    if (!invoice) return publicError('Recurring invoice not found or not due', 404);
+  } else {
+    if (!body.quoteId) return publicError('quoteId required', 400);
+
+    const amount = Number(body.amount);
+    if (!Number.isFinite(amount) || amount < 0 || amount > 1_000_000) {
+      return publicError('Invalid amount', 400);
+    }
+
+    try {
+      invoice = await createInvoiceFromQuote(body.quoteId, {
+        amount,
+        taxRate: body.taxRate,
+        description: body.description?.slice(0, 500),
+        clientAddress: body.clientAddress?.slice(0, 300),
+        notes: body.notes?.slice(0, 1000),
+      });
+    } catch {
+      console.error('[invoice] create failed');
+      return publicError('Could not create invoice', 500);
+    }
+
+    if (!invoice) return publicError('Quote not found', 404);
+  }
 
   let mail = { ok: false as boolean };
   const notify = body.notifyClient !== false;

@@ -35,7 +35,15 @@ create table if not exists zav_invoices (
   total numeric,
   currency text,
   notes text,
-  billing_snapshot jsonb
+  billing_snapshot jsonb,
+  recurring boolean default false,
+  frequency text default 'once',
+  series_id text,
+  cycle integer default 1,
+  period_start timestamptz,
+  period_end timestamptz,
+  next_invoice_at timestamptz,
+  parent_invoice_id text
 );
 
 create table if not exists zav_billing (

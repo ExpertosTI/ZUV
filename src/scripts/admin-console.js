@@ -155,11 +155,11 @@ export function initAdminConsole() {
 
         <section class="zav-adm__pane" data-pane="invoices">
           <section class="zav-adm__panel">
-            <h3>Invoices</h3>
+            <h3>Invoices <span>recurring cycles are manual &amp; secure</span></h3>
             <div class="zav-adm__table-wrap">
               <table class="zav-adm__table">
                 <thead>
-                  <tr><th>#</th><th>Client</th><th>Service</th><th>Total</th><th>Status</th><th>Date</th><th></th></tr>
+                  <tr><th>#</th><th>Client</th><th>Plan</th><th>Total</th><th>Status</th><th>Next</th><th></th></tr>
                 </thead>
                 <tbody data-invoices></tbody>
               </table>
@@ -529,19 +529,29 @@ export function initAdminConsole() {
       const invoices = data.invoices || [];
       invBody.innerHTML = invoices.length
         ? invoices
-            .map(
-              (inv) => `<tr>
-                <td>${escapeHtml(inv.number)}</td>
+            .map((inv) => {
+              const plan = inv.recurring
+                ? `${label(FREQ_LABEL, inv.frequency)} · C${inv.cycle || 1}`
+                : 'One-time';
+              const next = inv.nextInvoiceAt
+                ? new Date(inv.nextInvoiceAt).toLocaleDateString()
+                : '—';
+              const due = inv.recurring && inv.nextInvoiceAt && new Date(inv.nextInvoiceAt).getTime() <= Date.now();
+              return `<tr>
+                <td>${escapeHtml(inv.number)}${inv.recurring ? ' <span class="zav-adm__badge">REC</span>' : ''}</td>
                 <td>${escapeHtml(inv.clientName)}</td>
-                <td>${escapeHtml(inv.service)}</td>
+                <td><span class="zav-adm__badge zav-adm__badge--gold">${escapeHtml(plan)}</span></td>
                 <td>${escapeHtml(String(inv.total))} ${escapeHtml(inv.currency || '')}</td>
                 <td>${statusBadge(inv.status)}</td>
-                <td>${new Date(inv.createdAt).toLocaleDateString()}</td>
-                <td><a class="zav-adm__btn" href="/invoice/${escapeHtml(inv.id)}" target="_blank">Open</a></td>
-              </tr>`,
-            )
+                <td>${escapeHtml(next)}${due ? ' <span class="zav-adm__badge zav-adm__badge--sky">DUE</span>' : ''}</td>
+                <td class="zav-adm__card-actions">
+                  <a class="zav-adm__btn" href="/invoice/${escapeHtml(inv.id)}" target="_blank">Open</a>
+                  ${inv.recurring && inv.nextInvoiceAt ? `<button type="button" class="zav-adm__btn zav-adm__btn--accent" data-act="next-cycle" data-id="${escapeHtml(inv.id)}">Next cycle</button>` : ''}
+                </td>
+              </tr>`;
+            })
             .join('')
-        : `<tr><td colspan="7" class="zav-adm__empty">No invoices yet. Mark work done from Inbox.</td></tr>`;
+        : `<tr><td colspan="7" class="zav-adm__empty">No invoices yet. Generate from Inbox.</td></tr>`;
     }
 
     const clientsBody = root.querySelector('[data-clients]');
@@ -748,6 +758,7 @@ export function initAdminConsole() {
       description: String(fd.get('description') || ''),
       clientAddress: String(fd.get('clientAddress') || ''),
       notes: String(fd.get('notes') || ''),
+      notifyClient: true,
     };
     const res = await fetch('/api/invoices', {
       method: 'POST',
@@ -759,6 +770,28 @@ export function initAdminConsole() {
     closeInvoiceModal();
     await loadMetrics();
     if (data.invoice?.id) window.open(`/invoice/${data.invoice.id}`, '_blank', 'noopener');
+  });
+
+  root.querySelector('[data-invoices]')?.addEventListener('click', async (e) => {
+    const btn = e.target.closest('[data-act="next-cycle"]');
+    if (!btn) return;
+    const id = btn.getAttribute('data-id');
+    if (!id) return;
+    btn.setAttribute('disabled', 'true');
+    try {
+      const res = await fetch('/api/invoices', {
+        method: 'POST',
+        headers: authHeaders(),
+        body: JSON.stringify({ action: 'next_cycle', invoiceId: id, notifyClient: true }),
+      });
+      const data = await res.json();
+      await loadMetrics();
+      if (data.invoice?.id) window.open(`/invoice/${data.invoice.id}`, '_blank', 'noopener');
+    } catch {
+      /* ignore */
+    } finally {
+      btn.removeAttribute('disabled');
+    }
   });
 
   root.querySelector('[data-inbox]')?.addEventListener('click', async (e) => {
