@@ -11,7 +11,7 @@ RUN npm run build
 
 FROM node:22-alpine
 
-LABEL org.opencontainers.image.title="zav-web" \
+LABEL org.opencontainers.image.title="zuv-web" \
       org.opencontainers.image.description="ZAV Interior & Clean — landing + metrics" \
       org.opencontainers.image.url="https://zavinteriorclean.com" \
       org.opencontainers.image.vendor="renace.tech"

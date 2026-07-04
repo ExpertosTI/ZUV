@@ -23,9 +23,13 @@ const { m, clients } = Astro.props;
     {clients.length === 0 ? (
       <p class="reveal text-center text-muted">{m.feedEmpty}</p>
     ) : (
-      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3" translate="no">
         {clients.map((client, i) => (
-          <article class:list={['feed-card tilt-card reveal', i === 1 && 'reveal-delay-1', i === 2 && 'reveal-delay-2']}>
+          <article
+            class:list={['feed-card tilt-card reveal', i === 1 && 'reveal-delay-1', i === 2 && 'reveal-delay-2']}
+            lang="en"
+            translate="no"
+          >
             <div class="mb-3 flex items-center justify-between gap-3">
               <div>
                 <p class="font-semibold text-ink">{client.name}</p>

@@ -1,16 +1,17 @@
 #!/usr/bin/env bash
 # ── ZAV Interior & Clean — Renace Protocol deploy.sh ─────────
 #  Usage on VPS:
-#      cd /opt/zav && ./deploy.sh
+#      cd /opt/zuv && ./deploy.sh
 #  First run: clones the repo into PROJECT_DIR, then deploys.
 #
-#  Stack: zav  ·  Domain: zavinteriorclean.com  ·  Network: RenaceNet
+#  Stack: zuv  ·  Domain: zavinteriorclean.com  ·  Network: RenaceNet
+#  Repo:  https://github.com/ExpertosTI/ZUV
 
 set -euo pipefail
 
-REPO_URL="${REPO_URL:-https://github.com/ExpertosTI/zav.git}"
-PROJECT_DIR="${PROJECT_DIR:-/opt/zav}"
-STACK_NAME="${STACK_NAME:-zav}"
+REPO_URL="${REPO_URL:-https://github.com/ExpertosTI/ZUV.git}"
+PROJECT_DIR="${PROJECT_DIR:-/opt/zuv}"
+STACK_NAME="${STACK_NAME:-zuv}"
 SERVICE_NAME="${STACK_NAME}_web"
 DOMAIN="${DOMAIN:-zavinteriorclean.com}"
 DEPLOY_BRANCH="${DEPLOY_BRANCH:-main}"
@@ -30,23 +31,39 @@ else
   cd "$PROJECT_DIR"
 fi
 
-cyan "── 2. Build image (low priority) ──────────────"
-export DOCKER_BUILDKIT=1
+cyan "── 2. Load secrets (.env) ─────────────────────"
+if [ -f "$PROJECT_DIR/.env" ]; then
+  set -a
+  # shellcheck disable=SC1091
+  . "$PROJECT_DIR/.env"
+  set +a
+fi
 export ADMIN_PASSWORD="${ADMIN_PASSWORD:-04J27}"
+export SMTP_HOST="${SMTP_HOST:-smtp.gmail.com}"
+export SMTP_PORT="${SMTP_PORT:-587}"
+export SMTP_USER="${SMTP_USER:-hello@zavinteriorclean.com}"
+export SMTP_PASS="${SMTP_PASS:-}"
+export SMTP_FROM_NAME="${SMTP_FROM_NAME:-ZAV Interior & Clean}"
+export ADMIN_EMAIL="${ADMIN_EMAIL:-azhaliaestepan@gmail.com}"
+
+cyan "── 3. Build image (low priority) ──────────────"
+export DOCKER_BUILDKIT=1
 nice -n 19 ionice -c 3 docker compose build --pull
 
-cyan "── 3. Ensure RenaceNet exists ─────────────────"
+cyan "── 4. Ensure RenaceNet exists ─────────────────"
 if ! docker network ls --format '{{.Name}}' | grep -qx "RenaceNet"; then
   docker network create --driver overlay --attachable RenaceNet
 fi
 
-cyan "── 4. Deploy stack ($STACK_NAME → $DOMAIN) ────"
+cyan "── 5. Deploy stack ($STACK_NAME → $DOMAIN) ────"
+# Bake image tag used by stack
+docker tag zuv-web:latest zuv-web:latest 2>/dev/null || true
 docker stack deploy -c docker-compose.yml "$STACK_NAME"
 
-cyan "── 5. Force service update ────────────────────"
+cyan "── 6. Force service update ────────────────────"
 docker service update --force "$SERVICE_NAME" >/dev/null 2>&1 || true
 
-cyan "── 6. Cleanup dangling images ─────────────────"
+cyan "── 7. Cleanup dangling images ─────────────────"
 docker image prune -f >/dev/null
 
 green ""

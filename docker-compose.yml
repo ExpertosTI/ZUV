@@ -1,12 +1,13 @@
 # ── ZAV Interior & Clean — Docker Swarm + Traefik (RenaceNet) ──
-#  Stack name: zav  ·  Domain: zavinteriorclean.com
+#  Stack name: zuv  ·  Domain: zavinteriorclean.com
+#  Repo:       https://github.com/ExpertosTI/ZUV
 #  Network:    RenaceNet (external overlay)
 #  Entrypoints: web (:80), websecure (:443)
 #  Cert resolver: letsencryptresolver
 
 services:
   web:
-    image: zav-web:latest
+    image: zuv-web:latest
     build:
       context: .
       dockerfile: Dockerfile
@@ -15,6 +16,12 @@ services:
       PORT: 4321
       ZAV_DATA_DIR: /app/data
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:-04J27}
+      SMTP_HOST: ${SMTP_HOST:-smtp.gmail.com}
+      SMTP_PORT: ${SMTP_PORT:-465}
+      SMTP_USER: ${SMTP_USER:-hello@zavinteriorclean.com}
+      SMTP_PASS: ${SMTP_PASS}
+      SMTP_FROM_NAME: ${SMTP_FROM_NAME:-ZAV Interior & Clean}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-azhaliaestepan@gmail.com}
     volumes:
       - zav_data:/app/data
     networks:
@@ -44,45 +51,45 @@ services:
         - traefik.constraint-label=traefik-public
 
         # ── HTTP → HTTPS redirect ───────────────────────────────
-        - traefik.http.routers.zav-http.rule=Host(`zavinteriorclean.com`) || Host(`www.zavinteriorclean.com`)
-        - traefik.http.routers.zav-http.entrypoints=web
-        - traefik.http.routers.zav-http.middlewares=zav-redirect-https
+        - traefik.http.routers.zuv-http.rule=Host(`zavinteriorclean.com`) || Host(`www.zavinteriorclean.com`)
+        - traefik.http.routers.zuv-http.entrypoints=web
+        - traefik.http.routers.zuv-http.middlewares=zuv-redirect-https
 
         # ── HTTPS canonical (apex) ──────────────────────────────
-        - traefik.http.routers.zav.rule=Host(`zavinteriorclean.com`)
-        - traefik.http.routers.zav.entrypoints=websecure
-        - traefik.http.routers.zav.tls=true
-        - traefik.http.routers.zav.tls.certresolver=letsencryptresolver
-        - traefik.http.routers.zav.service=zav-svc
-        - traefik.http.routers.zav.middlewares=zav-security
+        - traefik.http.routers.zuv.rule=Host(`zavinteriorclean.com`)
+        - traefik.http.routers.zuv.entrypoints=websecure
+        - traefik.http.routers.zuv.tls=true
+        - traefik.http.routers.zuv.tls.certresolver=letsencryptresolver
+        - traefik.http.routers.zuv.service=zuv-svc
+        - traefik.http.routers.zuv.middlewares=zuv-security
 
         # ── HTTPS www → apex redirect ───────────────────────────
-        - traefik.http.routers.zav-www.rule=Host(`www.zavinteriorclean.com`)
-        - traefik.http.routers.zav-www.entrypoints=websecure
-        - traefik.http.routers.zav-www.tls=true
-        - traefik.http.routers.zav-www.tls.certresolver=letsencryptresolver
-        - traefik.http.routers.zav-www.middlewares=zav-www-redirect
-        - traefik.http.routers.zav-www.service=zav-svc
+        - traefik.http.routers.zuv-www.rule=Host(`www.zavinteriorclean.com`)
+        - traefik.http.routers.zuv-www.entrypoints=websecure
+        - traefik.http.routers.zuv-www.tls=true
+        - traefik.http.routers.zuv-www.tls.certresolver=letsencryptresolver
+        - traefik.http.routers.zuv-www.middlewares=zuv-www-redirect
+        - traefik.http.routers.zuv-www.service=zuv-svc
 
         # ── Service ─────────────────────────────────────────────
-        - traefik.http.services.zav-svc.loadbalancer.server.port=4321
-        - traefik.http.services.zav-svc.loadbalancer.healthcheck.path=/healthz
-        - traefik.http.services.zav-svc.loadbalancer.healthcheck.interval=30s
+        - traefik.http.services.zuv-svc.loadbalancer.server.port=4321
+        - traefik.http.services.zuv-svc.loadbalancer.healthcheck.path=/healthz
+        - traefik.http.services.zuv-svc.loadbalancer.healthcheck.interval=30s
 
         # ── Middlewares ─────────────────────────────────────────
-        - traefik.http.middlewares.zav-redirect-https.redirectscheme.scheme=https
-        - traefik.http.middlewares.zav-redirect-https.redirectscheme.permanent=true
+        - traefik.http.middlewares.zuv-redirect-https.redirectscheme.scheme=https
+        - traefik.http.middlewares.zuv-redirect-https.redirectscheme.permanent=true
 
-        - traefik.http.middlewares.zav-www-redirect.redirectregex.regex=^https?://www\.(.+)$$
-        - traefik.http.middlewares.zav-www-redirect.redirectregex.replacement=https://$$1
-        - traefik.http.middlewares.zav-www-redirect.redirectregex.permanent=true
+        - traefik.http.middlewares.zuv-www-redirect.redirectregex.regex=^https?://www\.(.+)$$
+        - traefik.http.middlewares.zuv-www-redirect.redirectregex.replacement=https://$$1
+        - traefik.http.middlewares.zuv-www-redirect.redirectregex.permanent=true
 
-        - traefik.http.middlewares.zav-security.headers.stsSeconds=31536000
-        - traefik.http.middlewares.zav-security.headers.stsIncludeSubdomains=true
-        - traefik.http.middlewares.zav-security.headers.stsPreload=true
-        - traefik.http.middlewares.zav-security.headers.contentTypeNosniff=true
-        - traefik.http.middlewares.zav-security.headers.browserXssFilter=true
-        - traefik.http.middlewares.zav-security.headers.referrerPolicy=strict-origin-when-cross-origin
+        - traefik.http.middlewares.zuv-security.headers.stsSeconds=31536000
+        - traefik.http.middlewares.zuv-security.headers.stsIncludeSubdomains=true
+        - traefik.http.middlewares.zuv-security.headers.stsPreload=true
+        - traefik.http.middlewares.zuv-security.headers.contentTypeNosniff=true
+        - traefik.http.middlewares.zuv-security.headers.browserXssFilter=true
+        - traefik.http.middlewares.zuv-security.headers.referrerPolicy=strict-origin-when-cross-origin
 
     logging:
       driver: json-file

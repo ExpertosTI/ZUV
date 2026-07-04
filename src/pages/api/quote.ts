@@ -1,4 +1,5 @@
 import type { APIRoute } from 'astro';
+import { sendQuoteNotifications } from '../../lib/mail';
 import { addQuote } from '../../lib/store';
 
 export const prerender = false;
@@ -42,7 +43,15 @@ export const POST: APIRoute = async ({ request }) => {
     userAgent: request.headers.get('user-agent') || undefined,
   });
 
-  return json({ ok: true, id: quote.id }, 201);
+  // Notify client + admin; never fail the quote if mail has issues
+  let mail = { sent: false as boolean };
+  try {
+    mail = await sendQuoteNotifications(quote);
+  } catch (err) {
+    console.error('[quote] mail failed', err);
+  }
+
+  return json({ ok: true, id: quote.id, mail }, 201);
 };
 
 function json(data: unknown, status = 200) {
