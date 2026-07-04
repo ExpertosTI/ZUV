@@ -39,6 +39,35 @@
     cursor: none !important;
   }
 
+  /* Admin panel: restore normal mouse (custom cursor is for the public site only) */
+  body.admin-open.has-custom-cursor,
+  body.admin-open.has-custom-cursor * {
+    cursor: auto !important;
+  }
+
+  body.admin-open input,
+  body.admin-open textarea,
+  body.admin-open [contenteditable="true"] {
+    cursor: text !important;
+  }
+
+  body.admin-open button,
+  body.admin-open a,
+  body.admin-open select,
+  body.admin-open label,
+  body.admin-open .zav-adm__tab,
+  body.admin-open .zav-adm__btn,
+  body.admin-open .zav-adm__chip,
+  body.admin-open .zav-adm__key {
+    cursor: pointer !important;
+  }
+
+  body.admin-open .cursor-ring,
+  body.admin-open #life-layer,
+  body.admin-open .theme-motifs {
+    display: none !important;
+  }
+
   ::selection {
     background: rgba(201, 162, 39, 0.35);
   }

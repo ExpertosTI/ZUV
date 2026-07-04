@@ -282,10 +282,13 @@ export function initAdminConsole() {
     root.classList.remove('is-active', 'is-pinpad', 'is-console');
     if (!mode) {
       root.setAttribute('aria-hidden', 'true');
+      document.body.classList.remove('admin-open');
       pinBuf = '';
       renderPin();
       return;
     }
+    // Disable public-site custom cursor / floating effects while admin is open
+    document.body.classList.add('admin-open');
     root.classList.add('is-active', mode);
     root.setAttribute('aria-hidden', 'false');
   };

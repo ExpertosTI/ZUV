@@ -6,6 +6,27 @@
   box-sizing: border-box;
 }
 
+.zav-adm,
+.zav-adm * {
+  cursor: auto;
+}
+
+.zav-adm input,
+.zav-adm textarea {
+  cursor: text;
+}
+
+.zav-adm button,
+.zav-adm a,
+.zav-adm select,
+.zav-adm label,
+.zav-adm .zav-adm__tab,
+.zav-adm .zav-adm__btn,
+.zav-adm .zav-adm__chip,
+.zav-adm .zav-adm__key {
+  cursor: pointer;
+}
+
 .zav-adm {
   --za-bg: #07131f;
   --za-bg-2: #0d1f33;
