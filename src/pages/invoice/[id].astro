@@ -1,13 +1,22 @@
 ---
-import { getInvoice } from '../../lib/store';
+import { getInvoicePublic } from '../../lib/store';
 
 export const prerender = false;
 
 const id = Astro.params.id || '';
-const invoice = id ? await getInvoice(id) : null;
+const accessToken = Astro.url.searchParams.get('t') || '';
+const invoice = id ? await getInvoicePublic(id, accessToken) : null;
 
 if (!invoice) {
-  return new Response('Invoice not found', { status: 404 });
+  return new Response('Invoice not found', {
+    status: 404,
+    headers: {
+      'Content-Type': 'text/plain; charset=utf-8',
+      'X-Content-Type-Options': 'nosniff',
+      'Cache-Control': 'no-store',
+      'X-Frame-Options': 'DENY',
+    },
+  });
 }
 
 const b = invoice.billingSnapshot;
@@ -32,7 +41,6 @@ const nextAt = invoice.nextInvoiceAt
   ? new Date(invoice.nextInvoiceAt).toLocaleDateString()
   : null;
 
-// Prefer same-origin asset so print/PDF always resolves the transparent logo
 const logoUrl = '/logo.png';
 ---
 
@@ -41,6 +49,7 @@ const logoUrl = '/logo.png';
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex,nofollow" />
     <title>Invoice {invoice.number} · ZAV</title>
     <style>
       body { font-family: DM Sans, system-ui, sans-serif; margin: 0; background: #f7f4ef; color: #1a1a1a; }
@@ -103,9 +112,8 @@ const logoUrl = '/logo.png';
         <div>
           <p style="margin:0 0 6px;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#a8841a;font-weight:700">Service</p>
           <p style="margin:0;font-weight:700">{invoice.service}</p>
-          <p class="muted">Quote: {invoice.quoteId}</p>
           {invoice.recurring && (
-            <p class="muted">Cycle #{invoice.cycle} · Series {invoice.seriesId.slice(0, 18)}…</p>
+            <p class="muted">Cycle #{invoice.cycle}</p>
           )}
         </div>
       </div>

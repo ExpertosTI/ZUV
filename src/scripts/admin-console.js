@@ -407,6 +407,13 @@ export function initAdminConsole() {
 
   let inboxFilter = 'all';
 
+  const invoiceHref = (invoiceId) => {
+    const inv = (dashboard?.invoices || []).find((i) => i.id === invoiceId);
+    if (!inv) return '#';
+    const t = inv.accessToken ? `?t=${encodeURIComponent(inv.accessToken)}` : '';
+    return `/invoice/${encodeURIComponent(inv.id)}${t}`;
+  };
+
   const statusBadge = (status) => {
     const s = status || 'new';
     const cls =
@@ -457,7 +464,7 @@ export function initAdminConsole() {
         ${status === 'new' ? `<button type="button" class="zav-adm__btn" data-act="viewed" data-id="${escapeHtml(q.id)}">Mark viewed</button>` : ''}
         ${status !== 'done' ? `<button type="button" class="zav-adm__btn" data-act="done" data-id="${escapeHtml(q.id)}">✓ Work done</button>` : ''}
         <button type="button" class="zav-adm__btn zav-adm__btn--accent" data-act="invoice" data-id="${escapeHtml(q.id)}">Generate invoice</button>
-        ${q.invoiceId ? `<a class="zav-adm__btn" href="/invoice/${escapeHtml(q.invoiceId)}" target="_blank">Open invoice</a>` : ''}
+        ${q.invoiceId ? `<a class="zav-adm__btn" href="${invoiceHref(q.invoiceId)}" target="_blank">Open invoice</a>` : ''}
       </div>
     </article>`;
   };
@@ -547,7 +554,7 @@ export function initAdminConsole() {
                 <td>${statusBadge(inv.status)}</td>
                 <td>${escapeHtml(next)}${due ? ' <span class="zav-adm__badge zav-adm__badge--sky">DUE</span>' : ''}</td>
                 <td class="zav-adm__card-actions">
-                  <a class="zav-adm__btn" href="/invoice/${escapeHtml(inv.id)}" target="_blank">Open</a>
+                  <a class="zav-adm__btn" href="${invoiceHref(inv.id)}" target="_blank">Open</a>
                   ${inv.recurring && inv.nextInvoiceAt ? `<button type="button" class="zav-adm__btn zav-adm__btn--accent" data-act="next-cycle" data-id="${escapeHtml(inv.id)}">Next cycle</button>` : ''}
                 </td>
               </tr>`;
@@ -771,7 +778,10 @@ export function initAdminConsole() {
     const data = await res.json();
     closeInvoiceModal();
     await loadMetrics();
-    if (data.invoice?.id) window.open(`/invoice/${data.invoice.id}`, '_blank', 'noopener');
+    if (data.invoice?.id) {
+      const t = data.invoice.accessToken ? `?t=${encodeURIComponent(data.invoice.accessToken)}` : '';
+      window.open(`/invoice/${data.invoice.id}${t}`, '_blank', 'noopener');
+    }
   });
 
   root.querySelector('[data-invoices]')?.addEventListener('click', async (e) => {
@@ -788,7 +798,10 @@ export function initAdminConsole() {
       });
       const data = await res.json();
       await loadMetrics();
-      if (data.invoice?.id) window.open(`/invoice/${data.invoice.id}`, '_blank', 'noopener');
+      if (data.invoice?.id) {
+        const t = data.invoice.accessToken ? `?t=${encodeURIComponent(data.invoice.accessToken)}` : '';
+        window.open(`/invoice/${data.invoice.id}${t}`, '_blank', 'noopener');
+      }
     } catch {
       /* ignore */
     } finally {

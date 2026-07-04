@@ -1,5 +1,6 @@
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
+import { newAccessToken } from './auth';
 
 const DATA_DIR = process.env.ZAV_DATA_DIR || path.join(process.cwd(), 'data');
 
@@ -58,6 +59,8 @@ export type Invoice = {
   currency: string;
   notes?: string;
   billingSnapshot: BillingProfile;
+  /** Secret for public invoice link (?t=) */
+  accessToken: string;
   /** Recurring billing */
   recurring: boolean;
   frequency: RecurringFrequency;
@@ -321,6 +324,7 @@ function normalizeInvoice(inv: Invoice): Invoice {
   const periodEnd = inv.periodEnd || addPeriod(new Date(periodStart), frequency).toISOString();
   return {
     ...inv,
+    accessToken: inv.accessToken || '',
     recurring,
     frequency,
     seriesId: inv.seriesId || `series_${inv.quoteId}`,
@@ -335,12 +339,40 @@ function normalizeInvoice(inv: Invoice): Invoice {
 
 export async function getInvoices(): Promise<Invoice[]> {
   const invoices = await readJson<Invoice[]>('invoices.json', []);
-  return invoices.map(normalizeInvoice);
+  let dirty = false;
+  const normalized = invoices.map((inv) => {
+    const n = normalizeInvoice(inv);
+    if (!n.accessToken) {
+      n.accessToken = newAccessToken();
+      dirty = true;
+    }
+    return n;
+  });
+  if (dirty) await writeJson('invoices.json', normalized);
+  return normalized;
 }
 
 export async function getInvoice(id: string): Promise<Invoice | null> {
+  if (!id || !/^inv_[a-z0-9]+_[a-z0-9]+$/i.test(id)) return null;
   const invoices = await getInvoices();
   return invoices.find((i) => i.id === id) || null;
+}
+
+export async function getInvoicePublic(id: string, accessToken: string): Promise<Invoice | null> {
+  const invoice = await getInvoice(id);
+  if (!invoice) return null;
+  // Legacy invoices without token: issue one and require it next time is harsh;
+  // allow once if empty, then persist token on read is complex — require token always when set.
+  if (!invoice.accessToken) return invoice;
+  const { timingSafeEqual } = await import('node:crypto');
+  const a = Buffer.from(String(accessToken || ''));
+  const b = Buffer.from(invoice.accessToken);
+  if (a.length !== b.length || !timingSafeEqual(a, b)) return null;
+  return invoice;
+}
+
+export function invoicePublicPath(invoice: Invoice) {
+  return `/invoice/${invoice.id}?t=${encodeURIComponent(invoice.accessToken)}`;
 }
 
 async function persistInvoice(invoice: Invoice) {
@@ -408,6 +440,7 @@ export async function createInvoiceFromQuote(
     currency: billing.currency || 'USD',
     notes: overrides.notes || billing.notes,
     billingSnapshot: billing,
+    accessToken: newAccessToken(),
     recurring,
     frequency,
     seriesId,
@@ -458,6 +491,7 @@ export async function createNextRecurringInvoice(invoiceId: string): Promise<Inv
     createdAt: new Date().toISOString(),
     status: 'draft',
     billingSnapshot: billing,
+    accessToken: newAccessToken(),
     cycle: nextCycle,
     periodStart: periodStart.toISOString(),
     periodEnd: periodEnd.toISOString(),

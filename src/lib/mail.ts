@@ -365,7 +365,7 @@ export async function sendInvoiceToClient(invoice: Invoice, locale = 'en') {
   }
 
   const L = t(locale);
-  const invoiceUrl = `${SITE_URL}/invoice/${invoice.id}`;
+  const invoiceUrl = `${SITE_URL}/invoice/${invoice.id}?t=${encodeURIComponent(invoice.accessToken || '')}`;
 
   const recurringNote = invoice.recurring
     ? `<p style="margin:12px 0;padding:10px 12px;border-radius:12px;background:#faf7f1;border:1px solid #efe8dc;font-size:13px;color:#3d3d3d">
