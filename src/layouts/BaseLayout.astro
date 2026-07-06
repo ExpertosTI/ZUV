@@ -75,12 +75,16 @@ const jsonLdBlocks = Astro.props.jsonLd || [
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
     <link
-      href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Outfit:wght@300;400;500;600;700&display=swap"
+      rel="preload"
+      as="image"
+      href={ogImage}
+      fetchpriority="high"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=Outfit:wght@400;500;600;700&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="/admin-console.css" />
 
     <!-- Open Graph -->
     <meta property="og:site_name" content={SITE_NAME} />
@@ -126,12 +130,22 @@ const jsonLdBlocks = Astro.props.jsonLd || [
 
     <script>
       import { initInteract } from '../scripts/interact.js';
-      import { initFloatingLife } from '../scripts/floating-life.js';
-      import { initAdminConsole } from '../scripts/admin-console.js';
+      import { initAdminLoader } from '../scripts/admin-loader.js';
+      import { trackPageVisit } from '../scripts/visit-tracker.js';
 
       initInteract();
-      initFloatingLife();
-      initAdminConsole();
+      initAdminLoader();
+      trackPageVisit();
+
+      const startFloatingLife = () => {
+        import('../scripts/floating-life.js').then(({ initFloatingLife }) => initFloatingLife());
+      };
+
+      if ('requestIdleCallback' in window) {
+        requestIdleCallback(startFloatingLife, { timeout: 2500 });
+      } else {
+        setTimeout(startFloatingLife, 1200);
+      }
     </script>
   </body>
 </html>

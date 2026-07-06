@@ -9,7 +9,7 @@ import WhatsAppFab from '../components/WhatsAppFab.astro';
 import ThemeMotifs from '../components/ThemeMotifs.astro';
 import { detectLocale, t } from '../i18n/messages';
 import { SEO_COPY } from '../lib/seo';
-import { getClients, trackVisit } from '../lib/store';
+import { getClients } from '../lib/store';
 
 export const prerender = false;
 
@@ -17,20 +17,6 @@ const cookieLang = Astro.cookies.get('zav_lang')?.value ?? null;
 const accept = Astro.request.headers.get('accept-language');
 const locale = detectLocale(accept, cookieLang);
 const m = t(locale);
-
-let visitorKey = Astro.cookies.get('zav_vid')?.value;
-if (!visitorKey) {
-  visitorKey = `v_${crypto.randomUUID()}`;
-  Astro.cookies.set('zav_vid', visitorKey, {
-    path: '/',
-    httpOnly: true,
-    sameSite: 'lax',
-    maxAge: 60 * 60 * 24 * 365,
-    secure: Astro.url.protocol === 'https:',
-  });
-}
-
-await trackVisit(visitorKey);
 
 const clients = await getClients();
 ---

@@ -1,6 +1,8 @@
 import { defineMiddleware } from 'astro:middleware';
 
-export const onRequest = defineMiddleware(async (_context, next) => {
+const STATIC_EXT = /\.(?:avif|webp|jpe?g|png|gif|svg|ico|css|js|woff2?|webmanifest)$/i;
+
+export const onRequest = defineMiddleware(async (context, next) => {
   const response = await next();
   const headers = new Headers(response.headers);
 
@@ -10,9 +12,10 @@ export const onRequest = defineMiddleware(async (_context, next) => {
   headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
   headers.set('Cross-Origin-Opener-Policy', 'same-origin-allow-popups');
 
-  // Don't cache HTML documents aggressively
   const type = headers.get('content-type') || '';
-  if (type.includes('text/html')) {
+  if (STATIC_EXT.test(context.url.pathname)) {
+    headers.set('Cache-Control', 'public, max-age=31536000, immutable');
+  } else if (type.includes('text/html')) {
     headers.set('Cache-Control', 'public, max-age=0, must-revalidate');
   }
 

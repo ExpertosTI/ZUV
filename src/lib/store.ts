@@ -577,11 +577,21 @@ export async function updateInvoice(
   return invoices[idx];
 }
 
+let clientsCache: { data: ClientWork[]; at: number } | null = null;
+const CLIENTS_TTL_MS = 30_000;
+
 export async function getClients(): Promise<ClientWork[]> {
-  return readJson<ClientWork[]>('clients.json', seedClients);
+  const now = Date.now();
+  if (clientsCache && now - clientsCache.at < CLIENTS_TTL_MS) {
+    return clientsCache.data;
+  }
+  const data = await readJson<ClientWork[]>('clients.json', seedClients);
+  clientsCache = { data, at: now };
+  return data;
 }
 
 export async function saveClients(clients: ClientWork[]) {
+  clientsCache = { data: clients, at: Date.now() };
   await writeJson('clients.json', clients);
 }
 
