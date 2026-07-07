@@ -859,3 +859,138 @@
   gap: 8px;
   justify-content: flex-end;
 }
+
+/* Share tab */
+.zav-adm__share-layout {
+  display: grid;
+  gap: 14px;
+}
+
+@media (min-width: 900px) {
+  .zav-adm__share-layout {
+    grid-template-columns: 1fr 1fr;
+    grid-template-areas:
+      "picker qr"
+      "actions actions";
+  }
+  .zav-adm__share-picker { grid-area: picker; }
+  .zav-adm__share-qr { grid-area: qr; }
+  .zav-adm__share-actions { grid-area: actions; }
+}
+
+.zav-adm__share-targets {
+  display: grid;
+  gap: 8px;
+}
+
+.zav-adm__share-target {
+  display: grid;
+  gap: 4px;
+  text-align: left;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--za-line-soft);
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--za-text);
+  transition: border-color 180ms, background 180ms;
+}
+
+.zav-adm__share-target strong {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.zav-adm__share-target span {
+  font-size: 12px;
+  color: var(--za-dim);
+  line-height: 1.35;
+}
+
+.zav-adm__share-target:hover,
+.zav-adm__share-target.is-active {
+  border-color: var(--za-line);
+  background: rgba(201, 162, 39, 0.08);
+}
+
+.zav-adm__share-target.is-active strong {
+  color: var(--za-gold-lt);
+}
+
+.zav-adm__qr-wrap {
+  display: flex;
+  justify-content: center;
+  padding: 12px;
+  border-radius: 16px;
+  background: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.zav-adm__qr-wrap canvas {
+  display: block;
+  border-radius: 8px;
+}
+
+.zav-adm__qr-wrap canvas.is-loading {
+  opacity: 0.35;
+}
+
+.zav-adm__share-url {
+  margin: 12px 0 4px;
+  font-family: var(--za-mono);
+  font-size: 11px;
+  color: var(--za-sky);
+  word-break: break-all;
+  line-height: 1.45;
+}
+
+.zav-adm__share-hint {
+  margin: 0;
+  font-size: 12px;
+  color: var(--za-dim);
+}
+
+.zav-adm__share-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+@media (min-width: 700px) {
+  .zav-adm__share-grid {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+}
+
+.zav-adm__share-btn {
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--za-line-soft);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--za-text);
+  font-size: 12px;
+  font-weight: 600;
+  transition: background 160ms, border-color 160ms;
+}
+
+.zav-adm__share-btn:hover {
+  border-color: var(--za-line);
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.zav-adm__share-btn--accent {
+  border-color: rgba(201, 162, 39, 0.45);
+  background: rgba(201, 162, 39, 0.12);
+  color: var(--za-gold-lt);
+}
+
+.zav-adm__share-btn--accent:hover {
+  background: rgba(201, 162, 39, 0.2);
+}
+
+.zav-adm__msg.is-ok {
+  color: var(--za-mint);
+}
+
+.zav-adm__msg.is-err {
+  color: var(--za-red);
+}

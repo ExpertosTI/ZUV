@@ -4,6 +4,8 @@
  * PIN: 04J27
  */
 
+import { initAdminShare } from './admin-share.js';
+
 const PIN_LENGTH = 5;
 const ACTIVATION = 'zav';
 const BUFFER_MS = 1800;
@@ -81,6 +83,7 @@ export function initAdminConsole() {
           <button type="button" class="zav-adm__tab" data-tab="invoices">Invoices</button>
           <button type="button" class="zav-adm__tab" data-tab="billing">Billing</button>
           <button type="button" class="zav-adm__tab" data-tab="clients">Clients</button>
+          <button type="button" class="zav-adm__tab" data-tab="share">Share</button>
         </nav>
         <div class="zav-adm__actions">
           <button type="button" class="zav-adm__btn" data-action="refresh">↻ Refresh</button>
@@ -225,6 +228,10 @@ export function initAdminConsole() {
             <p class="zav-adm__msg" data-client-msg></p>
           </section>
         </section>
+
+        <section class="zav-adm__pane" data-pane="share">
+          <div data-share-root></div>
+        </section>
       </main>
 
       <footer class="zav-adm__foot">
@@ -254,6 +261,8 @@ export function initAdminConsole() {
   `;
 
   document.body.appendChild(root);
+
+  const sharePanel = initAdminShare(root);
 
   // bubbles
   const bubbles = root.querySelector('.zav-adm__bubbles');
@@ -620,6 +629,7 @@ export function initAdminConsole() {
     root.querySelectorAll('.zav-adm__pane').forEach((p) => {
       p.classList.toggle('is-active', p.getAttribute('data-pane') === id);
     });
+    if (id === 'share') sharePanel?.open?.();
   };
 
   root.querySelectorAll('.zav-adm__tab').forEach((tab) => {
