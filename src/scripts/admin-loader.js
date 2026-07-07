@@ -5,12 +5,24 @@
 
 const ACTIVATION = 'zav';
 const BUFFER_MS = 1800;
-const ADMIN_CSS_V = '3';
+const ADMIN_CSS_V = '4';
 
 let typeBuf = '';
 let lastKey = 0;
 let loading = false;
 let loaded = false;
+
+function loadStylesheet(href) {
+  return new Promise((resolve, reject) => {
+    document.querySelectorAll('link[href*="admin-console.css"]').forEach((el) => el.remove());
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = href;
+    link.onload = () => resolve();
+    link.onerror = () => reject(new Error('admin-console.css failed to load'));
+    document.head.appendChild(link);
+  });
+}
 
 function isTyping(el) {
   if (!el) return false;
@@ -24,11 +36,7 @@ async function loadAdminConsole() {
   loading = true;
 
   try {
-    document.querySelectorAll('link[href*="admin-console.css"]').forEach((el) => el.remove());
-    const link = document.createElement('link');
-    link.rel = 'stylesheet';
-    link.href = `/admin-console.css?v=${ADMIN_CSS_V}`;
-    document.head.appendChild(link);
+    await loadStylesheet(`/admin-console.css?v=${ADMIN_CSS_V}`);
 
     const { initAdminConsole } = await import('./admin-console.js');
     initAdminConsole();

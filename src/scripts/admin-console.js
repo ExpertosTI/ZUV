@@ -10,22 +10,21 @@ const PIN_LENGTH = 5;
 const ACTIVATION = 'zav';
 const BUFFER_MS = 1800;
 
-const ICONS = {
-  spray: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M9 4h4l1 3h3v3H7V7h3L9 4z"/><path d="M8 10h8v9a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2v-9z"/><path d="M14 4c2 0 4 1 5 3"/></svg>`,
-  spark: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 2l1.2 6.2L19 9l-5 3.2L15.5 19 12 15.8 8.5 19 10 12.2 5 9l5.8-.8L12 2z"/></svg>`,
-  users: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M16 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"/><circle cx="9.5" cy="7" r="3"/><path d="M20 21v-2a3.5 3.5 0 0 0-2.5-3.3"/><path d="M16 4.2a3 3 0 0 1 0 5.6"/></svg>`,
-  lead: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 19h16"/><path d="M7 16V9"/><path d="M12 16V5"/><path d="M17 16v-4"/></svg>`,
-  home: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 11.5 12 5l8 6.5V20a1 1 0 0 1-1 1h-5v-6H10v6H5a1 1 0 0 1-1-1v-8.5z"/></svg>`,
-  cloth: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 8c3-3 13-3 16 0-1 4-3 11-4 13-4-2-8-2-12 0-1-3-2-9 0-13z"/></svg>`,
-  inbox: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 6h16v12H4z"/><path d="m4 7 8 6 8-6"/></svg>`,
-  chart: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 19V5"/><path d="M8 17V9"/><path d="M12 17V7"/><path d="M16 17v-5"/><path d="M20 17v-8"/></svg>`,
-  invoice: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M7 3h10v18l-2-1.5L13 21l-2-1.5L9 21 7 19.5z"/><path d="M9 8h6M9 12h6"/></svg>`,
-  billing: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="6" width="18" height="12" rx="2"/><path d="M3 10h18"/></svg>`,
-  share: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5 15.4 17.5M15.4 6.5 8.6 10.5"/></svg>`,
-  mail: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 6h16v12H4z"/><path d="m4 7 8 6 8-6"/></svg>`,
-  phone: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6.5 4h3l1.5 4-2 1.2a11 11 0 0 0 5.8 5.8L18 13l4 1.5v3A2 2 0 0 1 20 20a16 16 0 0 1-16-16 2 2 0 0 1 2-2z"/></svg>`,
-  refresh: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M20 12a8 8 0 1 1-2.3-5.7"/><path d="M20 4v6h-6"/></svg>`,
-};
+/** Injected with the bundle — layout works even if admin-console.css is cached or missing */
+const CRITICAL_CSS = `
+#zav-adm,#zav-adm *{box-sizing:border-box}
+#zav-adm{position:fixed;inset:0;z-index:2147483000;font-family:system-ui,sans-serif;color:#f7f4ef;font-size:14px}
+#zav-adm svg{width:1em;height:1em;max-width:20px;max-height:20px;display:block;flex-shrink:0}
+#zav-adm .zav-adm__motif{position:absolute;opacity:.14;pointer-events:none;font-size:32px;line-height:1}
+#zav-adm .zav-adm__motif--1{top:8%;left:6%}
+#zav-adm .zav-adm__motif--2{top:18%;right:8%}
+#zav-adm .zav-adm__motif--3{bottom:14%;left:10%}
+#zav-adm .zav-adm__motif--4{bottom:20%;right:12%}
+#zav-adm .zav-adm__trend{display:flex;align-items:flex-end;gap:6px;height:120px;padding-top:8px}
+#zav-adm .zav-adm__bar{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:6px;height:120px}
+#zav-adm .zav-adm__bar-fill{width:100%;min-height:4px;border-radius:8px 8px 4px 4px;background:linear-gradient(180deg,#5eead4,rgba(94,234,212,.15))}
+#zav-adm .zav-adm__tab-ico,#zav-adm .zav-adm__btn-ico{font-size:14px;line-height:1}
+`;
 
 const EMOJI = {
   service: { home: '🏠', deep: '🫧', move: '📦', interior: '✨' },
@@ -57,11 +56,15 @@ const FREQ_LABEL = {
   monthly: 'Monthly',
 };
 
-/** Inline SVG must live inside .zav-adm__ico — never raw in layout. */
-const ico = (svg) => `<span class="zav-adm__ico" aria-hidden="true">${svg}</span>`;
-
 export function initAdminConsole() {
   if (document.getElementById('zav-adm')) return;
+
+  if (!document.getElementById('zav-adm-critical')) {
+    const style = document.createElement('style');
+    style.id = 'zav-adm-critical';
+    style.textContent = CRITICAL_CSS;
+    document.head.appendChild(style);
+  }
 
   const root = document.createElement('div');
   root.id = 'zav-adm';
@@ -70,13 +73,13 @@ export function initAdminConsole() {
   root.innerHTML = `
     <div class="zav-adm__scrim" data-close></div>
     <div class="zav-adm__bubbles" aria-hidden="true"></div>
-    <div class="zav-adm__motif zav-adm__motif--1">${ICONS.spray}</div>
-    <div class="zav-adm__motif zav-adm__motif--2">${ICONS.spark}</div>
-    <div class="zav-adm__motif zav-adm__motif--3">${ICONS.cloth}</div>
-    <div class="zav-adm__motif zav-adm__motif--4">${ICONS.home}</div>
+    <div class="zav-adm__motif zav-adm__motif--1" aria-hidden="true">🧴</div>
+    <div class="zav-adm__motif zav-adm__motif--2" aria-hidden="true">✨</div>
+    <div class="zav-adm__motif zav-adm__motif--3" aria-hidden="true">🧽</div>
+    <div class="zav-adm__motif zav-adm__motif--4" aria-hidden="true">🏠</div>
 
     <div class="zav-adm__pinpad" role="dialog" aria-label="ZAV access" aria-modal="true">
-      <div class="zav-adm__brand">${ico(ICONS.spark)} ZAV · CLEAN OPS</div>
+      <div class="zav-adm__brand">✨ ZAV · CLEAN OPS</div>
       <div class="zav-adm__title">🔐 Enter PIN</div>
       <p class="zav-adm__subtitle">✨ Metrics · leads · homes cared for</p>
       <div class="zav-adm__dots">${'<span class="zav-adm__dot"></span>'.repeat(PIN_LENGTH)}</div>
@@ -90,24 +93,24 @@ export function initAdminConsole() {
 
     <div class="zav-adm__console" role="region" aria-label="ZAV metrics">
       <header class="zav-adm__head">
-        <div class="zav-adm__head-brand">${ico(ICONS.spark)} ZAV OPS</div>
+        <div class="zav-adm__head-brand">✨ ZAV OPS</div>
         <div class="zav-adm__head-title">
           🧼 Cleaning command center
           <small>✨ Live leads &amp; performance</small>
         </div>
         <nav class="zav-adm__tabs" role="tablist">
           <button type="button" class="zav-adm__tab is-active" data-tab="inbox">
-            <span class="zav-adm__tab-ico">${ico(ICONS.inbox)}</span> Inbox
+            <span class="zav-adm__tab-ico">📬</span> Inbox
             <span class="zav-adm__tab-badge" data-m="inbox-badge" hidden>0</span>
           </button>
-          <button type="button" class="zav-adm__tab" data-tab="overview"><span class="zav-adm__tab-ico">${ico(ICONS.chart)}</span> Overview</button>
-          <button type="button" class="zav-adm__tab" data-tab="invoices"><span class="zav-adm__tab-ico">${ico(ICONS.invoice)}</span> Invoices</button>
-          <button type="button" class="zav-adm__tab" data-tab="billing"><span class="zav-adm__tab-ico">${ico(ICONS.billing)}</span> Billing</button>
-          <button type="button" class="zav-adm__tab" data-tab="clients"><span class="zav-adm__tab-ico">${ico(ICONS.users)}</span> Clients</button>
-          <button type="button" class="zav-adm__tab" data-tab="share"><span class="zav-adm__tab-ico">${ico(ICONS.share)}</span> Share</button>
+          <button type="button" class="zav-adm__tab" data-tab="overview"><span class="zav-adm__tab-ico">📊</span> Overview</button>
+          <button type="button" class="zav-adm__tab" data-tab="invoices"><span class="zav-adm__tab-ico">🧾</span> Invoices</button>
+          <button type="button" class="zav-adm__tab" data-tab="billing"><span class="zav-adm__tab-ico">💳</span> Billing</button>
+          <button type="button" class="zav-adm__tab" data-tab="clients"><span class="zav-adm__tab-ico">👥</span> Clients</button>
+          <button type="button" class="zav-adm__tab" data-tab="share"><span class="zav-adm__tab-ico">🔗</span> Share</button>
         </nav>
         <div class="zav-adm__actions">
-          <button type="button" class="zav-adm__btn" data-action="refresh"><span class="zav-adm__btn-ico">${ico(ICONS.refresh)}</span> Refresh</button>
+          <button type="button" class="zav-adm__btn" data-action="refresh"><span class="zav-adm__btn-ico">🔄</span> Refresh</button>
           <button type="button" class="zav-adm__btn zav-adm__btn--danger" data-action="close">✕ Close</button>
         </div>
       </header>
@@ -117,22 +120,22 @@ export function initAdminConsole() {
           <div class="zav-adm__kpis">
             <article class="zav-adm__kpi zav-adm__kpi--new">
               <span class="zav-adm__kpi-emoji" aria-hidden="true">📬</span>
-              <div class="zav-adm__kpi-label">${ico(ICONS.inbox)} New</div>
+              <div class="zav-adm__kpi-label">New</div>
               <strong data-m="inbox-new">—</strong><em>unread requests</em>
             </article>
             <article class="zav-adm__kpi zav-adm__kpi--viewed">
               <span class="zav-adm__kpi-emoji" aria-hidden="true">👀</span>
-              <div class="zav-adm__kpi-label">${ico(ICONS.lead)} In progress</div>
+              <div class="zav-adm__kpi-label">In progress</div>
               <strong data-m="inbox-viewed">—</strong><em>viewed</em>
             </article>
             <article class="zav-adm__kpi zav-adm__kpi--done">
               <span class="zav-adm__kpi-emoji" aria-hidden="true">✅</span>
-              <div class="zav-adm__kpi-label">${ico(ICONS.spark)} Done</div>
+              <div class="zav-adm__kpi-label">Done</div>
               <strong data-m="inbox-done">—</strong><em>jobs completed</em>
             </article>
             <article class="zav-adm__kpi zav-adm__kpi--invoice">
               <span class="zav-adm__kpi-emoji" aria-hidden="true">🧾</span>
-              <div class="zav-adm__kpi-label">${ico(ICONS.invoice)} Invoices</div>
+              <div class="zav-adm__kpi-label">Invoices</div>
               <strong data-m="invoices-count">—</strong><em>generated</em>
             </article>
           </div>
@@ -149,25 +152,25 @@ export function initAdminConsole() {
           <div class="zav-adm__kpis">
             <article class="zav-adm__kpi zav-adm__kpi--visits">
               <span class="zav-adm__kpi-emoji" aria-hidden="true">👁️</span>
-              <div class="zav-adm__kpi-label">${ico(ICONS.users)} Visits</div>
+              <div class="zav-adm__kpi-label">Visits</div>
               <strong data-m="visits">—</strong>
               <em data-m="unique">— unique</em>
             </article>
             <article class="zav-adm__kpi zav-adm__kpi--leads">
               <span class="zav-adm__kpi-emoji" aria-hidden="true">📈</span>
-              <div class="zav-adm__kpi-label">${ico(ICONS.lead)} Leads</div>
+              <div class="zav-adm__kpi-label">Leads</div>
               <strong data-m="leads">—</strong>
               <em data-m="leads-today">— today</em>
             </article>
             <article class="zav-adm__kpi zav-adm__kpi--conv">
               <span class="zav-adm__kpi-emoji" aria-hidden="true">🎯</span>
-              <div class="zav-adm__kpi-label">${ico(ICONS.spark)} Conversion</div>
+              <div class="zav-adm__kpi-label">Conversion</div>
               <strong data-m="conversion">—</strong>
               <em>leads / visits</em>
             </article>
             <article class="zav-adm__kpi zav-adm__kpi--homes">
               <span class="zav-adm__kpi-emoji" aria-hidden="true">🏡</span>
-              <div class="zav-adm__kpi-label">${ico(ICONS.home)} Homes</div>
+              <div class="zav-adm__kpi-label">Homes</div>
               <strong data-m="homes">—</strong>
               <em data-m="leads-week">— leads / 7d</em>
             </article>
@@ -446,13 +449,14 @@ export function initAdminConsole() {
     const el = root.querySelector('[data-trend]');
     if (!el) return;
     const max = Math.max(...trend.map((t) => t.count), 1);
+    const barMaxPx = 100;
     el.innerHTML = trend
       .map((t) => {
-        const h = Math.max(6, Math.round((t.count / max) * 100));
+        const h = Math.max(4, Math.round((t.count / max) * barMaxPx));
         const day = t.date.slice(5);
         const tip = t.count > 0 ? '✨' : '';
         return `<div class="zav-adm__bar" title="${t.date}: ${t.count} leads">
-          <div class="zav-adm__bar-fill" style="height:${h}%"></div>
+          <div class="zav-adm__bar-fill" style="height:${h}px"></div>
           <small>${day}${tip}</small>
         </div>`;
       })

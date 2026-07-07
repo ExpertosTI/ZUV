@@ -105,19 +105,20 @@
   opacity: 1;
 }
 
-/* floating cleaning motifs */
+/* floating cleaning motifs (emoji — no SVG bleed) */
 .zav-adm__motif {
   position: absolute;
-  opacity: 0.12;
-  color: var(--za-mint);
+  opacity: 0.14;
   pointer-events: none;
+  font-size: 32px;
+  line-height: 1;
   animation: za-float 8s ease-in-out infinite;
 }
 
-.zav-adm__motif--1 { top: 8%; left: 6%; width: 42px; animation-delay: 0s; }
-.zav-adm__motif--2 { top: 18%; right: 8%; width: 36px; color: var(--za-gold); animation-delay: 1.2s; }
-.zav-adm__motif--3 { bottom: 14%; left: 10%; width: 40px; animation-delay: 2s; }
-.zav-adm__motif--4 { bottom: 20%; right: 12%; width: 34px; color: var(--za-sky); animation-delay: 0.6s; }
+.zav-adm__motif--1 { top: 8%; left: 6%; animation-delay: 0s; }
+.zav-adm__motif--2 { top: 18%; right: 8%; animation-delay: 1.2s; }
+.zav-adm__motif--3 { bottom: 14%; left: 10%; animation-delay: 2s; }
+.zav-adm__motif--4 { bottom: 20%; right: 12%; animation-delay: 0.6s; }
 
 @keyframes za-float {
   0%, 100% { transform: translateY(0) rotate(-4deg); }
@@ -389,26 +390,17 @@
 
 .zav-adm__tab-ico {
   display: inline-flex;
-  width: 14px;
-  height: 14px;
-  opacity: 0.9;
-}
-
-.zav-adm__tab-ico svg {
-  width: 14px;
-  height: 14px;
+  font-size: 14px;
+  line-height: 1;
+  flex-shrink: 0;
+  opacity: 0.95;
 }
 
 .zav-adm__btn-ico {
   display: inline-flex;
-  width: 14px;
-  height: 14px;
+  font-size: 14px;
+  line-height: 1;
   vertical-align: -2px;
-}
-
-.zav-adm__btn-ico svg {
-  width: 14px;
-  height: 14px;
 }
 
 .zav-adm__tab.is-active,
