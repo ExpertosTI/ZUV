@@ -1,0 +1,42 @@
+---
+description: Contexto ZAV — producto, deploy y convenciones del repo
+alwaysApply: true
+---
+
+# ZAV Interior & Clean
+
+Repo: `ExpertosTI/ZUV` · workspace: `/Users/brainiacx/APPS/ZAV`
+
+## Producto
+
+- Landing mobile-first: wizard de cotización, feed de clientes, métricas.
+- Idiomas: EN / ES / PT (detección por `Accept-Language` + cookie).
+- Admin oculto: escribir **ZAV** en la página o abrir `/#zav` → PIN (`ADMIN_PASSWORD`).
+- Emails de cotización vía SMTP (variables en `.env` del servidor).
+
+## Stack
+
+- Astro SSR + Node adapter + Tailwind v4.
+- Datos persistentes: JSON en `data/` (volumen Docker `zav_data`).
+- Visitas: ping cliente a `POST /api/visit` (no bloquear SSR).
+
+## Deploy
+
+- VPS: `/opt/zuv` · stack `zuv` · servicio `zuv_web`
+- Dominios: `zavinteriorclean.com`, `zav.renace.tech`
+- Script completo: `./deploy.sh` (pull, build, stack deploy, inyecta SMTP)
+- Manual: `git fetch && reset --hard` → `docker compose build --pull` → `docker stack deploy -c docker-compose.yml zuv`
+
+## Verificación post-deploy
+
+```bash
+git rev-parse --short HEAD
+curl -fsS https://zavinteriorclean.com/healthz
+docker service logs zuv_web --tail 30
+```
+
+## Optimización
+
+- Admin console y animaciones: lazy-load (no en el bundle crítico).
+- Assets estáticos: cache largo vía middleware.
+- Imágenes en `public/`: mantener comprimidas (hero ~1200px, logo ~720px).
