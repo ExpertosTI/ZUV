@@ -11,27 +11,75 @@ function env(name: string, fallback = '') {
 
 function mailEnv() {
   return {
-    user: env('SMTP_USER', 'hello@zavinteriorclean.com'),
+    user: env('SMTP_USER', 'info@renace.tech'),
     pass: env('SMTP_PASS'),
-    host: env('SMTP_HOST', 'smtp.gmail.com'),
-    port: Number(env('SMTP_PORT', '587')) || 587,
+    host: env('SMTP_HOST', 'smtp.hostinger.com'),
+    port: Number(env('SMTP_PORT', '465')) || 465,
     admin: env('ADMIN_EMAIL', 'azhaliaestepan@gmail.com'),
     fromName: env('SMTP_FROM_NAME', 'ZAV Interior & Clean'),
+    from: env('SMTP_FROM', 'hello@zavinteriorclean.com'),
     siteUrl: env('PUBLIC_SITE_URL', 'https://zavinteriorclean.com').replace(/\/$/, ''),
     replyTo: env('SMTP_REPLY_TO', 'hello@zavinteriorclean.com'),
     profile: env('SMTP_PROFILE', '').toLowerCase(),
   };
 }
 
-/** Resolve SMTP host/port — ZAV uses Google Workspace for @zavinteriorclean.com mailboxes. */
+type MailBranding = {
+  name: string;
+  from: string;
+  replyTo: string;
+  phone: string;
+  website: string;
+  siteUrl: string;
+  tagline: string;
+};
+
+/** Pull live company branding from billing profile + env fallbacks. */
+async function getMailBranding(): Promise<MailBranding> {
+  const m = mailEnv();
+  let billing = {
+    businessName: m.fromName,
+    email: m.replyTo,
+    phone: '(717) 415-6171',
+    website: m.siteUrl,
+    notes: 'Homes that feel alive — and stay immaculate.',
+  };
+
+  try {
+    const { getBilling } = await import('./store');
+    const b = await getBilling();
+    billing = {
+      businessName: b.businessName || billing.businessName,
+      email: b.email || billing.email,
+      phone: b.phone || billing.phone,
+      website: b.website || billing.website,
+      notes: b.notes || billing.notes,
+    };
+  } catch {
+    /* billing optional at boot */
+  }
+
+  return {
+    name: billing.businessName || m.fromName,
+    from: m.from || billing.email || m.replyTo,
+    replyTo: m.replyTo || billing.email,
+    phone: billing.phone,
+    website: (billing.website || m.siteUrl).replace(/\/$/, ''),
+    siteUrl: m.siteUrl,
+    tagline: billing.notes,
+  };
+}
+
+/** Resolve SMTP host/port — Hostinger relay for @renace.tech, Google for @zavinteriorclean.com. */
 function resolvedSmtp() {
   const m = mailEnv();
   let { host, port, profile, user } = m;
 
   const zavMailbox = /@zavinteriorclean\.com$/i.test(user);
+  const renaceMailbox = /@renace\.tech$/i.test(user);
   const hostingerHost = /hostinger/i.test(host);
 
-  if (profile === 'hostinger') {
+  if (profile === 'hostinger' || renaceMailbox) {
     host = 'smtp.hostinger.com';
     port = 465;
   } else if (
@@ -44,14 +92,25 @@ function resolvedSmtp() {
     port = 587;
   }
 
+  const provider =
+    port === 465 && /hostinger/i.test(host)
+      ? 'hostinger'
+      : port === 587 && /gmail/i.test(host)
+        ? 'google'
+        : 'smtp';
+
   return {
     ...m,
     host,
     port,
     secure: port === 465,
     requireTLS: port === 587,
-    provider: port === 587 && /gmail/i.test(host) ? 'google' : hostingerHost ? 'hostinger' : 'smtp',
+    provider,
   };
+}
+
+function maskEmail(addr: string) {
+  return addr.replace(/(.{2}).+(@.+)/, '$1***$2');
 }
 
 const labels = {
@@ -208,14 +267,35 @@ function createTransport() {
 function mailStatusForAdmin() {
   const cfg = mailConfigured();
   const smtp = resolvedSmtp();
+  const m = mailEnv();
   return {
     configured: cfg.ok,
     host: smtp.host,
     port: smtp.port,
-    user: smtp.user.replace(/(.{2}).+(@.+)/, '$1***$2'),
+    user: maskEmail(smtp.user),
+    from: maskEmail(m.from),
+    replyTo: maskEmail(m.replyTo),
     provider: smtp.provider,
     reason: cfg.ok ? undefined : 'Mail is not configured on the server.',
   };
+}
+
+async function sendBranded(
+  transport: nodemailer.Transporter,
+  brand: MailBranding,
+  smtp: ReturnType<typeof resolvedSmtp>,
+  opts: nodemailer.SendMailOptions,
+) {
+  const fromHeader = `"${brand.name}" <${brand.from}>`;
+  const replyTo = opts.replyTo || brand.replyTo;
+  const maskedFrom = brand.from.toLowerCase() !== smtp.user.toLowerCase();
+
+  await transport.sendMail({
+    ...opts,
+    from: fromHeader,
+    replyTo,
+    ...(maskedFrom ? { envelope: { from: smtp.user } } : {}),
+  });
 }
 
 function detailsHtml(quote: Quote, locale: LocaleKey) {
@@ -256,10 +336,13 @@ function money(n: number, currency = 'USD') {
   return new Intl.NumberFormat('en-US', { style: 'currency', currency }).format(n);
 }
 
-/** Branded email shell — logo centered, cream/mustard/navy like the site */
-function wrap(title: string, body: string) {
-  const siteUrl = mailEnv().siteUrl;
-  const logoUrl = `${siteUrl}/logo.png`;
+/** Branded email shell — logo + live billing data */
+function wrap(title: string, body: string, brand: MailBranding) {
+  const logoUrl = `${brand.siteUrl}/logo.png`;
+  const tel = brand.phone.replace(/\D/g, '');
+  const telHref = tel ? `+1${tel.replace(/^1/, '')}` : '';
+  const phoneDisplay = escapeHtml(brand.phone);
+  const siteHost = brand.website.replace(/^https?:\/\//, '');
   return `<!doctype html>
 <html lang="en">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
@@ -269,19 +352,18 @@ function wrap(title: string, body: string) {
     <tr><td align="center">
       <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:560px;background:#ffffff;border-radius:18px;border:1px solid #efe8dc;overflow:hidden">
         <tr><td style="padding:28px 28px 12px;text-align:center;background:linear-gradient(180deg,#fffef9 0%,#ffffff 100%)">
-          <img src="${logoUrl}" alt="ZAV Interior & Clean" width="220" style="display:block;margin:0 auto 12px;max-width:220px;width:100%;height:auto;border:0" />
-          <p style="margin:0;font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:#a8841a;font-weight:700">Interior &amp; Clean</p>
+          <img src="${logoUrl}" alt="${escapeHtml(brand.name)}" width="220" style="display:block;margin:0 auto 12px;max-width:220px;width:100%;height:auto;border:0" />
+          <p style="margin:0;font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:#a8841a;font-weight:700">${escapeHtml(brand.name)}</p>
         </td></tr>
         <tr><td style="padding:8px 28px 28px">
           <h1 style="margin:0 0 14px;font-size:22px;line-height:1.25;color:#1a1a1a;font-weight:700">${escapeHtml(title)}</h1>
           ${body}
         </td></tr>
         <tr><td style="padding:16px 28px 24px;border-top:1px solid #efe8dc;text-align:center">
-          <p style="margin:0 0 6px;font-size:12px;color:#6b6560">Homes that feel alive — and stay immaculate.</p>
+          <p style="margin:0 0 6px;font-size:12px;color:#6b6560">${escapeHtml(brand.tagline)}</p>
           <p style="margin:0;font-size:12px;color:#1b3a5c;font-weight:600">
-            <a href="tel:+17174156171" style="color:#1b3a5c;text-decoration:none">(717) 415-6171</a>
-            &nbsp;·&nbsp;
-            <a href="${siteUrl}" style="color:#1b3a5c;text-decoration:none">zavinteriorclean.com</a>
+            ${telHref ? `<a href="tel:${telHref}" style="color:#1b3a5c;text-decoration:none">${phoneDisplay}</a>&nbsp;·&nbsp;` : ''}
+            <a href="${escapeHtml(brand.website)}" style="color:#1b3a5c;text-decoration:none">${escapeHtml(siteHost)}</a>
           </p>
         </td></tr>
       </table>
@@ -339,6 +421,8 @@ export async function verifyMailConnection() {
 
 export async function sendTestMail(to?: string) {
   const m = mailEnv();
+  const smtp = resolvedSmtp();
+  const brand = await getMailBranding();
   const transport = createTransport();
   const status = getMailConfigStatus();
   if (!transport) {
@@ -348,14 +432,14 @@ export async function sendTestMail(to?: string) {
   const dest = to || m.admin;
 
   try {
-    await transport.sendMail({
-      from: `"${m.fromName}" <${m.user}>`,
-      replyTo: m.replyTo,
+    await sendBranded(transport, brand, smtp, {
       to: dest,
-      subject: 'ZAV mail test · OK',
+      subject: `${brand.name} · mail test OK`,
       html: wrap(
         'Mail test OK',
-        `<p style="color:#3d3d3d;line-height:1.55">Notification channel is ready.</p>`,
+        `<p style="color:#3d3d3d;line-height:1.55">Notification channel is ready for <strong>${escapeHtml(brand.name)}</strong>.</p>
+         <p style="color:#6b6560;font-size:13px">Clients see <strong>${escapeHtml(brand.from)}</strong> · replies go to <strong>${escapeHtml(brand.replyTo)}</strong>.</p>`,
+        brand,
       ),
     });
     return { ok: true as const, to: dest };
@@ -369,6 +453,8 @@ export async function sendTestMail(to?: string) {
 export async function sendQuoteNotifications(quote: Quote) {
   const status = getMailConfigStatus();
   const transport = createTransport();
+  const smtp = resolvedSmtp();
+  const brand = await getMailBranding();
   const m = mailEnv();
   if (!transport) {
     console.error('[mail] skip quote notify:', status.reason || 'not configured');
@@ -387,8 +473,9 @@ export async function sendQuoteNotifications(quote: Quote) {
      <table style="border-collapse:collapse;width:100%">${detailsHtml(quote, locale)}</table>
      <p style="margin-top:18px;color:#6b6560;font-size:13px">${L.clientFooter}</p>
      <p style="margin-top:18px;text-align:center">
-       <a href="${m.siteUrl}/#quote" style="display:inline-block;background:linear-gradient(135deg,#c9a227,#a8841a);color:#1a1a1a;text-decoration:none;font-weight:700;font-size:13px;padding:12px 20px;border-radius:999px">zavinteriorclean.com</a>
+       <a href="${brand.siteUrl}/#quote" style="display:inline-block;background:linear-gradient(135deg,#c9a227,#a8841a);color:#1a1a1a;text-decoration:none;font-weight:700;font-size:13px;padding:12px 20px;border-radius:999px">${escapeHtml(brand.website.replace(/^https?:\/\//, ''))}</a>
      </p>`,
+    brand,
   );
 
   const adminHtml = wrap(
@@ -401,9 +488,8 @@ export async function sendQuoteNotifications(quote: Quote) {
        <a href="mailto:${escapeHtml(quote.email)}" style="color:#1b3a5c">${escapeHtml(quote.email)}</a>
      </p>
      <p style="margin-top:12px;font-size:12px;color:#6b6560">Open the site, type <strong>ZAV</strong> + PIN to manage the inbox.</p>`,
+    brand,
   );
-
-  const from = `"${m.fromName}" <${m.user}>`;
 
   // Send sequentially — more reliable on shared SMTP than parallel
   let clientOk = false;
@@ -411,11 +497,9 @@ export async function sendQuoteNotifications(quote: Quote) {
   let error: string | undefined;
 
   try {
-    await transport.sendMail({
-      from,
+    await sendBranded(transport, brand, smtp, {
       to: quote.email,
-      replyTo: m.replyTo,
-      subject: `${L.clientSubject} · ZAV`,
+      subject: `${L.clientSubject} · ${brand.name}`,
       html: clientHtml,
     });
     clientOk = true;
@@ -425,11 +509,10 @@ export async function sendQuoteNotifications(quote: Quote) {
   }
 
   try {
-    await transport.sendMail({
-      from,
+    await sendBranded(transport, brand, smtp, {
       to: m.admin,
       replyTo: quote.email,
-      subject: `${adminL.adminSubject}: ${quote.name} · ZAV`,
+      subject: `${adminL.adminSubject}: ${quote.name} · ${brand.name}`,
       html: adminHtml,
     });
     adminOk = true;
@@ -448,6 +531,8 @@ export async function sendQuoteNotifications(quote: Quote) {
 
 export async function sendScheduleReminder(quote: Quote) {
   const transport = createTransport();
+  const smtp = resolvedSmtp();
+  const brand = await getMailBranding();
   const m = mailEnv();
   if (!transport || !quote.preferredDate || !quote.preferredSlot) {
     return { sent: false, client: false, admin: false, error: 'not_ready' };
@@ -464,6 +549,7 @@ export async function sendScheduleReminder(quote: Quote) {
      <p style="margin:16px 0;padding:12px 14px;border-radius:12px;background:#faf7f1;border:1px solid #efe8dc;font-weight:700;color:#1b3a5c">${escapeHtml(schedule)}</p>
      <table style="border-collapse:collapse;width:100%">${detailsHtml(quote, locale)}</table>
      <p style="margin-top:18px;color:#6b6560;font-size:13px">${L.clientFooter}</p>`,
+    brand,
   );
 
   const adminHtml = wrap(
@@ -471,18 +557,16 @@ export async function sendScheduleReminder(quote: Quote) {
     `<p style="color:#3d3d3d;line-height:1.55">Upcoming preferred visit for <strong>${escapeHtml(quote.name)}</strong>.</p>
      <p style="margin:16px 0;padding:12px 14px;border-radius:12px;background:#faf7f1;border:1px solid #efe8dc;font-weight:700;color:#1b3a5c">${escapeHtml(schedule)}</p>
      <table style="border-collapse:collapse;width:100%">${detailsHtml(quote, 'en')}</table>`,
+    brand,
   );
 
-  const from = `"${m.fromName}" <${m.user}>`;
   let clientOk = false;
   let adminOk = false;
 
   try {
-    await transport.sendMail({
-      from,
+    await sendBranded(transport, brand, smtp, {
       to: quote.email,
-      replyTo: m.replyTo,
-      subject: `${L.reminderSubject} · ZAV`,
+      subject: `${L.reminderSubject} · ${brand.name}`,
       html: clientHtml,
     });
     clientOk = true;
@@ -491,8 +575,7 @@ export async function sendScheduleReminder(quote: Quote) {
   }
 
   try {
-    await transport.sendMail({
-      from,
+    await sendBranded(transport, brand, smtp, {
       to: m.admin,
       replyTo: quote.email,
       subject: `Reminder: ${quote.name} · ${schedule}`,
@@ -533,13 +616,15 @@ export async function processDueReminders() {
 
 export async function sendInvoiceToClient(invoice: Invoice, locale = 'en') {
   const transport = createTransport();
+  const smtp = resolvedSmtp();
+  const brand = await getMailBranding();
   const m = mailEnv();
   if (!transport) {
     return { ok: false as const, error: 'smtp_not_configured' };
   }
 
   const L = t(locale);
-  const invoiceUrl = `${m.siteUrl}/invoice/${invoice.id}?t=${encodeURIComponent(invoice.accessToken || '')}`;
+  const invoiceUrl = `${brand.siteUrl}/invoice/${invoice.id}?t=${encodeURIComponent(invoice.accessToken || '')}`;
 
   const recurringNote = invoice.recurring
     ? `<p style="margin:12px 0;padding:10px 12px;border-radius:12px;background:#faf7f1;border:1px solid #efe8dc;font-size:13px;color:#3d3d3d">
@@ -561,12 +646,11 @@ export async function sendInvoiceToClient(invoice: Invoice, locale = 'en') {
      <p style="text-align:center;margin:22px 0 8px">
        <a href="${invoiceUrl}" style="display:inline-block;background:linear-gradient(135deg,#c9a227,#a8841a);color:#1a1a1a;text-decoration:none;font-weight:700;font-size:13px;padding:12px 22px;border-radius:999px">${escapeHtml(L.invoiceOpen)}</a>
      </p>`,
+    brand,
   );
 
   try {
-    await transport.sendMail({
-      from: `"${m.fromName}" <${m.user}>`,
-      replyTo: m.replyTo,
+    await sendBranded(transport, brand, smtp, {
       to: invoice.clientEmail,
       bcc: m.admin,
       subject: `${L.invoiceSubject} · ${invoice.number}`,

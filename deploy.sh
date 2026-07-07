@@ -54,20 +54,28 @@ load_env_file() {
 }
 load_env_file "$PROJECT_DIR/.env"
 export ADMIN_PASSWORD="${ADMIN_PASSWORD:-04J27}"
-export SMTP_USER="${SMTP_USER:-hello@zavinteriorclean.com}"
-# @zavinteriorclean.com uses Google Workspace — auto-resolve to Gmail SMTP unless SMTP_PROFILE=hostinger
+export SMTP_USER="${SMTP_USER:-info@renace.tech}"
+# Hostinger relay for @renace.tech · Google Workspace for @zavinteriorclean.com
 export SMTP_PROFILE="${SMTP_PROFILE:-}"
-if [[ -z "$SMTP_PROFILE" && "$SMTP_USER" == *"@zavinteriorclean.com" ]]; then
-  export SMTP_HOST="${SMTP_HOST:-smtp.gmail.com}"
-  export SMTP_PORT="${SMTP_PORT:-587}"
-elif [[ "$SMTP_PROFILE" == "hostinger" ]]; then
+if [[ -z "$SMTP_PROFILE" ]]; then
+  if [[ "$SMTP_USER" == *"@renace.tech" ]]; then
+    export SMTP_PROFILE=hostinger
+  elif [[ "$SMTP_USER" == *"@zavinteriorclean.com" ]]; then
+    export SMTP_PROFILE=google
+  fi
+fi
+if [[ "$SMTP_PROFILE" == "hostinger" || "$SMTP_USER" == *"@renace.tech" ]]; then
   export SMTP_HOST="${SMTP_HOST:-smtp.hostinger.com}"
   export SMTP_PORT="${SMTP_PORT:-465}"
+elif [[ -z "$SMTP_PROFILE" && "$SMTP_USER" == *"@zavinteriorclean.com" ]]; then
+  export SMTP_HOST="${SMTP_HOST:-smtp.gmail.com}"
+  export SMTP_PORT="${SMTP_PORT:-587}"
 else
   export SMTP_HOST="${SMTP_HOST:-smtp.gmail.com}"
   export SMTP_PORT="${SMTP_PORT:-587}"
 fi
 export SMTP_PASS="${SMTP_PASS:-}"
+export SMTP_FROM="${SMTP_FROM:-hello@zavinteriorclean.com}"
 export SMTP_FROM_NAME="${SMTP_FROM_NAME:-ZAV Interior & Clean}"
 export SMTP_REPLY_TO="${SMTP_REPLY_TO:-hello@zavinteriorclean.com}"
 export PUBLIC_SITE_URL="${PUBLIC_SITE_URL:-https://zavinteriorclean.com}"
@@ -105,6 +113,7 @@ docker service update \
   --env-rm "SMTP_USER" \
   --env-rm "SMTP_PASS" \
   --env-rm "SMTP_PROFILE" \
+  --env-rm "SMTP_FROM" \
   --env-rm "SMTP_FROM_NAME" \
   --env-rm "SMTP_REPLY_TO" \
   --env-rm "ADMIN_EMAIL" \
@@ -115,6 +124,7 @@ docker service update \
   --env-add "SMTP_USER=${SMTP_USER}" \
   --env-add "SMTP_PASS=${SMTP_PASS}" \
   --env-add "SMTP_PROFILE=${SMTP_PROFILE}" \
+  --env-add "SMTP_FROM=${SMTP_FROM}" \
   --env-add "SMTP_FROM_NAME=${SMTP_FROM_NAME}" \
   --env-add "SMTP_REPLY_TO=${SMTP_REPLY_TO}" \
   --env-add "ADMIN_EMAIL=${ADMIN_EMAIL}" \

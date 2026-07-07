@@ -928,8 +928,9 @@ export function initAdminConsole() {
       const data = await res.json();
       if (!mailStatusEl) return;
       if (data.verify?.ok) {
-        const host = data.status?.host ? ` (${data.status.host}:${data.status.port})` : '';
-        mailStatusEl.textContent = `✅ Mail notifications are active${host}.`;
+        const from = data.status?.from ? ` · from ${data.status.from}` : '';
+        const host = data.status?.host ? ` (${data.status.provider || 'smtp'}:${data.status.port})` : '';
+        mailStatusEl.textContent = `✅ Mail active${from}${host}`;
         mailStatusEl.classList.add('is-ok');
         mailStatusEl.classList.remove('is-err');
       } else {
