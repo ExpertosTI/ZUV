@@ -54,9 +54,19 @@ load_env_file() {
 }
 load_env_file "$PROJECT_DIR/.env"
 export ADMIN_PASSWORD="${ADMIN_PASSWORD:-04J27}"
-export SMTP_HOST="${SMTP_HOST:-smtp.hostinger.com}"
-export SMTP_PORT="${SMTP_PORT:-465}"
-export SMTP_USER="${SMTP_USER:-info@renace.tech}"
+export SMTP_USER="${SMTP_USER:-hello@zavinteriorclean.com}"
+# @zavinteriorclean.com uses Google Workspace — auto-resolve to Gmail SMTP unless SMTP_PROFILE=hostinger
+export SMTP_PROFILE="${SMTP_PROFILE:-}"
+if [[ -z "$SMTP_PROFILE" && "$SMTP_USER" == *"@zavinteriorclean.com" ]]; then
+  export SMTP_HOST="${SMTP_HOST:-smtp.gmail.com}"
+  export SMTP_PORT="${SMTP_PORT:-587}"
+elif [[ "$SMTP_PROFILE" == "hostinger" ]]; then
+  export SMTP_HOST="${SMTP_HOST:-smtp.hostinger.com}"
+  export SMTP_PORT="${SMTP_PORT:-465}"
+else
+  export SMTP_HOST="${SMTP_HOST:-smtp.gmail.com}"
+  export SMTP_PORT="${SMTP_PORT:-587}"
+fi
 export SMTP_PASS="${SMTP_PASS:-}"
 export SMTP_FROM_NAME="${SMTP_FROM_NAME:-ZAV Interior & Clean}"
 export SMTP_REPLY_TO="${SMTP_REPLY_TO:-hello@zavinteriorclean.com}"
@@ -90,10 +100,21 @@ cyan "── 6. Inject mail secrets into service ─────────"
 # Swarm often drops env_file; force SMTP vars onto the running service
 sleep 2
 docker service update \
+  --env-rm "SMTP_HOST" \
+  --env-rm "SMTP_PORT" \
+  --env-rm "SMTP_USER" \
+  --env-rm "SMTP_PASS" \
+  --env-rm "SMTP_PROFILE" \
+  --env-rm "SMTP_FROM_NAME" \
+  --env-rm "SMTP_REPLY_TO" \
+  --env-rm "ADMIN_EMAIL" \
+  --env-rm "PUBLIC_SITE_URL" \
+  --env-rm "ADMIN_PASSWORD" \
   --env-add "SMTP_HOST=${SMTP_HOST}" \
   --env-add "SMTP_PORT=${SMTP_PORT}" \
   --env-add "SMTP_USER=${SMTP_USER}" \
   --env-add "SMTP_PASS=${SMTP_PASS}" \
+  --env-add "SMTP_PROFILE=${SMTP_PROFILE}" \
   --env-add "SMTP_FROM_NAME=${SMTP_FROM_NAME}" \
   --env-add "SMTP_REPLY_TO=${SMTP_REPLY_TO}" \
   --env-add "ADMIN_EMAIL=${ADMIN_EMAIL}" \

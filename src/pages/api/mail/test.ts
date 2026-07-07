@@ -1,6 +1,6 @@
 import type { APIRoute } from 'astro';
 import { authorized } from '../../../lib/auth';
-import { sendTestMail, verifyMailConnection } from '../../../lib/mail';
+import { getMailConfigStatus, sendTestMail, verifyMailConnection } from '../../../lib/mail';
 import { publicError, publicJson, rateLimit } from '../../../lib/security';
 
 export const prerender = false;
@@ -9,11 +9,14 @@ export const GET: APIRoute = async ({ request }) => {
   if (!authorized(request)) return publicError('Unauthorized', 401);
 
   const verify = await verifyMailConnection();
+  const status = getMailConfigStatus();
   return publicJson({
     verify: {
       ok: verify.ok,
-      error: verify.ok ? undefined : 'Mail notifications need attention.',
+      error: verify.ok ? undefined : verify.error || 'Mail notifications need attention.',
+      hint: verify.ok ? undefined : verify.hint,
     },
+    status,
   });
 };
 
@@ -25,15 +28,7 @@ export const POST: APIRoute = async ({ request, clientAddress }) => {
     return publicError('Too many attempts. Try again shortly.', 429);
   }
 
-  // Always send to configured admin — never accept arbitrary "to" from client
   const result = await sendTestMail();
-  if (result.ok) return publicJson({ ok: true });
-  return publicError('Could not send test notification.', 502);
+  if (result.ok) return publicJson({ ok: true, to: result.to });
+  return publicJson({ ok: false, error: result.error || 'Could not send test notification.' }, 502);
 };
-
-function json(data: unknown, status = 200) {
-  return new Response(JSON.stringify(data), {
-    status,
-    headers: { 'Content-Type': 'application/json' },
-  });
-}

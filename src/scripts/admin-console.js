@@ -921,19 +921,28 @@ export function initAdminConsole() {
       const data = await res.json();
       if (!mailStatusEl) return;
       if (data.verify?.ok) {
-        mailStatusEl.textContent = 'Mail notifications are active.';
+        const host = data.status?.host ? ` (${data.status.host}:${data.status.port})` : '';
+        mailStatusEl.textContent = `✅ Mail notifications are active${host}.`;
+        mailStatusEl.classList.add('is-ok');
+        mailStatusEl.classList.remove('is-err');
       } else {
-        mailStatusEl.textContent = 'Mail notifications need attention. Check server mail settings.';
+        const hint = data.verify?.hint || data.verify?.error || 'Check server mail settings.';
+        mailStatusEl.textContent = `⚠️ ${hint}`;
+        mailStatusEl.classList.add('is-err');
+        mailStatusEl.classList.remove('is-ok');
       }
     } catch {
-      if (mailStatusEl) mailStatusEl.textContent = 'Mail status unavailable.';
+      if (mailStatusEl) {
+        mailStatusEl.textContent = '⚠️ Mail status unavailable.';
+        mailStatusEl.classList.add('is-err');
+      }
     }
   };
 
   root.querySelector('[data-mail-check]')?.addEventListener('click', () => {
     if (mailMsgEl) mailMsgEl.textContent = 'Checking…';
     refreshMailStatus().then(() => {
-      if (mailMsgEl) mailMsgEl.textContent = mailStatusEl?.textContent || '';
+      if (mailMsgEl) mailMsgEl.textContent = '';
     });
   });
 
@@ -947,8 +956,10 @@ export function initAdminConsole() {
     const data = await res.json();
     if (mailMsgEl) {
       mailMsgEl.textContent = data.ok
-        ? `Test sent to ${data.to}`
-        : `Test failed: ${data.error || 'unknown'}`;
+        ? `✅ Test sent to ${data.to || 'admin'}`
+        : `❌ ${data.error || 'Test failed'}`;
+      mailMsgEl.classList.toggle('is-ok', Boolean(data.ok));
+      mailMsgEl.classList.toggle('is-err', !data.ok);
     }
     refreshMailStatus();
   });

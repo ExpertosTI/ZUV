@@ -11,14 +11,46 @@ function env(name: string, fallback = '') {
 
 function mailEnv() {
   return {
-    user: env('SMTP_USER', 'info@renace.tech'),
+    user: env('SMTP_USER', 'hello@zavinteriorclean.com'),
     pass: env('SMTP_PASS'),
-    host: env('SMTP_HOST', 'smtp.hostinger.com'),
-    port: Number(env('SMTP_PORT', '465')) || 465,
+    host: env('SMTP_HOST', 'smtp.gmail.com'),
+    port: Number(env('SMTP_PORT', '587')) || 587,
     admin: env('ADMIN_EMAIL', 'azhaliaestepan@gmail.com'),
     fromName: env('SMTP_FROM_NAME', 'ZAV Interior & Clean'),
     siteUrl: env('PUBLIC_SITE_URL', 'https://zavinteriorclean.com').replace(/\/$/, ''),
     replyTo: env('SMTP_REPLY_TO', 'hello@zavinteriorclean.com'),
+    profile: env('SMTP_PROFILE', '').toLowerCase(),
+  };
+}
+
+/** Resolve SMTP host/port — ZAV uses Google Workspace for @zavinteriorclean.com mailboxes. */
+function resolvedSmtp() {
+  const m = mailEnv();
+  let { host, port, profile, user } = m;
+
+  const zavMailbox = /@zavinteriorclean\.com$/i.test(user);
+  const hostingerHost = /hostinger/i.test(host);
+
+  if (profile === 'hostinger') {
+    host = 'smtp.hostinger.com';
+    port = 465;
+  } else if (
+    profile === 'google' ||
+    profile === 'gmail' ||
+    /@(gmail\.com|googlemail\.com)$/i.test(user) ||
+    (zavMailbox && hostingerHost)
+  ) {
+    host = 'smtp.gmail.com';
+    port = 587;
+  }
+
+  return {
+    ...m,
+    host,
+    port,
+    secure: port === 465,
+    requireTLS: port === 587,
+    provider: port === 587 && /gmail/i.test(host) ? 'google' : hostingerHost ? 'hostinger' : 'smtp',
   };
 }
 
@@ -154,15 +186,15 @@ function createTransport() {
     return null;
   }
 
-  const m = mailEnv();
+  const smtp = resolvedSmtp();
   const options: SMTPTransport.Options = {
-    host: m.host,
-    port: m.port,
-    secure: m.port === 465,
-    requireTLS: m.port === 587,
+    host: smtp.host,
+    port: smtp.port,
+    secure: smtp.secure,
+    requireTLS: smtp.requireTLS,
     auth: {
-      user: m.user,
-      pass: m.pass,
+      user: smtp.user,
+      pass: smtp.pass,
     },
     tls: { minVersion: 'TLSv1.2' },
     connectionTimeout: 15_000,
@@ -171,6 +203,19 @@ function createTransport() {
   };
 
   return nodemailer.createTransport(options);
+}
+
+function mailStatusForAdmin() {
+  const cfg = mailConfigured();
+  const smtp = resolvedSmtp();
+  return {
+    configured: cfg.ok,
+    host: smtp.host,
+    port: smtp.port,
+    user: smtp.user.replace(/(.{2}).+(@.+)/, '$1***$2'),
+    provider: smtp.provider,
+    reason: cfg.ok ? undefined : 'Mail is not configured on the server.',
+  };
 }
 
 function detailsHtml(quote: Quote, locale: LocaleKey) {
@@ -262,26 +307,33 @@ export function getMailConfigStatus() {
   return {
     configured: cfg.ok,
     reason: cfg.ok ? undefined : 'Mail is not configured on the server.',
+    ...mailStatusForAdmin(),
   };
 }
 
 export async function verifyMailConnection() {
   const status = getMailConfigStatus();
   if (!status.configured) {
-    return { ok: false as const, error: status.reason };
+    return { ok: false as const, error: status.reason, hint: status.reason };
   }
 
   const transport = createTransport();
   if (!transport) {
-    return { ok: false as const, error: 'Mail is not available.' };
+    return { ok: false as const, error: 'Mail is not available.', hint: status.reason };
   }
 
   try {
     await transport.verify();
-    return { ok: true as const };
-  } catch {
-    console.error('[mail] verify failed');
-    return { ok: false as const, error: 'Mail notifications need attention.' };
+    return { ok: true as const, ...mailStatusForAdmin() };
+  } catch (err) {
+    const hint = explainSmtpError(err);
+    console.error('[mail] verify failed:', hint);
+    return {
+      ok: false as const,
+      error: 'Mail notifications need attention.',
+      hint,
+      ...mailStatusForAdmin(),
+    };
   }
 }
 
@@ -308,8 +360,9 @@ export async function sendTestMail(to?: string) {
     });
     return { ok: true as const, to: dest };
   } catch (err) {
-    console.error('[mail] test failed:', explainSmtpError(err));
-    return { ok: false as const, error: 'Could not send test notification.' };
+    const hint = explainSmtpError(err);
+    console.error('[mail] test failed:', hint);
+    return { ok: false as const, error: hint };
   }
 }
 
