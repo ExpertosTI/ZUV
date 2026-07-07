@@ -88,12 +88,12 @@ export function initAdminShare(root) {
   mount.innerHTML = `
     <div class="zav-adm__share-layout">
       <section class="zav-adm__panel zav-adm__share-picker">
-        <h3>¿Qué compartir? <span>elige el destino del QR</span></h3>
+        <h3>📣 ¿Qué compartir? <span>elige el destino del QR</span></h3>
         <div class="zav-adm__share-targets" data-share-targets></div>
       </section>
 
       <section class="zav-adm__panel zav-adm__share-qr">
-        <h3>Código QR <span>listo para imprimir o guardar</span></h3>
+        <h3>📱 Código QR <span>listo para imprimir o guardar</span></h3>
         <div class="zav-adm__qr-wrap">
           <canvas data-share-canvas width="280" height="280" aria-label="Código QR"></canvas>
         </div>
@@ -102,18 +102,18 @@ export function initAdminShare(root) {
       </section>
 
       <section class="zav-adm__panel zav-adm__share-actions">
-        <h3>Compartir <span>copiar, enviar o descargar</span></h3>
+        <h3>🚀 Compartir <span>copiar, enviar o descargar</span></h3>
         <div class="zav-adm__share-grid">
-          <button type="button" class="zav-adm__share-btn" data-share-action="copy-link">Copiar enlace</button>
-          <button type="button" class="zav-adm__share-btn" data-share-action="copy-message">Copiar mensaje</button>
-          <button type="button" class="zav-adm__share-btn zav-adm__share-btn--accent" data-share-action="whatsapp">WhatsApp</button>
-          <button type="button" class="zav-adm__share-btn" data-share-action="email">Email</button>
-          <button type="button" class="zav-adm__share-btn" data-share-action="sms">SMS</button>
-          <button type="button" class="zav-adm__share-btn" data-share-action="native" hidden data-share-native>Compartir…</button>
-          <button type="button" class="zav-adm__share-btn" data-share-action="facebook">Facebook</button>
-          <button type="button" class="zav-adm__share-btn" data-share-action="instagram">Instagram</button>
-          <button type="button" class="zav-adm__share-btn" data-share-action="download">Descargar QR</button>
-          <button type="button" class="zav-adm__share-btn" data-share-action="print">Imprimir QR</button>
+          <button type="button" class="zav-adm__share-btn" data-share-action="copy-link">🔗 Copiar enlace</button>
+          <button type="button" class="zav-adm__share-btn" data-share-action="copy-message">📋 Copiar mensaje</button>
+          <button type="button" class="zav-adm__share-btn zav-adm__share-btn--accent" data-share-action="whatsapp">💬 WhatsApp</button>
+          <button type="button" class="zav-adm__share-btn" data-share-action="email">✉️ Email</button>
+          <button type="button" class="zav-adm__share-btn" data-share-action="sms">📱 SMS</button>
+          <button type="button" class="zav-adm__share-btn" data-share-action="native" hidden data-share-native>📤 Compartir…</button>
+          <button type="button" class="zav-adm__share-btn" data-share-action="facebook">📘 Facebook</button>
+          <button type="button" class="zav-adm__share-btn" data-share-action="instagram">📸 Instagram</button>
+          <button type="button" class="zav-adm__share-btn" data-share-action="download">⬇️ Descargar QR</button>
+          <button type="button" class="zav-adm__share-btn" data-share-action="print">🖨️ Imprimir QR</button>
         </div>
         <p class="zav-adm__msg" data-share-msg></p>
       </section>
@@ -130,6 +130,7 @@ export function initAdminShare(root) {
   if (navigator.share) nativeBtn.hidden = false;
 
   const targetIds = ['quote', 'home', 'whatsapp'];
+  const targetEmoji = { quote: '📝', home: '🏠', whatsapp: '💬' };
   let activeId = 'quote';
   let active = buildTarget(activeId);
   let qrBusy = false;
@@ -138,7 +139,7 @@ export function initAdminShare(root) {
     .map((id) => {
       const t = buildTarget(id);
       return `<button type="button" class="zav-adm__share-target" data-share-id="${id}">
-        <strong>${t.label}</strong>
+        <strong>${targetEmoji[id] || '✨'} ${t.label}</strong>
         <span>${t.hint}</span>
       </button>`;
     })
