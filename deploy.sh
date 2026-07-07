@@ -85,7 +85,14 @@ if [ -z "$SMTP_PASS" ] || [[ "$SMTP_PASS" =~ TU_APP_PASSWORD|YOUR_GOOGLE|changem
   red "WARNING: SMTP_PASS is missing or still a placeholder in /opt/zuv/.env"
 fi
 if [ -n "$SMTP_PASS" ]; then
-  cyan "   SMTP user: $SMTP_USER  pass: set (${#SMTP_PASS} chars)"
+  cyan "   SMTP profile: ${SMTP_PROFILE:-auto} · ${SMTP_HOST}:${SMTP_PORT}"
+  cyan "   SMTP user: $SMTP_USER  pass: set (${#SMTP_PASS} chars) · reply-to: $SMTP_REPLY_TO"
+  if [[ "$SMTP_PROFILE" == "hostinger" && "$SMTP_USER" != *"@renace.tech" ]]; then
+    red "   WARNING: hostinger profile but SMTP_USER is not @renace.tech"
+  fi
+  if [[ "$SMTP_USER" == *"@renace.tech" && ${#SMTP_PASS} -ne 12 ]]; then
+    red "   WARNING: renace.tech pass should be 12 chars — got ${#SMTP_PASS} (check .env)"
+  fi
 else
   red "   SMTP pass: NOT SET — quote emails will not send"
 fi

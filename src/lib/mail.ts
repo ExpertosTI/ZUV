@@ -255,25 +255,50 @@ function createTransport() {
       user: smtp.user,
       pass: smtp.pass,
     },
-    tls: { minVersion: 'TLSv1.2' },
-    connectionTimeout: 15_000,
-    greetingTimeout: 15_000,
-    socketTimeout: 20_000,
+    tls: { minVersion: 'TLSv1.2', ciphers: 'TLSv1.2:' },
+    connectionTimeout: 20_000,
+    greetingTimeout: 20_000,
+    socketTimeout: 25_000,
   };
 
   return nodemailer.createTransport(options);
+}
+
+/** Retry on alternate Hostinger port if primary fails. */
+async function withTransport<T>(fn: (t: nodemailer.Transporter) => Promise<T>): Promise<T> {
+  const smtp = resolvedSmtp();
+  const primary = createTransport();
+  if (!primary) throw new Error('smtp_not_configured');
+
+  try {
+    return await fn(primary);
+  } catch (err) {
+    if (smtp.provider !== 'hostinger') throw err;
+    const altPort = smtp.port === 465 ? 587 : 465;
+    console.warn(`[mail] retry hostinger on port ${altPort}`);
+    const alt = nodemailer.createTransport({
+      host: smtp.host,
+      port: altPort,
+      secure: altPort === 465,
+      requireTLS: altPort === 587,
+      auth: { user: smtp.user, pass: smtp.pass },
+      tls: { minVersion: 'TLSv1.2' },
+    });
+    return fn(alt);
+  }
 }
 
 function mailStatusForAdmin() {
   const cfg = mailConfigured();
   const smtp = resolvedSmtp();
   const m = mailEnv();
+  const displayFrom = smtp.provider === 'hostinger' ? smtp.user : m.from;
   return {
     configured: cfg.ok,
     host: smtp.host,
     port: smtp.port,
     user: maskEmail(smtp.user),
-    from: maskEmail(m.from),
+    from: maskEmail(displayFrom),
     replyTo: maskEmail(m.replyTo),
     provider: smtp.provider,
     reason: cfg.ok ? undefined : 'Mail is not configured on the server.',
@@ -286,15 +311,15 @@ async function sendBranded(
   smtp: ReturnType<typeof resolvedSmtp>,
   opts: nodemailer.SendMailOptions,
 ) {
-  const fromHeader = `"${brand.name}" <${brand.from}>`;
+  // Hostinger only allows the authenticated mailbox in From — brand via display name + Reply-To
+  const fromAddr = smtp.provider === 'hostinger' ? smtp.user : brand.from;
+  const fromHeader = `"${brand.name}" <${fromAddr}>`;
   const replyTo = opts.replyTo || brand.replyTo;
-  const maskedFrom = brand.from.toLowerCase() !== smtp.user.toLowerCase();
 
   await transport.sendMail({
     ...opts,
     from: fromHeader,
     replyTo,
-    ...(maskedFrom ? { envelope: { from: smtp.user } } : {}),
   });
 }
 
@@ -405,7 +430,7 @@ export async function verifyMailConnection() {
   }
 
   try {
-    await transport.verify();
+    await withTransport((transport) => transport.verify());
     return { ok: true as const, ...mailStatusForAdmin() };
   } catch (err) {
     const hint = explainSmtpError(err);
@@ -432,16 +457,18 @@ export async function sendTestMail(to?: string) {
   const dest = to || m.admin;
 
   try {
-    await sendBranded(transport, brand, smtp, {
-      to: dest,
-      subject: `${brand.name} · mail test OK`,
-      html: wrap(
-        'Mail test OK',
-        `<p style="color:#3d3d3d;line-height:1.55">Notification channel is ready for <strong>${escapeHtml(brand.name)}</strong>.</p>
-         <p style="color:#6b6560;font-size:13px">Clients see <strong>${escapeHtml(brand.from)}</strong> · replies go to <strong>${escapeHtml(brand.replyTo)}</strong>.</p>`,
-        brand,
-      ),
-    });
+    await withTransport((transport) =>
+      sendBranded(transport, brand, smtp, {
+        to: dest,
+        subject: `${brand.name} · mail test OK`,
+        html: wrap(
+          'Mail test OK',
+          `<p style="color:#3d3d3d;line-height:1.55">Notification channel is ready for <strong>${escapeHtml(brand.name)}</strong>.</p>
+         <p style="color:#6b6560;font-size:13px">Reply-To: <strong>${escapeHtml(brand.replyTo)}</strong></p>`,
+          brand,
+        ),
+      }),
+    );
     return { ok: true as const, to: dest };
   } catch (err) {
     const hint = explainSmtpError(err);
@@ -497,11 +524,13 @@ export async function sendQuoteNotifications(quote: Quote) {
   let error: string | undefined;
 
   try {
-    await sendBranded(transport, brand, smtp, {
-      to: quote.email,
-      subject: `${L.clientSubject} · ${brand.name}`,
-      html: clientHtml,
-    });
+    await withTransport((transport) =>
+      sendBranded(transport, brand, smtp, {
+        to: quote.email,
+        subject: `${L.clientSubject} · ${brand.name}`,
+        html: clientHtml,
+      }),
+    );
     clientOk = true;
   } catch (err) {
     error = explainSmtpError(err);
@@ -509,12 +538,14 @@ export async function sendQuoteNotifications(quote: Quote) {
   }
 
   try {
-    await sendBranded(transport, brand, smtp, {
-      to: m.admin,
-      replyTo: quote.email,
-      subject: `${adminL.adminSubject}: ${quote.name} · ${brand.name}`,
-      html: adminHtml,
-    });
+    await withTransport((transport) =>
+      sendBranded(transport, brand, smtp, {
+        to: m.admin,
+        replyTo: quote.email,
+        subject: `${adminL.adminSubject}: ${quote.name} · ${brand.name}`,
+        html: adminHtml,
+      }),
+    );
     adminOk = true;
   } catch (err) {
     error = explainSmtpError(err);
@@ -564,23 +595,27 @@ export async function sendScheduleReminder(quote: Quote) {
   let adminOk = false;
 
   try {
-    await sendBranded(transport, brand, smtp, {
-      to: quote.email,
-      subject: `${L.reminderSubject} · ${brand.name}`,
-      html: clientHtml,
-    });
+    await withTransport((transport) =>
+      sendBranded(transport, brand, smtp, {
+        to: quote.email,
+        subject: `${L.reminderSubject} · ${brand.name}`,
+        html: clientHtml,
+      }),
+    );
     clientOk = true;
   } catch (err) {
     console.error('[mail] reminder client failed:', explainSmtpError(err));
   }
 
   try {
-    await sendBranded(transport, brand, smtp, {
-      to: m.admin,
-      replyTo: quote.email,
-      subject: `Reminder: ${quote.name} · ${schedule}`,
-      html: adminHtml,
-    });
+    await withTransport((transport) =>
+      sendBranded(transport, brand, smtp, {
+        to: m.admin,
+        replyTo: quote.email,
+        subject: `Reminder: ${quote.name} · ${schedule}`,
+        html: adminHtml,
+      }),
+    );
     adminOk = true;
   } catch (err) {
     console.error('[mail] reminder admin failed:', explainSmtpError(err));
@@ -650,12 +685,14 @@ export async function sendInvoiceToClient(invoice: Invoice, locale = 'en') {
   );
 
   try {
-    await sendBranded(transport, brand, smtp, {
-      to: invoice.clientEmail,
-      bcc: m.admin,
-      subject: `${L.invoiceSubject} · ${invoice.number}`,
-      html,
-    });
+    await withTransport((transport) =>
+      sendBranded(transport, brand, smtp, {
+        to: invoice.clientEmail,
+        bcc: m.admin,
+        subject: `${L.invoiceSubject} · ${invoice.number}`,
+        html,
+      }),
+    );
     return { ok: true as const };
   } catch (err) {
     console.error('[mail] invoice notify failed:', explainSmtpError(err));
