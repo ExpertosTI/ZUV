@@ -8,55 +8,66 @@ alwaysApply: true
 ## Idioma y tono
 
 - Responder en **español** salvo que pida otro idioma.
-- Prosa clara; sin telegrafía. Comandos completos y listos para copiar.
+- Prosa mínima. El usuario automatiza todo: **ejecutar** en lugar de solo explicar cuando sea posible.
 
-## Secretos y credenciales
+## Comandos (obligatorio)
 
-- **Nunca** pegar, inventar ni usar como ejemplo claves reales o ficticias (API keys, tokens, contraseñas).
-- **Nunca** sugerir `nano`, `vim`, `vi` ni editores interactivos en el servidor para configurar secretos.
-- **Nunca** ejecutar ni proponer `cat .env`, `grep` de claves, `echo $GEMINI_API_KEY`, ni curls que impriman credenciales.
-- Para verificar config sin exponer valores: `test -n "$VAR" && echo "ok" || echo "falta"` (sin imprimir el valor).
-- Si hace falta una clave, indicar **qué variable** va en `.env` y que el usuario la pegue **solo en su máquina/servidor**, no en el chat.
+- Solo bloques **listos para copiar y pegar**, con rutas, hosts, stacks y dominios **reales**.
+- **Prohibido:** placeholders (`<tu-usuario>`, `YOUR_*`, `ejemplo`, `seed`), opciones múltiples en un mismo bloque, `nano`/`vim`/`vi`, editores interactivos.
+- **Prohibido:** datos de ejemplo o bloques `.env` ficticios en el chat.
+- Si hay dos proyectos, dar **dos bloques separados** (ZAV y Citas), cada uno completo.
+- Para secretos: usar `./deploy.sh` o el `.env` ya existente en el servidor; nunca pedir pegar claves en el chat.
+- Verificar sin exponer valores: `test -n "$SMTP_PASS" && echo "ok" || echo "falta"`
 
-## VPS compartido (RenaceTech)
+## Secretos
+
+- Nunca pegar, inventar ni imprimir claves, tokens ni contraseñas.
+- Nunca `cat .env`, `grep` de claves, ni curls que impriman credenciales.
+
+## VPS RenaceTech
 
 - SSH: `ssh root@45.9.191.18`
-- Red Docker: `RenaceNet` (Traefik + Let's Encrypt).
-- Dar **comandos completos** en bloques copiables (ssh → cd → git → docker).
-- No mezclar despliegue con edición de secretos en la misma instrucción.
-- No inspeccionar ni volcar `.env` del servidor salvo petición explícita.
+- Red: `RenaceNet`
 
 | Proyecto | Ruta VPS | Stack | Servicio | Dominio |
 |----------|----------|-------|----------|---------|
-| **ZAV** | `/opt/zuv` | `zuv` | `zuv_web` | `zavinteriorclean.com` · `zav.renace.tech` |
-| **Citas** | `/opt/citas` | `citas` | `citas_web` | `citas.renace.tech` |
+| ZAV | `/opt/zuv` | `zuv` | `zuv_web` | `zavinteriorclean.com` |
+| Citas | `/opt/citas` | `citas` | `citas_web` | `citas.renace.tech` |
 
-## Proyectos locales (no confundir)
+## Proyectos locales
 
-| Repo | Ruta local | Qué es |
-|------|------------|--------|
-| **ZAV** | `/Users/brainiacx/APPS/ZAV` | Landing limpieza · cotizaciones · WhatsApp |
-| **Citas** | `/Users/brainiacx/APPS/citas` | Reservas salones · bahía · asistente Gemini |
-
-Si el usuario muestra Studio BBShop, servicios, bahía o asistente → **Citas**, no ZAV.
+| Repo | Ruta |
+|------|------|
+| ZAV | `/Users/brainiacx/APPS/ZAV` |
+| Citas | `/Users/brainiacx/APPS/citas` |
 
 ## Código y entrega
 
-- Cambios mínimos y enfocados; reutilizar convenciones del repo.
-- No crear docs `.md` no pedidos.
-- **Commits:** solo cuando el usuario lo pida (commit, desplegar, subir, o confirme con “sí”). Entonces hacer **commit + push** sin volver a preguntar.
-- No pushear sin commit previo. No commit proactivo si no lo pidió.
+- Cambios mínimos; reutilizar convenciones del repo.
+- No crear `.md` no pedidos.
+- Commit + push solo cuando lo pida; entonces sin volver a preguntar.
 
-## Actualización en producción (ya desplegado)
+## Deploy ZAV (producción)
 
 ```bash
 ssh root@45.9.191.18
-cd /opt/<zuv|citas>
+cd /opt/zuv
 git fetch origin main && git reset --hard origin/main
-docker compose build --pull
-docker stack deploy -c docker-compose.yml <zuv|citas>
-docker service ps <zuv_web|citas_web> --no-trunc
-curl -fsS https://<dominio>/healthz && echo " OK"
+./deploy.sh
+git rev-parse --short HEAD
+curl -fsS https://zavinteriorclean.com/healthz && echo " OK"
+docker service ps zuv_web --no-trunc | head -3
 ```
 
-ZAV también puede usar `./deploy.sh` (inyecta SMTP tras el deploy).
+## Deploy Citas (producción)
+
+```bash
+ssh root@45.9.191.18
+cd /opt/citas
+git fetch origin main && git reset --hard origin/main
+docker compose build --pull
+docker stack deploy -c docker-compose.yml citas
+docker service update --force citas_web
+docker service ps citas_web --no-trunc | head -3
+curl -fsS https://citas.renace.tech/healthz && echo " OK"
+```
