@@ -57,6 +57,9 @@ const FREQ_LABEL = {
   monthly: 'Monthly',
 };
 
+/** Inline SVG must live inside .zav-adm__ico — never raw in layout. */
+const ico = (svg) => `<span class="zav-adm__ico" aria-hidden="true">${svg}</span>`;
+
 export function initAdminConsole() {
   if (document.getElementById('zav-adm')) return;
 
@@ -73,7 +76,7 @@ export function initAdminConsole() {
     <div class="zav-adm__motif zav-adm__motif--4">${ICONS.home}</div>
 
     <div class="zav-adm__pinpad" role="dialog" aria-label="ZAV access" aria-modal="true">
-      <div class="zav-adm__brand">${ICONS.spark} ZAV · CLEAN OPS</div>
+      <div class="zav-adm__brand">${ico(ICONS.spark)} ZAV · CLEAN OPS</div>
       <div class="zav-adm__title">🔐 Enter PIN</div>
       <p class="zav-adm__subtitle">✨ Metrics · leads · homes cared for</p>
       <div class="zav-adm__dots">${'<span class="zav-adm__dot"></span>'.repeat(PIN_LENGTH)}</div>
@@ -87,24 +90,24 @@ export function initAdminConsole() {
 
     <div class="zav-adm__console" role="region" aria-label="ZAV metrics">
       <header class="zav-adm__head">
-        <div class="zav-adm__head-brand">${ICONS.spark} ZAV OPS</div>
+        <div class="zav-adm__head-brand">${ico(ICONS.spark)} ZAV OPS</div>
         <div class="zav-adm__head-title">
           🧼 Cleaning command center
           <small>✨ Live leads &amp; performance</small>
         </div>
         <nav class="zav-adm__tabs" role="tablist">
           <button type="button" class="zav-adm__tab is-active" data-tab="inbox">
-            <span class="zav-adm__tab-ico">${ICONS.inbox}</span> Inbox
+            <span class="zav-adm__tab-ico">${ico(ICONS.inbox)}</span> Inbox
             <span class="zav-adm__tab-badge" data-m="inbox-badge" hidden>0</span>
           </button>
-          <button type="button" class="zav-adm__tab" data-tab="overview"><span class="zav-adm__tab-ico">${ICONS.chart}</span> Overview</button>
-          <button type="button" class="zav-adm__tab" data-tab="invoices"><span class="zav-adm__tab-ico">${ICONS.invoice}</span> Invoices</button>
-          <button type="button" class="zav-adm__tab" data-tab="billing"><span class="zav-adm__tab-ico">${ICONS.billing}</span> Billing</button>
-          <button type="button" class="zav-adm__tab" data-tab="clients"><span class="zav-adm__tab-ico">${ICONS.users}</span> Clients</button>
-          <button type="button" class="zav-adm__tab" data-tab="share"><span class="zav-adm__tab-ico">${ICONS.share}</span> Share</button>
+          <button type="button" class="zav-adm__tab" data-tab="overview"><span class="zav-adm__tab-ico">${ico(ICONS.chart)}</span> Overview</button>
+          <button type="button" class="zav-adm__tab" data-tab="invoices"><span class="zav-adm__tab-ico">${ico(ICONS.invoice)}</span> Invoices</button>
+          <button type="button" class="zav-adm__tab" data-tab="billing"><span class="zav-adm__tab-ico">${ico(ICONS.billing)}</span> Billing</button>
+          <button type="button" class="zav-adm__tab" data-tab="clients"><span class="zav-adm__tab-ico">${ico(ICONS.users)}</span> Clients</button>
+          <button type="button" class="zav-adm__tab" data-tab="share"><span class="zav-adm__tab-ico">${ico(ICONS.share)}</span> Share</button>
         </nav>
         <div class="zav-adm__actions">
-          <button type="button" class="zav-adm__btn" data-action="refresh"><span class="zav-adm__btn-ico">${ICONS.refresh}</span> Refresh</button>
+          <button type="button" class="zav-adm__btn" data-action="refresh"><span class="zav-adm__btn-ico">${ico(ICONS.refresh)}</span> Refresh</button>
           <button type="button" class="zav-adm__btn zav-adm__btn--danger" data-action="close">✕ Close</button>
         </div>
       </header>
@@ -114,22 +117,22 @@ export function initAdminConsole() {
           <div class="zav-adm__kpis">
             <article class="zav-adm__kpi zav-adm__kpi--new">
               <span class="zav-adm__kpi-emoji" aria-hidden="true">📬</span>
-              <div class="zav-adm__kpi-label">${ICONS.inbox} New</div>
+              <div class="zav-adm__kpi-label">${ico(ICONS.inbox)} New</div>
               <strong data-m="inbox-new">—</strong><em>unread requests</em>
             </article>
             <article class="zav-adm__kpi zav-adm__kpi--viewed">
               <span class="zav-adm__kpi-emoji" aria-hidden="true">👀</span>
-              <div class="zav-adm__kpi-label">${ICONS.lead} In progress</div>
+              <div class="zav-adm__kpi-label">${ico(ICONS.lead)} In progress</div>
               <strong data-m="inbox-viewed">—</strong><em>viewed</em>
             </article>
             <article class="zav-adm__kpi zav-adm__kpi--done">
               <span class="zav-adm__kpi-emoji" aria-hidden="true">✅</span>
-              <div class="zav-adm__kpi-label">${ICONS.spark} Done</div>
+              <div class="zav-adm__kpi-label">${ico(ICONS.spark)} Done</div>
               <strong data-m="inbox-done">—</strong><em>jobs completed</em>
             </article>
             <article class="zav-adm__kpi zav-adm__kpi--invoice">
               <span class="zav-adm__kpi-emoji" aria-hidden="true">🧾</span>
-              <div class="zav-adm__kpi-label">${ICONS.invoice} Invoices</div>
+              <div class="zav-adm__kpi-label">${ico(ICONS.invoice)} Invoices</div>
               <strong data-m="invoices-count">—</strong><em>generated</em>
             </article>
           </div>
@@ -146,25 +149,25 @@ export function initAdminConsole() {
           <div class="zav-adm__kpis">
             <article class="zav-adm__kpi zav-adm__kpi--visits">
               <span class="zav-adm__kpi-emoji" aria-hidden="true">👁️</span>
-              <div class="zav-adm__kpi-label">${ICONS.users} Visits</div>
+              <div class="zav-adm__kpi-label">${ico(ICONS.users)} Visits</div>
               <strong data-m="visits">—</strong>
               <em data-m="unique">— unique</em>
             </article>
             <article class="zav-adm__kpi zav-adm__kpi--leads">
               <span class="zav-adm__kpi-emoji" aria-hidden="true">📈</span>
-              <div class="zav-adm__kpi-label">${ICONS.lead} Leads</div>
+              <div class="zav-adm__kpi-label">${ico(ICONS.lead)} Leads</div>
               <strong data-m="leads">—</strong>
               <em data-m="leads-today">— today</em>
             </article>
             <article class="zav-adm__kpi zav-adm__kpi--conv">
               <span class="zav-adm__kpi-emoji" aria-hidden="true">🎯</span>
-              <div class="zav-adm__kpi-label">${ICONS.spark} Conversion</div>
+              <div class="zav-adm__kpi-label">${ico(ICONS.spark)} Conversion</div>
               <strong data-m="conversion">—</strong>
               <em>leads / visits</em>
             </article>
             <article class="zav-adm__kpi zav-adm__kpi--homes">
               <span class="zav-adm__kpi-emoji" aria-hidden="true">🏡</span>
-              <div class="zav-adm__kpi-label">${ICONS.home} Homes</div>
+              <div class="zav-adm__kpi-label">${ico(ICONS.home)} Homes</div>
               <strong data-m="homes">—</strong>
               <em data-m="leads-week">— leads / 7d</em>
             </article>
@@ -172,17 +175,17 @@ export function initAdminConsole() {
 
           <div class="zav-adm__grid-2">
             <section class="zav-adm__panel">
-              <h3>${ICONS.lead} 📊 Lead trend <span>last 14 days</span></h3>
+              <h3>📊 Lead trend <span>last 14 days</span></h3>
               <div class="zav-adm__trend" data-trend></div>
             </section>
             <section class="zav-adm__panel">
-              <h3>${ICONS.spray} 🫧 Top services</h3>
+              <h3>🫧 Top services</h3>
               <div class="zav-adm__rows" data-top-services></div>
             </section>
           </div>
 
           <section class="zav-adm__panel">
-            <h3>${ICONS.cloth} ✨ Latest leads <span>fresh requests</span></h3>
+            <h3>✨ Latest leads <span>fresh requests</span></h3>
             <div class="zav-adm__table-wrap">
               <table class="zav-adm__table">
                 <thead>
@@ -198,7 +201,7 @@ export function initAdminConsole() {
 
         <section class="zav-adm__pane" data-pane="invoices">
           <section class="zav-adm__panel">
-            <h3>${ICONS.invoice} 🧾 Invoices <span>recurring cycles are manual &amp; secure</span></h3>
+            <h3>🧾 Invoices <span>recurring cycles are manual &amp; secure</span></h3>
             <div class="zav-adm__table-wrap">
               <table class="zav-adm__table">
                 <thead>
@@ -212,7 +215,7 @@ export function initAdminConsole() {
 
         <section class="zav-adm__pane" data-pane="billing">
           <section class="zav-adm__panel">
-            <h3>${ICONS.mail} 📧 Mail notifications <span>outbound alerts</span></h3>
+            <h3>📧 Mail notifications <span>outbound alerts</span></h3>
             <p class="zav-adm__lead-meta" data-mail-status>Checking mail…</p>
             <div class="zav-adm__card-actions" style="margin-top:10px">
               <button type="button" class="zav-adm__btn" data-mail-check>🔌 Check connection</button>
@@ -221,7 +224,7 @@ export function initAdminConsole() {
             <p class="zav-adm__msg" data-mail-msg></p>
           </section>
           <section class="zav-adm__panel">
-            <h3>${ICONS.billing} 💳 Billing profile <span>used on invoices</span></h3>
+            <h3>💳 Billing profile <span>used on invoices</span></h3>
             <form class="zav-adm__form" data-billing-form>
               <input name="businessName" placeholder="Business name" required />
               <input name="legalName" placeholder="Legal name" />
@@ -243,7 +246,7 @@ export function initAdminConsole() {
 
         <section class="zav-adm__pane" data-pane="clients">
           <section class="zav-adm__panel">
-            <h3>${ICONS.home} 🏡 Homes in feed <span data-m="homes-2">—</span></h3>
+            <h3>🏡 Homes in feed <span data-m="homes-2">—</span></h3>
             <div class="zav-adm__table-wrap">
               <table class="zav-adm__table">
                 <thead>
@@ -515,8 +518,8 @@ export function initAdminConsole() {
       ${q.preferredDate ? `<p class="zav-adm__card-notes zav-adm__card-schedule">📅 ${escapeHtml(q.preferredDate)} · ${escapeHtml(q.preferredSlot || '')}</p>` : ''}
       <p class="zav-adm__card-notes">${q.notes ? `💬 ${escapeHtml(q.notes)}` : '💬 No notes'}</p>
       <div class="zav-adm__card-contact">
-        <a class="zav-adm__contact-pill" href="tel:${escapeHtml(q.phone)}">${ICONS.phone} ${escapeHtml(q.phone)}</a>
-        <a class="zav-adm__contact-pill" href="mailto:${escapeHtml(q.email)}">${ICONS.mail} ${escapeHtml(q.email)}</a>
+        <a class="zav-adm__contact-pill" href="tel:${escapeHtml(q.phone)}">📞 ${escapeHtml(q.phone)}</a>
+        <a class="zav-adm__contact-pill" href="mailto:${escapeHtml(q.email)}">✉️ ${escapeHtml(q.email)}</a>
         <a class="zav-adm__contact-pill zav-adm__contact-pill--wa" href="https://wa.me/${escapeHtml(String(q.phone).replace(/\D/g, ''))}" target="_blank" rel="noopener">💬 WhatsApp</a>
       </div>
       <div class="zav-adm__card-actions">

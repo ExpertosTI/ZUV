@@ -14,7 +14,11 @@ export const onRequest = defineMiddleware(async (context, next) => {
 
   const type = headers.get('content-type') || '';
   if (STATIC_EXT.test(context.url.pathname)) {
-    headers.set('Cache-Control', 'public, max-age=31536000, immutable');
+    if (context.url.pathname.endsWith('admin-console.css')) {
+      headers.set('Cache-Control', 'public, max-age=300');
+    } else {
+      headers.set('Cache-Control', 'public, max-age=31536000, immutable');
+    }
   } else if (type.includes('text/html')) {
     headers.set('Cache-Control', 'public, max-age=0, must-revalidate');
   }

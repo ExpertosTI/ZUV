@@ -5,6 +5,7 @@
 
 const ACTIVATION = 'zav';
 const BUFFER_MS = 1800;
+const ADMIN_CSS_V = '3';
 
 let typeBuf = '';
 let lastKey = 0;
@@ -23,12 +24,11 @@ async function loadAdminConsole() {
   loading = true;
 
   try {
-    if (!document.querySelector('link[href="/admin-console.css"]')) {
-      const link = document.createElement('link');
-      link.rel = 'stylesheet';
-      link.href = '/admin-console.css';
-      document.head.appendChild(link);
-    }
+    document.querySelectorAll('link[href*="admin-console.css"]').forEach((el) => el.remove());
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = `/admin-console.css?v=${ADMIN_CSS_V}`;
+    document.head.appendChild(link);
 
     const { initAdminConsole } = await import('./admin-console.js');
     initAdminConsole();
