@@ -80,6 +80,28 @@ export SMTP_FROM_NAME="${SMTP_FROM_NAME:-ZAV Interior & Clean}"
 export SMTP_REPLY_TO="${SMTP_REPLY_TO:-hello@zavinteriorclean.com}"
 export PUBLIC_SITE_URL="${PUBLIC_SITE_URL:-https://zavinteriorclean.com}"
 export ADMIN_EMAIL="${ADMIN_EMAIL:-azhaliaestepan@gmail.com}"
+export EVOLUTION_API_URL="${EVOLUTION_API_URL:-}"
+export EVOLUTION_API_KEY="${EVOLUTION_API_KEY:-}"
+export EVOLUTION_INSTANCE="${EVOLUTION_INSTANCE:-}"
+export ADMIN_WHATSAPP="${ADMIN_WHATSAPP:-17174156171}"
+export GEMINI_API_KEY="${GEMINI_API_KEY:-}"
+export GEMINI_MODEL="${GEMINI_MODEL:-gemini-2.5-flash}"
+
+# Merge .evolution.local into env for deploy
+if [ -f "$PROJECT_DIR/.evolution.local" ]; then
+  load_env_file "$PROJECT_DIR/.evolution.local"
+fi
+
+if [ -n "$EVOLUTION_API_URL" ] && [ -n "$EVOLUTION_API_KEY" ]; then
+  cyan "   WhatsApp:  Evolution configured (${EVOLUTION_INSTANCE:-?}) → admin …${ADMIN_WHATSAPP: -4}"
+else
+  red "   WhatsApp:  NOT SET — only email on quotes"
+fi
+if [ -n "$GEMINI_API_KEY" ]; then
+  cyan "   Gemini:    configured (${#GEMINI_API_KEY} chars, model $GEMINI_MODEL)"
+else
+  red "   Gemini:    NOT SET — admin assistant disabled"
+fi
 
 if [ -z "$SMTP_PASS" ] || [[ "$SMTP_PASS" =~ TU_APP_PASSWORD|YOUR_GOOGLE|changeme ]]; then
   red "WARNING: SMTP_PASS is missing or still a placeholder in /opt/zuv/.env"
@@ -111,34 +133,40 @@ cyan "── 5. Deploy stack ($STACK_NAME → $DOMAIN) ────"
 docker tag zuv-web:latest zuv-web:latest 2>/dev/null || true
 docker stack deploy -c docker-compose.yml "$STACK_NAME"
 
-cyan "── 6. Inject mail secrets into service ─────────"
-# Swarm often drops env_file; force SMTP vars onto the running service
+cyan "── 6. Inject secrets into service ─────────────"
+# Swarm often drops env_file; force runtime vars onto the running service
 sleep 2
-docker service update \
-  --env-rm "SMTP_HOST" \
-  --env-rm "SMTP_PORT" \
-  --env-rm "SMTP_USER" \
-  --env-rm "SMTP_PASS" \
-  --env-rm "SMTP_PROFILE" \
-  --env-rm "SMTP_FROM" \
-  --env-rm "SMTP_FROM_NAME" \
-  --env-rm "SMTP_REPLY_TO" \
-  --env-rm "ADMIN_EMAIL" \
-  --env-rm "PUBLIC_SITE_URL" \
-  --env-rm "ADMIN_PASSWORD" \
-  --env-add "SMTP_HOST=${SMTP_HOST}" \
-  --env-add "SMTP_PORT=${SMTP_PORT}" \
-  --env-add "SMTP_USER=${SMTP_USER}" \
-  --env-add "SMTP_PASS=${SMTP_PASS}" \
-  --env-add "SMTP_PROFILE=${SMTP_PROFILE}" \
-  --env-add "SMTP_FROM=${SMTP_FROM}" \
-  --env-add "SMTP_FROM_NAME=${SMTP_FROM_NAME}" \
-  --env-add "SMTP_REPLY_TO=${SMTP_REPLY_TO}" \
-  --env-add "ADMIN_EMAIL=${ADMIN_EMAIL}" \
-  --env-add "PUBLIC_SITE_URL=${PUBLIC_SITE_URL}" \
-  --env-add "ADMIN_PASSWORD=${ADMIN_PASSWORD}" \
-  --force \
-  "$SERVICE_NAME" >/dev/null
+
+ENV_PAIRS=(
+  "SMTP_HOST=${SMTP_HOST}"
+  "SMTP_PORT=${SMTP_PORT}"
+  "SMTP_USER=${SMTP_USER}"
+  "SMTP_PASS=${SMTP_PASS}"
+  "SMTP_PROFILE=${SMTP_PROFILE}"
+  "SMTP_FROM=${SMTP_FROM}"
+  "SMTP_FROM_NAME=${SMTP_FROM_NAME}"
+  "SMTP_REPLY_TO=${SMTP_REPLY_TO}"
+  "ADMIN_EMAIL=${ADMIN_EMAIL}"
+  "PUBLIC_SITE_URL=${PUBLIC_SITE_URL}"
+  "ADMIN_PASSWORD=${ADMIN_PASSWORD}"
+  "EVOLUTION_API_URL=${EVOLUTION_API_URL}"
+  "EVOLUTION_API_KEY=${EVOLUTION_API_KEY}"
+  "EVOLUTION_INSTANCE=${EVOLUTION_INSTANCE}"
+  "ADMIN_WHATSAPP=${ADMIN_WHATSAPP}"
+  "GEMINI_API_KEY=${GEMINI_API_KEY}"
+  "GEMINI_MODEL=${GEMINI_MODEL}"
+)
+
+UPDATE_ARGS=(--force)
+for pair in "${ENV_PAIRS[@]}"; do
+  key="${pair%%=*}"
+  UPDATE_ARGS+=(--env-rm "$key")
+done
+for pair in "${ENV_PAIRS[@]}"; do
+  UPDATE_ARGS+=(--env-add "$pair")
+done
+
+docker service update "${UPDATE_ARGS[@]}" "$SERVICE_NAME" >/dev/null
 
 cyan "── 7. Cleanup dangling images ─────────────────"
 docker image prune -f >/dev/null

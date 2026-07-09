@@ -1148,3 +1148,56 @@
 .zav-adm__msg.is-err {
   color: var(--za-red);
 }
+
+.zav-adm__assistant-log {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: min(52vh, 420px);
+  overflow-y: auto;
+  margin: 14px 0;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid var(--za-line-soft);
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.zav-adm__assistant-bubble {
+  max-width: 92%;
+  padding: 10px 12px;
+  border-radius: 12px;
+  font-size: 13px;
+  line-height: 1.45;
+  white-space: pre-wrap;
+}
+
+.zav-adm__assistant-bubble--user {
+  align-self: flex-end;
+  background: rgba(201, 162, 39, 0.15);
+  border: 1px solid rgba(201, 162, 39, 0.35);
+}
+
+.zav-adm__assistant-bubble--model {
+  align-self: flex-start;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--za-line-soft);
+}
+
+.zav-adm__assistant-form {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+  align-items: end;
+}
+
+.zav-adm__assistant-form textarea {
+  width: 100%;
+  min-height: 56px;
+  resize: vertical;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--za-line-soft);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--za-text);
+  font: inherit;
+}

@@ -108,6 +108,7 @@ export function initAdminConsole() {
           <button type="button" class="zav-adm__tab" data-tab="billing"><span class="zav-adm__tab-ico">💳</span> Billing</button>
           <button type="button" class="zav-adm__tab" data-tab="clients"><span class="zav-adm__tab-ico">👥</span> Clients</button>
           <button type="button" class="zav-adm__tab" data-tab="share"><span class="zav-adm__tab-ico">🔗</span> Share</button>
+          <button type="button" class="zav-adm__tab" data-tab="assistant"><span class="zav-adm__tab-ico">🤖</span> Assistant</button>
         </nav>
         <div class="zav-adm__actions">
           <button type="button" class="zav-adm__btn" data-action="refresh"><span class="zav-adm__btn-ico">🔄</span> Refresh</button>
@@ -227,6 +228,11 @@ export function initAdminConsole() {
             <p class="zav-adm__msg" data-mail-msg></p>
           </section>
           <section class="zav-adm__panel">
+            <h3>💬 WhatsApp <span>Evolution API · quote alerts</span></h3>
+            <p class="zav-adm__lead-meta" data-wa-status>Checking WhatsApp…</p>
+            <p class="zav-adm__lead-meta" style="margin-top:6px;font-size:12px">Clients get confirmation on quote · Admin gets details + phone.</p>
+          </section>
+          <section class="zav-adm__panel">
             <h3>💳 Billing profile <span>used on invoices</span></h3>
             <form class="zav-adm__form" data-billing-form>
               <input name="businessName" placeholder="Business name" required />
@@ -275,6 +281,19 @@ export function initAdminConsole() {
 
         <section class="zav-adm__pane" data-pane="share">
           <div data-share-root></div>
+        </section>
+
+        <section class="zav-adm__pane" data-pane="assistant">
+          <section class="zav-adm__panel zav-adm__assistant">
+            <h3>🤖 ZAV Assistant <span>reports &amp; WhatsApp</span></h3>
+            <p class="zav-adm__lead-meta" data-assistant-status>Loading…</p>
+            <div class="zav-adm__assistant-log" data-assistant-log aria-live="polite"></div>
+            <form class="zav-adm__assistant-form" data-assistant-form>
+              <textarea name="message" rows="2" placeholder="Ej: Envíame por WhatsApp un resumen de leads nuevos hoy" required></textarea>
+              <button type="submit" class="zav-adm__btn zav-adm__btn--accent">Send</button>
+            </form>
+            <p class="zav-adm__msg" data-assistant-msg></p>
+          </section>
         </section>
       </main>
 
@@ -676,6 +695,7 @@ export function initAdminConsole() {
       });
     }
     refreshMailStatus().catch(() => {});
+    refreshAssistantStatus().catch(() => {});
   }
 
   const setTab = (id) => {
@@ -921,23 +941,41 @@ export function initAdminConsole() {
 
   const mailStatusEl = root.querySelector('[data-mail-status]');
   const mailMsgEl = root.querySelector('[data-mail-msg]');
+  const waStatusEl = root.querySelector('[data-wa-status]');
+  const assistantStatusEl = root.querySelector('[data-assistant-status]');
+  const assistantLogEl = root.querySelector('[data-assistant-log]');
+  const assistantForm = root.querySelector('[data-assistant-form]');
+  const assistantMsgEl = root.querySelector('[data-assistant-msg]');
+  const assistantHistory = [];
 
   const refreshMailStatus = async () => {
     try {
       const res = await fetch('/api/mail/test', { headers: { Authorization: `Bearer ${token}` } });
       const data = await res.json();
-      if (!mailStatusEl) return;
-      if (data.verify?.ok) {
-        const from = data.status?.from ? ` · from ${data.status.from}` : '';
-        const host = data.status?.host ? ` (${data.status.provider || 'smtp'}:${data.status.port})` : '';
-        mailStatusEl.textContent = `✅ Mail active${from}${host}`;
-        mailStatusEl.classList.add('is-ok');
-        mailStatusEl.classList.remove('is-err');
-      } else {
-        const hint = data.verify?.hint || data.verify?.error || 'Check server mail settings.';
-        mailStatusEl.textContent = `⚠️ ${hint}`;
-        mailStatusEl.classList.add('is-err');
-        mailStatusEl.classList.remove('is-ok');
+      if (mailStatusEl) {
+        if (data.verify?.ok) {
+          const from = data.status?.from ? ` · from ${data.status.from}` : '';
+          const host = data.status?.host ? ` (${data.status.provider || 'smtp'}:${data.status.port})` : '';
+          mailStatusEl.textContent = `✅ Mail active${from}${host}`;
+          mailStatusEl.classList.add('is-ok');
+          mailStatusEl.classList.remove('is-err');
+        } else {
+          const hint = data.verify?.hint || data.verify?.error || 'Check server mail settings.';
+          mailStatusEl.textContent = `⚠️ ${hint}`;
+          mailStatusEl.classList.add('is-err');
+          mailStatusEl.classList.remove('is-ok');
+        }
+      }
+      if (data.whatsapp && waStatusEl) {
+        if (data.whatsapp.configured) {
+          waStatusEl.textContent = `✅ WhatsApp active → admin …${data.whatsapp.adminTo?.slice(-4) || '????'}`;
+          waStatusEl.classList.add('is-ok');
+          waStatusEl.classList.remove('is-err');
+        } else {
+          waStatusEl.textContent = `⚠️ ${data.whatsapp.reason || 'WhatsApp not configured'}`;
+          waStatusEl.classList.add('is-err');
+          waStatusEl.classList.remove('is-ok');
+        }
       }
     } catch {
       if (mailStatusEl) {
@@ -946,6 +984,71 @@ export function initAdminConsole() {
       }
     }
   };
+
+  const appendAssistantBubble = (role, text) => {
+    if (!assistantLogEl) return;
+    const div = document.createElement('div');
+    div.className = `zav-adm__assistant-bubble zav-adm__assistant-bubble--${role}`;
+    div.textContent = text;
+    assistantLogEl.appendChild(div);
+    assistantLogEl.scrollTop = assistantLogEl.scrollHeight;
+  };
+
+  const refreshAssistantStatus = async () => {
+    try {
+      const res = await fetch('/api/assistant', { headers: authHeaders() });
+      const data = await res.json();
+      if (!assistantStatusEl) return;
+      if (!data.gemini) {
+        assistantStatusEl.textContent = '⚠️ GEMINI_API_KEY not set on server';
+        assistantStatusEl.classList.add('is-err');
+        return;
+      }
+      const wa = data.whatsapp?.configured ? 'WhatsApp ready' : 'WhatsApp off';
+      assistantStatusEl.textContent = `✅ Gemini active · ${wa} · tools: ${(data.tools || []).join(', ')}`;
+      assistantStatusEl.classList.add('is-ok');
+      assistantStatusEl.classList.remove('is-err');
+    } catch {
+      if (assistantStatusEl) {
+        assistantStatusEl.textContent = '⚠️ Assistant unavailable';
+        assistantStatusEl.classList.add('is-err');
+      }
+    }
+  };
+
+  assistantForm?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const fd = new FormData(assistantForm);
+    const message = String(fd.get('message') || '').trim();
+    if (!message) return;
+    if (assistantMsgEl) assistantMsgEl.textContent = 'Thinking…';
+    appendAssistantBubble('user', message);
+    assistantForm.reset();
+    assistantHistory.push({ role: 'user', text: message });
+    try {
+      const res = await fetch('/api/assistant', {
+        method: 'POST',
+        headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message, history: assistantHistory.slice(0, -1) }),
+      });
+      const data = await res.json();
+      const reply = data.reply || data.error || 'No response';
+      appendAssistantBubble('model', reply);
+      assistantHistory.push({ role: 'model', text: reply });
+      if (assistantMsgEl) {
+        const waAction = (data.actions || []).find((a) => a.tool === 'send_whatsapp');
+        assistantMsgEl.textContent = waAction
+          ? waAction.result?.ok
+            ? '✅ Report sent via WhatsApp'
+            : `❌ WhatsApp: ${waAction.result?.error || 'failed'}`
+          : data.ok ? '' : `❌ ${data.error || 'Error'}`;
+        assistantMsgEl.classList.toggle('is-ok', Boolean(data.ok));
+        assistantMsgEl.classList.toggle('is-err', !data.ok);
+      }
+    } catch {
+      if (assistantMsgEl) assistantMsgEl.textContent = '❌ Request failed';
+    }
+  });
 
   root.querySelector('[data-mail-check]')?.addEventListener('click', () => {
     if (mailMsgEl) mailMsgEl.textContent = 'Checking…';

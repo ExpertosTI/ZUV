@@ -1,6 +1,8 @@
 import nodemailer from 'nodemailer';
 import type SMTPTransport from 'nodemailer/lib/smtp-transport';
+import { sendQuoteWhatsAppNotifications } from './quote-notify';
 import type { Invoice, Quote } from './store';
+import { getWhatsAppConfigStatus } from './whatsapp';
 import { formatSchedule, REMINDER_WINDOW_MS } from './schedule';
 
 /** Read env at call-time (never bake empty values at build). */
@@ -552,13 +554,27 @@ export async function sendQuoteNotifications(quote: Quote) {
     console.error('[mail] admin notify failed:', error);
   }
 
+  let whatsapp = { sent: false, client: false, admin: false, error: undefined as string | undefined };
+  try {
+    const wa = await sendQuoteWhatsAppNotifications(quote);
+    whatsapp = { sent: wa.sent, client: wa.client, admin: wa.admin, error: wa.error };
+    if (!wa.sent && wa.error) {
+      console.warn('[whatsapp] quote notify partial/fail', wa);
+    }
+  } catch {
+    console.error('[whatsapp] quote notify exception');
+  }
+
   return {
     sent: clientOk && adminOk,
     client: clientOk,
     admin: adminOk,
+    whatsapp,
     error,
   };
 }
+
+export { getWhatsAppConfigStatus };
 
 export async function sendScheduleReminder(quote: Quote) {
   const transport = createTransport();

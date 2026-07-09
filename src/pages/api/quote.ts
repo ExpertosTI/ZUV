@@ -69,21 +69,28 @@ export const POST: APIRoute = async ({ request, clientAddress }) => {
     return publicJson({ ok: true, id: `local_${Date.now()}`, stored: false }, 201);
   }
 
-  let mail = { sent: false as boolean, client: false, admin: false, error: undefined as string | undefined };
+  let mail = {
+    sent: false as boolean,
+    client: false,
+    admin: false,
+    whatsapp: { sent: false, client: false, admin: false },
+    error: undefined as string | undefined,
+  };
   try {
     mail = await sendQuoteNotifications(quote);
-    if (mail.client || mail.admin) {
+    if (mail.client || mail.admin || mail.whatsapp?.client || mail.whatsapp?.admin) {
       await updateQuote(quote.id, { confirmationSentAt: new Date().toISOString() });
     }
-    if (!mail.sent) {
-      console.error('[quote] mail partial/fail', {
+    if (!mail.sent && !mail.whatsapp?.sent) {
+      console.error('[quote] notify partial/fail', {
         client: mail.client,
         admin: mail.admin,
+        whatsapp: mail.whatsapp,
         error: mail.error,
       });
     }
   } catch {
-    console.error('[quote] mail exception');
+    console.error('[quote] notify exception');
   }
 
   return publicJson({
@@ -92,5 +99,6 @@ export const POST: APIRoute = async ({ request, clientAddress }) => {
     stored: true,
     schedule: { date: preferredDate, slot: preferredSlot, at: scheduledAt },
     mail: { sent: mail.sent, client: mail.client, admin: mail.admin },
+    whatsapp: mail.whatsapp,
   }, 201);
 };

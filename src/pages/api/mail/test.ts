@@ -1,6 +1,7 @@
 import type { APIRoute } from 'astro';
 import { authorized } from '../../../lib/auth';
 import { getMailConfigStatus, sendTestMail, verifyMailConnection } from '../../../lib/mail';
+import { getWhatsAppConfigStatus } from '../../../lib/whatsapp';
 import { publicError, publicJson, rateLimit } from '../../../lib/security';
 
 export const prerender = false;
@@ -10,6 +11,7 @@ export const GET: APIRoute = async ({ request }) => {
 
   const verify = await verifyMailConnection();
   const status = getMailConfigStatus();
+  const whatsapp = getWhatsAppConfigStatus();
   return publicJson({
     verify: {
       ok: verify.ok,
@@ -17,6 +19,7 @@ export const GET: APIRoute = async ({ request }) => {
       hint: verify.ok ? undefined : verify.hint,
     },
     status,
+    whatsapp,
   });
 };
 
