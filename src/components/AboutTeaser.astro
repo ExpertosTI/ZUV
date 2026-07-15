@@ -10,18 +10,18 @@ const { m } = Astro.props;
 
 <section class="about-teaser px-4 py-16 sm:px-6 sm:py-20" aria-labelledby="about-title">
   <div class="mx-auto grid max-w-6xl items-center gap-10 lg:grid-cols-2 lg:gap-14">
-    <div class="reveal overflow-hidden rounded-sm">
+    <div class="reveal overflow-hidden rounded-sm order-2 lg:order-1">
       <img
-        src="/about-zav.jpg"
-        alt="ZAV Interior & Clean professional in a bright Central Florida home"
+        src="/amenities-zav.jpg"
+        alt="ZAV Interior & Clean amenity set — shampoo, conditioner, lotion and soap"
         width="900"
-        height="1100"
+        height="798"
         loading="lazy"
         decoding="async"
-        class="h-full w-full object-cover aspect-[4/5]"
+        class="h-full w-full object-cover aspect-[5/4]"
       />
     </div>
-    <div class="reveal reveal-delay-1">
+    <div class="reveal reveal-delay-1 order-1 lg:order-2">
       <p class="font-accent text-lg text-mustard-deep sm:text-xl">{m.aboutEyebrow}</p>
       <h2 id="about-title" class="font-display mt-3 text-3xl tracking-tight text-ink sm:text-4xl">
         {m.aboutTitle}

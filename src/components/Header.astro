@@ -2,7 +2,6 @@
 import type { Locale, Messages } from '../i18n/messages';
 import { LOCALES, localeLabels } from '../i18n/messages';
 import { whatsappUrl } from '../lib/contact';
-import BrandLogo from './BrandLogo.astro';
 
 interface Props {
   locale: Locale;
@@ -23,8 +22,21 @@ const links = [
   <div class="header-progress" id="scroll-progress" aria-hidden="true"></div>
 
   <div class="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3 sm:px-6 sm:py-4">
-    <a href="#top" class="brand-link interactive flex min-w-0 items-center" aria-label={m.brand}>
-      <BrandLogo size="md" priority class="max-w-[200px] sm:max-w-[240px] md:max-w-[280px]" />
+    <a href="#top" class="brand-link interactive flex min-w-0 items-center gap-2.5 sm:gap-3" aria-label={m.brand}>
+      <img
+        src="/header-brand.jpg"
+        alt=""
+        width="80"
+        height="80"
+        class="header-brand-photo h-11 w-11 rounded-full object-cover sm:h-12 sm:w-12"
+        loading="eager"
+        fetchpriority="high"
+        decoding="async"
+      />
+      <span class="header-brand-text min-w-0">
+        <span class="font-display block text-[1.05rem] leading-none text-ink sm:text-lg">ZAV</span>
+        <span class="mt-0.5 block text-[9px] font-semibold uppercase tracking-[0.16em] text-muted sm:text-[10px]">Interior & Clean</span>
+      </span>
     </a>
 
     <nav class="hidden items-center gap-1 lg:flex" aria-label="Primary">
