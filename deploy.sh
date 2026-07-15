@@ -82,15 +82,37 @@ export PUBLIC_SITE_URL="${PUBLIC_SITE_URL:-https://zavinteriorclean.com}"
 export ADMIN_EMAIL="${ADMIN_EMAIL:-azhaliaestepan@gmail.com}"
 export EVOLUTION_API_URL="${EVOLUTION_API_URL:-https://evoapi.renace.tech}"
 export EVOLUTION_API_KEY="${EVOLUTION_API_KEY:-}"
-export EVOLUTION_INSTANCE="${EVOLUTION_INSTANCE:-zav-notify}"
+export EVOLUTION_INSTANCE="${EVOLUTION_INSTANCE:-RENACE.TECH}"
 export ADMIN_WHATSAPP="${ADMIN_WHATSAPP:-17174156171}"
 export GEMINI_API_KEY="${GEMINI_API_KEY:-}"
 export GEMINI_MODEL="${GEMINI_MODEL:-gemini-2.5-flash}"
 
-# Merge .evolution.local into env for deploy
+# Merge .evolution.local into env for deploy (source of truth for evoapi keys)
 if [ -f "$PROJECT_DIR/.evolution.local" ]; then
+  cyan "   Loading .evolution.local"
   load_env_file "$PROJECT_DIR/.evolution.local"
+  # Persist into .env so Swarm restarts keep the same keys
+  upsert_env() {
+    local k="$1" v="$2"
+    [ -n "$v" ] || return 0
+    touch "$PROJECT_DIR/.env"
+    if grep -q "^${k}=" "$PROJECT_DIR/.env"; then
+      grep -v "^${k}=" "$PROJECT_DIR/.env" > "$PROJECT_DIR/.env.tmp"
+      mv "$PROJECT_DIR/.env.tmp" "$PROJECT_DIR/.env"
+    fi
+    printf '%s=%s\n' "$k" "$v" >> "$PROJECT_DIR/.env"
+  }
+  upsert_env EVOLUTION_API_URL "$EVOLUTION_API_URL"
+  upsert_env EVOLUTION_API_KEY "$EVOLUTION_API_KEY"
+  upsert_env EVOLUTION_INSTANCE "$EVOLUTION_INSTANCE"
+  [ -n "${ADMIN_WHATSAPP:-}" ] && upsert_env ADMIN_WHATSAPP "$ADMIN_WHATSAPP"
 fi
+
+# Re-apply defaults after merge (do not wipe loaded keys)
+export EVOLUTION_API_URL="${EVOLUTION_API_URL:-https://evoapi.renace.tech}"
+export EVOLUTION_API_KEY="${EVOLUTION_API_KEY:-}"
+export EVOLUTION_INSTANCE="${EVOLUTION_INSTANCE:-RENACE.TECH}"
+export ADMIN_WHATSAPP="${ADMIN_WHATSAPP:-17174156171}"
 
 if [ -n "$EVOLUTION_API_URL" ] && [ -n "$EVOLUTION_API_KEY" ]; then
   cyan "   WhatsApp:  Evolution configured (${EVOLUTION_INSTANCE:-?}) → admin …${ADMIN_WHATSAPP: -4}"

@@ -35,6 +35,17 @@ export const POST: APIRoute = async ({ request }) => {
     });
   }
 
+  if (started.ok && (started as { alreadyConnected?: boolean }).alreadyConnected) {
+    return publicJson({
+      ok: true,
+      success: true,
+      instanceName: started.instanceName,
+      qrcode: null,
+      alreadyConnected: true,
+      message: 'WhatsApp already connected',
+    });
+  }
+
   return publicJson(
     {
       ok: false,

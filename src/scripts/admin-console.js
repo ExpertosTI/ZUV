@@ -1021,10 +1021,10 @@ export function initAdminConsole() {
       const line = !data?.configured
         ? `⚠️ ${data?.reason || 'EVOLUTION_* not set on server'}`
         : connected
-          ? `✅ Connected · ${data.instance || 'zav-notify'}${data.phone ? ` · ${data.phone}` : ''} → admin ${data.adminTo || ''}`
+          ? `✅ Connected · ${data.instance || 'RENACE.TECH'}${data.phone ? ` · ${data.phone}` : ''} → admin ${data.adminTo || ''}`
           : missing
-            ? `🟡 Instance missing · click Connect to create ${data.instance || 'zav-notify'}`
-            : `🟡 Waiting for QR scan · ${data.instance || 'zav-notify'} · admin ${data.adminTo || ''}`;
+            ? `🟡 Instance missing · click Connect for ${data.instance || 'RENACE.TECH'}`
+            : `🟡 Waiting for QR scan · ${data.instance || 'RENACE.TECH'} · admin ${data.adminTo || ''}`;
 
       [waStatusEl, waDetailStatusEl].forEach((el) => {
         if (!el) return;
@@ -1081,16 +1081,25 @@ export function initAdminConsole() {
   };
 
   const connectWhatsApp = async (forceQrOnly = false) => {
-    setWaMsg(forceQrOnly ? 'Refreshing QR…' : 'Creating instance & fetching QR…');
+    setWaMsg(forceQrOnly ? 'Refreshing QR…' : 'Connecting RENACE.TECH / fetching QR…');
     try {
+      const status = await refreshWhatsAppPanel();
+      const instanceName = status?.instance || 'RENACE.TECH';
       const res = await fetch(forceQrOnly ? '/api/whatsapp/instance/qr' : '/api/whatsapp/instance', {
         method: forceQrOnly ? 'GET' : 'POST',
         headers: forceQrOnly
           ? authHeaders()
           : { ...authHeaders(), 'Content-Type': 'application/json' },
-        body: forceQrOnly ? undefined : JSON.stringify({ instanceName: 'zav-notify' }),
+        body: forceQrOnly ? undefined : JSON.stringify({ instanceName }),
       });
       const data = await res.json();
+
+      if (data.alreadyConnected) {
+        hideWaQr();
+        setWaMsg('✅ WhatsApp already connected — ready for ZAV notifications', true);
+        await refreshWhatsAppPanel();
+        return;
+      }
 
       if (data.qrcode) {
         showWaQr(data.qrcode);

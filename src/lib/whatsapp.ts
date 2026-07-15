@@ -5,7 +5,7 @@ import { maskPhone, normalizePhoneDigits } from './phone';
 
 const DATA_DIR = process.env.ZAV_DATA_DIR || path.join(process.cwd(), 'data');
 const STATE_FILE = 'whatsapp.json';
-const DEFAULT_INSTANCE = 'zav-notify';
+const DEFAULT_INSTANCE = 'RENACE.TECH';
 const DEFAULT_API_URL = 'https://evoapi.renace.tech';
 const TEXT_DELAY_MS = 1200;
 
@@ -95,8 +95,14 @@ export function whatsappConfigured() {
 }
 
 async function activeInstanceName() {
+  const envName = env('EVOLUTION_INSTANCE', DEFAULT_INSTANCE) || DEFAULT_INSTANCE;
   const state = await getWhatsAppState();
-  return state.instanceName || env('EVOLUTION_INSTANCE', DEFAULT_INSTANCE) || DEFAULT_INSTANCE;
+  // Deploy .env / .evolution.local is source of truth (avoid stale zav-notify from old UI)
+  if (envName && state.instanceName !== envName) {
+    await saveWhatsAppState({ instanceName: envName });
+    return envName;
+  }
+  return state.instanceName || envName;
 }
 
 async function evoFetch(route: string, options: RequestInit = {}): Promise<EvoResult> {
@@ -152,7 +158,7 @@ function humanizeEvolutionError(err?: string, status?: number): string {
     );
   }
   if (status === 404 || e.includes('not found')) {
-    return 'WhatsApp instance not found on Evolution. Click Connect again to create zav-notify.';
+    return 'WhatsApp instance not found on Evolution. Check EVOLUTION_INSTANCE (RENACE.TECH) in .evolution.local.';
   }
   if (e.includes('timeout') || e.includes('fetch failed') || e.includes('network')) {
     return 'Could not reach evoapi.renace.tech. Check server outbound HTTPS.';
@@ -194,8 +200,8 @@ export async function probeEvolutionAdmin() {
 }
 
 /**
- * Full create → QR flow (Catagce/Raices pattern).
- * Creates zav-notify if missing, then returns scannable QR.
+ * Connect existing Evolution instance (RENACE.TECH by default) and return QR if needed.
+ * Prefer connect over create — shared Renace instances already exist on evoapi.
  */
 export async function startWhatsAppSession(instanceName?: string) {
   const name = (instanceName || (await activeInstanceName())).trim() || DEFAULT_INSTANCE;
@@ -206,75 +212,70 @@ export async function startWhatsAppSession(instanceName?: string) {
     return { ok: false as const, instanceName: name, qrcode: null as string | null, error: probe.error };
   }
 
-  let qr: string | null = null;
-  let lastError: string | undefined;
-  let lastStatus: number | undefined;
+  // Already linked?
+  const live = await evoFetch(`/instance/connectionState/${encodeURIComponent(name)}`);
+  if (live.success) {
+    const state = extractState(live.data);
+    if (state === 'open') {
+      const phone = extractOwnerPhone(live.data);
+      await saveWhatsAppState({ connected: true, phone: phone || '', instanceName: name });
+      return {
+        ok: true as const,
+        instanceName: name,
+        qrcode: null as string | null,
+        alreadyConnected: true as const,
+      };
+    }
+  }
+
+  // Fresh QR for existing instance
+  const conn = await evoFetch(`/instance/connect/${encodeURIComponent(name)}`);
+  if (conn.success) {
+    const qr = extractQr(conn.data);
+    if (qr) {
+      return { ok: true as const, instanceName: name, qrcode: qr };
+    }
+  }
+
+  // Missing instance only → create (requires global Evolution key)
+  const missing =
+    conn.status === 404 ||
+    /not found/i.test(String(conn.error || '')) ||
+    live.status === 404 ||
+    /not found/i.test(String(live.error || ''));
+
+  if (!missing) {
+    return {
+      ok: false as const,
+      instanceName: name,
+      qrcode: null as string | null,
+      error: humanizeEvolutionError(conn.error || live.error, conn.status || live.status),
+    };
+  }
 
   const createBody = JSON.stringify({
     instanceName: name,
     qrcode: true,
     integration: 'WHATSAPP-BAILEYS',
   });
-
   const created = await evoFetch('/instance/create', { method: 'POST', body: createBody });
   if (created.success) {
-    qr = extractQr(created.data);
-  } else {
-    lastError = created.error;
-    lastStatus = created.status;
-    const already = /already|exist/i.test(String(created.error || ''));
-    if (!already && created.status !== 403 && created.status !== 400) {
-      // keep going — connect may still work if instance somehow exists
-    }
-  }
-
-  async function fetchConnectQr() {
-    const conn = await evoFetch(`/instance/connect/${encodeURIComponent(name)}`);
-    if (conn.success) {
-      return { qr: extractQr(conn.data), error: undefined as string | undefined, status: conn.status };
-    }
-    return { qr: null as string | null, error: conn.error, status: conn.status };
-  }
-
-  if (!qr) {
-    await sleep(700);
-    let conn = await fetchConnectQr();
-    qr = conn.qr;
-    if (!qr) {
-      lastError = conn.error || lastError;
-      lastStatus = conn.status ?? lastStatus;
-
-      // Instance missing → force create, then connect again
-      if (conn.status === 404 || /not found/i.test(String(conn.error || ''))) {
-        const recreate = await evoFetch('/instance/create', { method: 'POST', body: createBody });
-        if (recreate.success) {
-          qr = extractQr(recreate.data);
-        } else {
-          lastError = recreate.error || lastError;
-          lastStatus = recreate.status ?? lastStatus;
-        }
-        if (!qr) {
-          await sleep(1000);
-          conn = await fetchConnectQr();
-          qr = conn.qr;
-          if (!qr) {
-            lastError = conn.error || lastError;
-            lastStatus = conn.status ?? lastStatus;
-          }
-        }
-      }
-    }
-  }
-
-  if (qr) {
-    return { ok: true as const, instanceName: name, qrcode: qr };
+    const qr = extractQr(created.data);
+    if (qr) return { ok: true as const, instanceName: name, qrcode: qr };
+    await sleep(800);
+    const again = await evoFetch(`/instance/connect/${encodeURIComponent(name)}`);
+    const qr2 = again.success ? extractQr(again.data) : null;
+    if (qr2) return { ok: true as const, instanceName: name, qrcode: qr2 };
   }
 
   return {
     ok: false as const,
     instanceName: name,
     qrcode: null as string | null,
-    error: humanizeEvolutionError(lastError, lastStatus),
+    error: humanizeEvolutionError(
+      created.error || conn.error || 'Could not create or connect instance',
+      created.status || conn.status,
+    ),
   };
 }
 
