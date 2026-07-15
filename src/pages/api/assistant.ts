@@ -8,9 +8,10 @@ export const prerender = false;
 
 export const GET: APIRoute = async ({ request }) => {
   if (!authorized(request)) return publicError('Unauthorized', 401);
+  const caps = await assistantCapabilities();
   return publicJson({
     ok: true,
-    ...assistantCapabilities(),
+    ...caps,
   });
 };
 

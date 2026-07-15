@@ -82,7 +82,7 @@ async function runTool(name: string, args: Record<string, unknown> = {}) {
   if (name === 'send_whatsapp') {
     const message = String(args.message || '').trim().slice(0, 3500);
     if (!message) return { ok: false, error: 'empty_message' };
-    const wa = getWhatsAppConfigStatus();
+    const wa = await getWhatsAppConfigStatus();
     if (!wa.configured) return { ok: false, error: 'whatsapp_not_configured' };
     const r = await sendAdminWhatsApp(message);
     return {
@@ -157,10 +157,10 @@ export async function runAssistantChat(history: AssistantMessage[], userMessage:
   };
 }
 
-export function assistantCapabilities() {
+export async function assistantCapabilities() {
   return {
     gemini: Boolean(process.env.GEMINI_API_KEY?.trim()),
-    whatsapp: getWhatsAppConfigStatus(),
+    whatsapp: await getWhatsAppConfigStatus(),
     tools: TOOLS.map((t) => t.name),
   };
 }

@@ -5,7 +5,7 @@
 
 const ACTIVATION = 'zav';
 const BUFFER_MS = 1800;
-const ADMIN_CSS_V = '4';
+const ADMIN_CSS_V = '5';
 
 let typeBuf = '';
 let lastKey = 0;

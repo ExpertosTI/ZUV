@@ -106,6 +106,7 @@ export function initAdminConsole() {
           <button type="button" class="zav-adm__tab" data-tab="overview"><span class="zav-adm__tab-ico">📊</span> Overview</button>
           <button type="button" class="zav-adm__tab" data-tab="invoices"><span class="zav-adm__tab-ico">🧾</span> Invoices</button>
           <button type="button" class="zav-adm__tab" data-tab="billing"><span class="zav-adm__tab-ico">💳</span> Billing</button>
+          <button type="button" class="zav-adm__tab" data-tab="whatsapp"><span class="zav-adm__tab-ico">💬</span> WhatsApp</button>
           <button type="button" class="zav-adm__tab" data-tab="clients"><span class="zav-adm__tab-ico">👥</span> Clients</button>
           <button type="button" class="zav-adm__tab" data-tab="share"><span class="zav-adm__tab-ico">🔗</span> Share</button>
           <button type="button" class="zav-adm__tab" data-tab="assistant"><span class="zav-adm__tab-ico">🤖</span> Assistant</button>
@@ -228,9 +229,9 @@ export function initAdminConsole() {
             <p class="zav-adm__msg" data-mail-msg></p>
           </section>
           <section class="zav-adm__panel">
-            <h3>💬 WhatsApp <span>Evolution API · quote alerts</span></h3>
+            <h3>💬 WhatsApp <span>Evolution · quote alerts</span></h3>
             <p class="zav-adm__lead-meta" data-wa-status>Checking WhatsApp…</p>
-            <p class="zav-adm__lead-meta" style="margin-top:6px;font-size:12px">Clients get confirmation on quote · Admin gets details + phone.</p>
+            <p class="zav-adm__lead-meta" style="margin-top:6px;font-size:12px">Open the <strong>WhatsApp</strong> tab to scan QR and link the notify number.</p>
           </section>
           <section class="zav-adm__panel">
             <h3>💳 Billing profile <span>used on invoices</span></h3>
@@ -250,6 +251,38 @@ export function initAdminConsole() {
               <button type="submit">Save billing data</button>
             </form>
             <p class="zav-adm__msg" data-billing-msg></p>
+          </section>
+        </section>
+
+        <section class="zav-adm__pane" data-pane="whatsapp">
+          <section class="zav-adm__panel zav-adm__wa">
+            <h3>💬 WhatsApp notifications <span>Evolution API · ZAV identity</span></h3>
+            <p class="zav-adm__lead-meta" data-wa-detail-status>Checking…</p>
+            <p class="zav-adm__wa-hint">
+              Link a phone as <strong>ZAV Interior &amp; Clean</strong>. Quote confirmations, admin alerts, invoices and reminders use this line with the same message format as email.
+            </p>
+            <div class="zav-adm__wa-meta" data-wa-meta></div>
+            <div class="zav-adm__card-actions zav-adm__wa-actions">
+              <button type="button" class="zav-adm__btn zav-adm__btn--accent" data-wa-connect>📲 Connect / show QR</button>
+              <button type="button" class="zav-adm__btn" data-wa-refresh-qr>🔄 Refresh QR</button>
+              <button type="button" class="zav-adm__btn" data-wa-poll>📡 Check status</button>
+              <button type="button" class="zav-adm__btn" data-wa-logout>🚪 Disconnect</button>
+              <button type="button" class="zav-adm__btn zav-adm__btn--danger" data-wa-delete>🗑️ Delete instance</button>
+            </div>
+            <div class="zav-adm__wa-qr-wrap" data-wa-qr-wrap hidden>
+              <img class="zav-adm__wa-qr" data-wa-qr alt="WhatsApp QR code" />
+              <p class="zav-adm__lead-meta">WhatsApp → Linked devices → Link a device</p>
+            </div>
+            <p class="zav-adm__msg" data-wa-msg></p>
+          </section>
+          <section class="zav-adm__panel">
+            <h3>✉️ Send test <span>ZAV format</span></h3>
+            <form class="zav-adm__form zav-adm__wa-test" data-wa-test-form>
+              <input name="number" type="tel" placeholder="Phone with country code (blank = admin)" />
+              <textarea name="message" rows="3" placeholder="Optional custom message — leave blank for ZAV notify template"></textarea>
+              <button type="submit" class="zav-adm__btn zav-adm__btn--accent">💬 Send test notification</button>
+            </form>
+            <p class="zav-adm__msg" data-wa-test-msg></p>
           </section>
         </section>
 
@@ -706,6 +739,7 @@ export function initAdminConsole() {
       p.classList.toggle('is-active', p.getAttribute('data-pane') === id);
     });
     if (id === 'share') sharePanel?.open?.();
+    if (id === 'whatsapp') refreshWhatsAppPanel?.().catch(() => {});
   };
 
   root.querySelectorAll('.zav-adm__tab').forEach((tab) => {
@@ -942,11 +976,139 @@ export function initAdminConsole() {
   const mailStatusEl = root.querySelector('[data-mail-status]');
   const mailMsgEl = root.querySelector('[data-mail-msg]');
   const waStatusEl = root.querySelector('[data-wa-status]');
+  const waDetailStatusEl = root.querySelector('[data-wa-detail-status]');
+  const waMetaEl = root.querySelector('[data-wa-meta]');
+  const waMsgEl = root.querySelector('[data-wa-msg]');
+  const waQrWrap = root.querySelector('[data-wa-qr-wrap]');
+  const waQrImg = root.querySelector('[data-wa-qr]');
+  const waTestForm = root.querySelector('[data-wa-test-form]');
+  const waTestMsgEl = root.querySelector('[data-wa-test-msg]');
   const assistantStatusEl = root.querySelector('[data-assistant-status]');
   const assistantLogEl = root.querySelector('[data-assistant-log]');
   const assistantForm = root.querySelector('[data-assistant-form]');
   const assistantMsgEl = root.querySelector('[data-assistant-msg]');
   const assistantHistory = [];
+  let waPollTimer = null;
+
+  const setWaMsg = (text, ok) => {
+    if (!waMsgEl) return;
+    waMsgEl.textContent = text || '';
+    waMsgEl.classList.toggle('is-ok', ok === true);
+    waMsgEl.classList.toggle('is-err', ok === false);
+  };
+
+  const showWaQr = (qrcode) => {
+    if (!waQrWrap || !waQrImg || !qrcode) return;
+    waQrImg.src = qrcode.startsWith('data:') ? qrcode : `data:image/png;base64,${qrcode}`;
+    waQrWrap.hidden = false;
+  };
+
+  const hideWaQr = () => {
+    if (waQrWrap) waQrWrap.hidden = true;
+    if (waQrImg) waQrImg.removeAttribute('src');
+  };
+
+  const stopWaPoll = () => {
+    if (waPollTimer) {
+      clearInterval(waPollTimer);
+      waPollTimer = null;
+    }
+  };
+
+  const applyWaStatus = (data) => {
+    const connected = data?.connected || data?.connectionState === 'open';
+    const line = !data?.configured
+      ? `⚠️ ${data?.reason || 'EVOLUTION_* not set on server'}`
+      : connected
+        ? `✅ Connected · ${data.instance || 'zav-notify'}${data.phone ? ` · ${data.phone}` : ''} → admin ${data.adminTo || ''}`
+        : `🟡 Waiting for QR scan · ${data.instance || 'zav-notify'} · admin ${data.adminTo || ''}`;
+
+    [waStatusEl, waDetailStatusEl].forEach((el) => {
+      if (!el) return;
+      el.textContent = line;
+      el.classList.toggle('is-ok', Boolean(data?.configured && connected));
+      el.classList.toggle('is-err', !data?.configured);
+    });
+
+    if (waMetaEl) {
+      waMetaEl.innerHTML = data?.configured
+        ? `<span class="zav-adm__badge">instance · ${escapeHtml(data.instance || '—')}</span>
+           <span class="zav-adm__badge zav-adm__badge--sky">state · ${escapeHtml(data.connectionState || 'unknown')}</span>
+           <span class="zav-adm__badge zav-adm__badge--gold">identity · ZAV Interior &amp; Clean</span>`
+        : `<span class="zav-adm__badge zav-adm__badge--sky">Need EVOLUTION_API_URL + EVOLUTION_API_KEY</span>`;
+    }
+
+    if (connected) hideWaQr();
+  };
+
+  const refreshWhatsAppPanel = async () => {
+    try {
+      const res = await fetch('/api/whatsapp/status', { headers: authHeaders() });
+      const data = await res.json();
+      applyWaStatus(data);
+      return data;
+    } catch {
+      applyWaStatus({ configured: false, reason: 'WhatsApp status unavailable' });
+      return null;
+    }
+  };
+
+  const pollWaConnection = async () => {
+    try {
+      const res = await fetch('/api/whatsapp/instance/status', { headers: authHeaders() });
+      const data = await res.json();
+      if (data.state === 'open') {
+        stopWaPoll();
+        hideWaQr();
+        setWaMsg('✅ WhatsApp connected — notifications use ZAV identity', true);
+        await refreshWhatsAppPanel();
+        refreshMailStatus().catch(() => {});
+      } else if (waDetailStatusEl) {
+        waDetailStatusEl.textContent = `⏳ Waiting for scan… state: ${data.state || 'unknown'}`;
+      }
+    } catch {
+      /* keep polling */
+    }
+  };
+
+  const startWaPoll = () => {
+    stopWaPoll();
+    waPollTimer = setInterval(pollWaConnection, 3500);
+    pollWaConnection();
+  };
+
+  const connectWhatsApp = async (forceQrOnly = false) => {
+    setWaMsg(forceQrOnly ? 'Refreshing QR…' : 'Creating / connecting instance…');
+    try {
+      let data;
+      if (forceQrOnly) {
+        const res = await fetch('/api/whatsapp/instance/qr', { headers: authHeaders() });
+        data = await res.json();
+      } else {
+        const res = await fetch('/api/whatsapp/instance', {
+          method: 'POST',
+          headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+          body: JSON.stringify({ instanceName: 'zav-notify' }),
+        });
+        data = await res.json();
+        if (!data.qrcode && (data.error || !data.ok)) {
+          const qrRes = await fetch('/api/whatsapp/instance/qr', { headers: authHeaders() });
+          data = await qrRes.json();
+        }
+      }
+
+      if (data.qrcode) {
+        showWaQr(data.qrcode);
+        setWaMsg('Scan the QR with WhatsApp → Linked devices', true);
+        startWaPoll();
+      } else {
+        setWaMsg(`❌ ${data.error || 'Could not get QR'}`, false);
+      }
+      await refreshWhatsAppPanel();
+    } catch {
+      setWaMsg('❌ Connection error', false);
+    }
+  };
 
   const refreshMailStatus = async () => {
     try {
@@ -966,23 +1128,13 @@ export function initAdminConsole() {
           mailStatusEl.classList.remove('is-ok');
         }
       }
-      if (data.whatsapp && waStatusEl) {
-        if (data.whatsapp.configured) {
-          waStatusEl.textContent = `✅ WhatsApp active → admin …${data.whatsapp.adminTo?.slice(-4) || '????'}`;
-          waStatusEl.classList.add('is-ok');
-          waStatusEl.classList.remove('is-err');
-        } else {
-          waStatusEl.textContent = `⚠️ ${data.whatsapp.reason || 'WhatsApp not configured'}`;
-          waStatusEl.classList.add('is-err');
-          waStatusEl.classList.remove('is-ok');
-        }
-      }
     } catch {
       if (mailStatusEl) {
         mailStatusEl.textContent = '⚠️ Mail status unavailable.';
         mailStatusEl.classList.add('is-err');
       }
     }
+    await refreshWhatsAppPanel();
   };
 
   const appendAssistantBubble = (role, text) => {
@@ -1047,6 +1199,56 @@ export function initAdminConsole() {
       }
     } catch {
       if (assistantMsgEl) assistantMsgEl.textContent = '❌ Request failed';
+    }
+  });
+
+  root.querySelector('[data-wa-connect]')?.addEventListener('click', () => connectWhatsApp(false));
+  root.querySelector('[data-wa-refresh-qr]')?.addEventListener('click', () => connectWhatsApp(true));
+  root.querySelector('[data-wa-poll]')?.addEventListener('click', async () => {
+    setWaMsg('Checking…');
+    await pollWaConnection();
+    await refreshWhatsAppPanel();
+    setWaMsg('');
+  });
+  root.querySelector('[data-wa-logout]')?.addEventListener('click', async () => {
+    stopWaPoll();
+    setWaMsg('Disconnecting…');
+    const res = await fetch('/api/whatsapp/instance/logout', { method: 'DELETE', headers: authHeaders() });
+    const data = await res.json();
+    hideWaQr();
+    setWaMsg(data.ok ? '🚪 Disconnected' : `❌ ${data.error || 'Logout failed'}`, Boolean(data.ok));
+    await refreshWhatsAppPanel();
+  });
+  root.querySelector('[data-wa-delete]')?.addEventListener('click', async () => {
+    if (!confirm('Delete WhatsApp instance? You will need to scan a new QR.')) return;
+    stopWaPoll();
+    setWaMsg('Deleting instance…');
+    const res = await fetch('/api/whatsapp/instance', { method: 'DELETE', headers: authHeaders() });
+    const data = await res.json();
+    hideWaQr();
+    setWaMsg(data.ok ? '🗑️ Instance deleted' : `❌ ${data.error || 'Delete failed'}`, Boolean(data.ok));
+    await refreshWhatsAppPanel();
+  });
+
+  waTestForm?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const fd = new FormData(waTestForm);
+    if (waTestMsgEl) waTestMsgEl.textContent = 'Sending ZAV test…';
+    const res = await fetch('/api/whatsapp/test', {
+      method: 'POST',
+      headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        number: String(fd.get('number') || '').trim(),
+        message: String(fd.get('message') || '').trim(),
+      }),
+    });
+    const data = await res.json();
+    if (waTestMsgEl) {
+      waTestMsgEl.textContent = data.ok
+        ? `✅ Test sent to ${data.to || 'admin'}`
+        : `❌ ${data.error || 'Test failed'}`;
+      waTestMsgEl.classList.toggle('is-ok', Boolean(data.ok));
+      waTestMsgEl.classList.toggle('is-err', !data.ok);
     }
   });
 

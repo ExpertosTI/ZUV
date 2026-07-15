@@ -11,7 +11,7 @@ export const GET: APIRoute = async ({ request }) => {
 
   const verify = await verifyMailConnection();
   const status = getMailConfigStatus();
-  const whatsapp = getWhatsAppConfigStatus();
+  const whatsapp = await getWhatsAppConfigStatus();
   return publicJson({
     verify: {
       ok: verify.ok,
