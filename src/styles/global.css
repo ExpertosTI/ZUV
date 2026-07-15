@@ -1,6 +1,11 @@
 @import "tailwindcss";
 
-/* cache-bust 2026-07-15: force new _astro CSS hash after sticky HTML-as-CSS cache */
+/* Deploy cache-bust: must change compiled CSS hash when CF poisoned a previous URL. */
+@layer base {
+  html {
+    --zav-asset-rev: 15;
+  }
+}
 
 @theme {
   /* Warm ZAV identity — yellow / terracotta / peach / cocoa */

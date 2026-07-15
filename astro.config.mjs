@@ -9,6 +9,13 @@ export default defineConfig({
     checkOrigin: false,
   },
   vite: {
+    build: {
+      rollupOptions: {
+        output: {
+          assetFileNames: "_astro/[name].[hash].[ext]",
+        },
+      },
+    },
     plugins: [tailwindcss()],
   },
   server: {
