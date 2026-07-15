@@ -1016,27 +1016,30 @@ export function initAdminConsole() {
   };
 
   const applyWaStatus = (data) => {
-    const connected = data?.connected || data?.connectionState === 'open';
-    const line = !data?.configured
-      ? `⚠️ ${data?.reason || 'EVOLUTION_* not set on server'}`
-      : connected
-        ? `✅ Connected · ${data.instance || 'zav-notify'}${data.phone ? ` · ${data.phone}` : ''} → admin ${data.adminTo || ''}`
-        : `🟡 Waiting for QR scan · ${data.instance || 'zav-notify'} · admin ${data.adminTo || ''}`;
+      const connected = data?.connected || data?.connectionState === 'open';
+      const missing = data?.connectionState === 'missing';
+      const line = !data?.configured
+        ? `⚠️ ${data?.reason || 'EVOLUTION_* not set on server'}`
+        : connected
+          ? `✅ Connected · ${data.instance || 'zav-notify'}${data.phone ? ` · ${data.phone}` : ''} → admin ${data.adminTo || ''}`
+          : missing
+            ? `🟡 Instance missing · click Connect to create ${data.instance || 'zav-notify'}`
+            : `🟡 Waiting for QR scan · ${data.instance || 'zav-notify'} · admin ${data.adminTo || ''}`;
 
-    [waStatusEl, waDetailStatusEl].forEach((el) => {
-      if (!el) return;
-      el.textContent = line;
-      el.classList.toggle('is-ok', Boolean(data?.configured && connected));
-      el.classList.toggle('is-err', !data?.configured);
-    });
+      [waStatusEl, waDetailStatusEl].forEach((el) => {
+        if (!el) return;
+        el.textContent = line;
+        el.classList.toggle('is-ok', Boolean(data?.configured && connected));
+        el.classList.toggle('is-err', !data?.configured || data?.connectionState === 'error');
+      });
 
-    if (waMetaEl) {
-      waMetaEl.innerHTML = data?.configured
-        ? `<span class="zav-adm__badge">instance · ${escapeHtml(data.instance || '—')}</span>
-           <span class="zav-adm__badge zav-adm__badge--sky">state · ${escapeHtml(data.connectionState || 'unknown')}</span>
-           <span class="zav-adm__badge zav-adm__badge--gold">identity · ZAV Interior &amp; Clean</span>`
-        : `<span class="zav-adm__badge zav-adm__badge--sky">Need EVOLUTION_API_URL + EVOLUTION_API_KEY</span>`;
-    }
+      if (waMetaEl) {
+        waMetaEl.innerHTML = data?.configured
+          ? `<span class="zav-adm__badge">instance · ${escapeHtml(data.instance || '—')}</span>
+             <span class="zav-adm__badge zav-adm__badge--sky">state · ${escapeHtml(data.connectionState || 'unknown')}</span>
+             <span class="zav-adm__badge zav-adm__badge--gold">identity · ZAV Interior &amp; Clean</span>`
+          : `<span class="zav-adm__badge zav-adm__badge--sky">Need EVOLUTION_API_URL + EVOLUTION_API_KEY (global)</span>`;
+      }
 
     if (connected) hideWaQr();
   };
@@ -1078,24 +1081,16 @@ export function initAdminConsole() {
   };
 
   const connectWhatsApp = async (forceQrOnly = false) => {
-    setWaMsg(forceQrOnly ? 'Refreshing QR…' : 'Creating / connecting instance…');
+    setWaMsg(forceQrOnly ? 'Refreshing QR…' : 'Creating instance & fetching QR…');
     try {
-      let data;
-      if (forceQrOnly) {
-        const res = await fetch('/api/whatsapp/instance/qr', { headers: authHeaders() });
-        data = await res.json();
-      } else {
-        const res = await fetch('/api/whatsapp/instance', {
-          method: 'POST',
-          headers: { ...authHeaders(), 'Content-Type': 'application/json' },
-          body: JSON.stringify({ instanceName: 'zav-notify' }),
-        });
-        data = await res.json();
-        if (!data.qrcode && (data.error || !data.ok)) {
-          const qrRes = await fetch('/api/whatsapp/instance/qr', { headers: authHeaders() });
-          data = await qrRes.json();
-        }
-      }
+      const res = await fetch(forceQrOnly ? '/api/whatsapp/instance/qr' : '/api/whatsapp/instance', {
+        method: forceQrOnly ? 'GET' : 'POST',
+        headers: forceQrOnly
+          ? authHeaders()
+          : { ...authHeaders(), 'Content-Type': 'application/json' },
+        body: forceQrOnly ? undefined : JSON.stringify({ instanceName: 'zav-notify' }),
+      });
+      const data = await res.json();
 
       if (data.qrcode) {
         showWaQr(data.qrcode);
@@ -1103,6 +1098,7 @@ export function initAdminConsole() {
         startWaPoll();
       } else {
         setWaMsg(`❌ ${data.error || 'Could not get QR'}`, false);
+        hideWaQr();
       }
       await refreshWhatsAppPanel();
     } catch {

@@ -2,15 +2,14 @@ import type { APIRoute } from 'astro';
 import { authorized } from '../../../../lib/auth';
 import { publicError, publicJson } from '../../../../lib/security';
 import {
-  createEvolutionInstance,
   deleteEvolutionInstance,
-  getEvolutionQr,
+  startWhatsAppSession,
   whatsappConfigured,
 } from '../../../../lib/whatsapp';
 
 export const prerender = false;
 
-/** Create (or recreate) Evolution instance and return QR when available. */
+/** Create instance if needed and return Evolution QR. */
 export const POST: APIRoute = async ({ request }) => {
   if (!authorized(request)) return publicError('Unauthorized', 401);
   if (!whatsappConfigured()) {
@@ -25,37 +24,23 @@ export const POST: APIRoute = async ({ request }) => {
   }
 
   const requested = String(body.instanceName || '').trim();
-  const created = await createEvolutionInstance(requested || undefined);
+  const started = await startWhatsAppSession(requested || undefined);
 
-  if (created.ok && created.qrcode) {
+  if (started.ok && started.qrcode) {
     return publicJson({
       ok: true,
       success: true,
-      instanceName: created.instanceName,
-      qrcode: created.qrcode,
+      instanceName: started.instanceName,
+      qrcode: started.qrcode,
     });
-  }
-
-  // Already exists or create without QR → fetch connect QR
-  if (created.alreadyExists || !created.qrcode) {
-    const qr = await getEvolutionQr(created.instanceName);
-    if (qr.qrcode) {
-      return publicJson({
-        ok: true,
-        success: true,
-        instanceName: created.instanceName,
-        qrcode: qr.qrcode,
-        reused: Boolean(created.alreadyExists),
-      });
-    }
   }
 
   return publicJson(
     {
       ok: false,
       success: false,
-      instanceName: created.instanceName,
-      error: created.error || 'Failed to create instance',
+      instanceName: started.instanceName,
+      error: started.error || 'Failed to create instance / get QR',
     },
     400,
   );
