@@ -104,13 +104,19 @@
   }
 
   .glass {
-    background: var(--color-glass);
-    backdrop-filter: blur(16px) saturate(1.2);
-    -webkit-backdrop-filter: blur(16px) saturate(1.2);
+    background: rgba(255, 252, 248, 0.94);
     border: 1px solid rgba(255, 255, 255, 0.55);
     box-shadow:
-      0 10px 40px rgba(27, 58, 92, 0.08),
+      0 10px 40px rgba(107, 69, 56, 0.08),
       inset 0 1px 0 rgba(255, 255, 255, 0.65);
+  }
+
+  @media (hover: hover) and (pointer: fine) and (min-width: 901px) {
+    .glass {
+      background: var(--color-glass);
+      backdrop-filter: blur(12px) saturate(1.1);
+      -webkit-backdrop-filter: blur(12px) saturate(1.1);
+    }
   }
 
   button,
@@ -228,19 +234,25 @@
 
   .site-header {
     border-bottom: 1px solid transparent;
-    background: rgba(246, 241, 235, 0.72);
-    backdrop-filter: blur(18px) saturate(1.15);
-    -webkit-backdrop-filter: blur(18px) saturate(1.15);
+    background: rgba(246, 241, 235, 0.94);
     transition:
       background 0.35s ease,
       border-color 0.35s ease,
       box-shadow 0.35s ease;
   }
 
+  @media (hover: hover) and (pointer: fine) and (min-width: 901px) {
+    .site-header {
+      background: rgba(246, 241, 235, 0.72);
+      backdrop-filter: blur(14px) saturate(1.1);
+      -webkit-backdrop-filter: blur(14px) saturate(1.1);
+    }
+  }
+
   .site-header.is-scrolled {
     border-color: rgba(42, 33, 30, 0.08);
-    background: rgba(246, 241, 235, 0.94);
-    box-shadow: 0 10px 30px rgba(107, 69, 56, 0.08);
+    background: rgba(246, 241, 235, 0.96);
+    box-shadow: 0 8px 24px rgba(107, 69, 56, 0.07);
   }
 
   .header-progress {
@@ -332,6 +344,8 @@
 
   .section-block {
     scroll-margin-top: 5.5rem;
+    content-visibility: auto;
+    contain-intrinsic-size: 800px;
   }
 
   .hero-frame {
@@ -482,7 +496,13 @@
     box-shadow:
       0 14px 34px rgba(18, 140, 126, 0.35),
       0 0 0 0 rgba(37, 211, 102, 0.35);
-    animation: wa-pulse 2.8s ease-out infinite;
+    animation: none;
+  }
+
+  @media (hover: hover) and (pointer: fine) and (min-width: 901px) {
+    .wa-fab {
+      animation: wa-pulse 3.2s ease-out infinite;
+    }
   }
 
   @media (min-width: 640px) {
@@ -555,7 +575,6 @@
       background 0.25s ease,
       opacity 0.3s ease,
       border-color 0.2s ease;
-    will-change: transform, width, height;
     mix-blend-mode: multiply;
   }
 
@@ -595,18 +614,15 @@
 
   .reveal {
     opacity: 0;
-    transform: translateY(24px);
-    filter: blur(4px);
+    transform: translateY(18px);
     transition:
-      opacity 0.9s cubic-bezier(0.16, 1, 0.3, 1),
-      transform 0.9s cubic-bezier(0.16, 1, 0.3, 1),
-      filter 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+      opacity 0.55s cubic-bezier(0.16, 1, 0.3, 1),
+      transform 0.55s cubic-bezier(0.16, 1, 0.3, 1);
   }
 
   .reveal.is-in {
     opacity: 1;
     transform: none;
-    filter: blur(0);
   }
 
   .reveal-delay-1 { transition-delay: 0.1s; }
@@ -615,18 +631,15 @@
 
   .magnet {
     display: inline-flex;
-    will-change: transform;
   }
 
   .magnet__inner {
-    will-change: transform;
     transition: transform 0.15s ease-out;
   }
 
   .tilt-card {
     transform-style: preserve-3d;
     transition: transform 0.25s ease, box-shadow 0.25s ease;
-    will-change: transform;
   }
 
   .click-ripple {
@@ -648,13 +661,11 @@
   .float-life {
     position: absolute;
     pointer-events: none;
-    opacity: 0.42;
-    will-change: transform;
-    filter: drop-shadow(0 4px 10px rgba(27, 58, 92, 0.06));
+    opacity: 0.32;
   }
 
   .float-life--anchor {
-    opacity: 0.2;
+    opacity: 0.16;
   }
 
   .float-life svg {
@@ -675,9 +686,15 @@
     position: absolute;
     width: 56px;
     height: 56px;
-    opacity: 0.14;
+    opacity: 0.12;
     color: var(--color-navy);
-    animation: motif-bob 7s ease-in-out infinite;
+    animation: none;
+  }
+
+  @media (hover: hover) and (pointer: fine) and (min-width: 1024px) {
+    .theme-motifs__item {
+      animation: motif-bob 9s ease-in-out infinite;
+    }
   }
 
   .theme-motifs__item--1 { top: 18%; left: 3%; color: var(--color-mustard); width: 64px; animation-delay: 0s; }

@@ -166,9 +166,15 @@ const links = [
     });
   };
 
-  addEventListener('scroll', () => {
+  let scrollRaf = 0;
+  const onScrollFrame = () => {
+    scrollRaf = 0;
     onScroll();
     syncActive();
+  };
+
+  addEventListener('scroll', () => {
+    if (!scrollRaf) scrollRaf = requestAnimationFrame(onScrollFrame);
   }, { passive: true });
 
   onScroll();

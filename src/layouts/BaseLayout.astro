@@ -141,13 +141,17 @@ const jsonLdBlocks = Astro.props.jsonLd || [
       trackPageVisit();
 
       const startFloatingLife = () => {
+        const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+        const touch = matchMedia('(hover: none), (pointer: coarse)').matches;
+        const narrow = matchMedia('(max-width: 900px)').matches;
+        if (reduce || touch || narrow) return;
         import('../scripts/floating-life.js').then(({ initFloatingLife }) => initFloatingLife());
       };
 
       if ('requestIdleCallback' in window) {
-        requestIdleCallback(startFloatingLife, { timeout: 2500 });
+        requestIdleCallback(startFloatingLife, { timeout: 4000 });
       } else {
-        setTimeout(startFloatingLife, 1200);
+        setTimeout(startFloatingLife, 2000);
       }
     </script>
   </body>
