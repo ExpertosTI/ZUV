@@ -7,7 +7,9 @@ const DATA_DIR = process.env.ZAV_DATA_DIR || path.join(process.cwd(), 'data');
 const STATE_FILE = 'whatsapp.json';
 const DEFAULT_INSTANCE = 'renace';
 const DEFAULT_API_URL = 'https://evoapi.renace.tech';
-const TEXT_DELAY_MS = 1200;
+const TEXT_DELAY_MS = 3500;
+/** Pause between outbound notifications (client → admin) to reduce ban risk. */
+const QUEUE_GAP_MS = 4500;
 
 function env(name: string, fallback = '') {
   const raw = process.env[name] ?? fallback;
@@ -183,8 +185,18 @@ function extractQr(data: any): string | null {
   return null;
 }
 
-function sleep(ms: number) {
+export function sleep(ms: number) {
   return new Promise((r) => setTimeout(r, ms));
+}
+
+/** Typing-style delay passed to Evolution sendText (anti-ban). */
+export function textSendDelayMs() {
+  return TEXT_DELAY_MS;
+}
+
+/** Gap between sequential outbound messages in a queue. */
+export function queueGapMs() {
+  return QUEUE_GAP_MS;
 }
 
 export async function probeEvolutionAdmin() {
@@ -471,16 +483,16 @@ export async function sendAdminWhatsApp(text: string) {
 export function buildWhatsAppTestMessage(toLabel?: string) {
   const when = new Date().toLocaleString('en-US', { timeZone: 'America/New_York' });
   return [
-    '✨ ZAV Interior & Clean',
-    '✅ WhatsApp notifications are active.',
+    'ZAV Interior & Clean',
+    'WhatsApp notifications are active for Orlando & Central Florida.',
     '',
     'This channel will send:',
-    '• Quote confirmations to clients',
-    '• New-lead alerts to admin',
-    '• Invoice & reminder notices',
+    '- Quote confirmations to clients',
+    '- New-lead alerts to admin',
+    '- Invoice & reminder notices',
     '',
     toLabel ? `Test to: ${toLabel}` : '',
-    `🕐 ${when}`,
+    `Checked: ${when}`,
   ]
     .filter(Boolean)
     .join('\n');

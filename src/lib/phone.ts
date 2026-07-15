@@ -1,4 +1,4 @@
-/** US phone helpers for WhatsApp / tel links (ZAV — Pennsylvania). */
+/** US phone helpers for WhatsApp / tel links (ZAV — Central Florida). */
 
 export function digitsOnly(raw: string) {
   return String(raw || '').replace(/\D/g, '');

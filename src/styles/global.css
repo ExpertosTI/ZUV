@@ -1,20 +1,23 @@
 @import "tailwindcss";
 
 @theme {
-  --color-cream: #f7f4ef;
-  --color-cream-dark: #efe8dc;
-  --color-ink: #1a1a1a;
-  --color-ink-soft: #3d3d3d;
-  --color-muted: #6b6560;
-  --color-mustard: #c9a227;
-  --color-mustard-deep: #a8841a;
-  --color-mustard-soft: #e8d48a;
-  --color-navy: #1b3a5c;
-  --color-navy-deep: #0f2438;
-  --color-glass: rgba(255, 255, 255, 0.72);
+  /* Warm ZAV identity — yellow / terracotta / peach / cocoa */
+  --color-cream: #f6f1eb;
+  --color-cream-dark: #ede4da;
+  --color-ink: #2a211e;
+  --color-ink-soft: #4a3c36;
+  --color-muted: #7a6a62;
+  --color-mustard: #f5c84b;
+  --color-mustard-deep: #c67a62;
+  --color-mustard-soft: #e8d0c0;
+  --color-navy: #6b4538;
+  --color-navy-deep: #4a2f28;
+  --color-glass: rgba(255, 252, 248, 0.78);
+  --color-peach: #efa978;
+  --color-sand: #e4c8b8;
 
   --font-sans: "DM Sans", system-ui, -apple-system, sans-serif;
-  --font-display: "Outfit", system-ui, -apple-system, sans-serif;
+  --font-display: "Nunito", "DM Sans", system-ui, sans-serif;
 }
 
 @layer base {
@@ -27,8 +30,9 @@
   body {
     font-family: var(--font-sans);
     background:
-      radial-gradient(1200px 600px at 10% -10%, rgba(201, 162, 39, 0.12), transparent 55%),
-      radial-gradient(900px 500px at 100% 0%, rgba(27, 58, 92, 0.08), transparent 50%),
+      radial-gradient(1100px 520px at 8% -8%, rgba(245, 200, 75, 0.16), transparent 55%),
+      radial-gradient(900px 480px at 96% 0%, rgba(198, 122, 98, 0.12), transparent 52%),
+      radial-gradient(700px 400px at 50% 100%, rgba(239, 169, 120, 0.1), transparent 55%),
       var(--color-cream);
     overflow-x: hidden;
     min-height: 100dvh;
@@ -69,7 +73,7 @@
   }
 
   ::selection {
-    background: rgba(201, 162, 39, 0.35);
+    background: rgba(198, 122, 98, 0.35);
   }
 
   .skip-link {
@@ -95,6 +99,8 @@
 @layer components {
   .font-display {
     font-family: var(--font-display);
+    letter-spacing: -0.02em;
+    font-weight: 700;
   }
 
   .glass {
@@ -187,14 +193,14 @@
 
   .btn-accent {
     @apply inline-flex items-center justify-center gap-2 rounded-full px-6 py-3.5 text-sm font-semibold tracking-wide transition-all duration-300;
-    background: linear-gradient(135deg, var(--color-mustard) 0%, var(--color-mustard-deep) 100%);
+    background: linear-gradient(135deg, var(--color-mustard) 0%, var(--color-peach) 52%, var(--color-mustard-deep) 100%);
     color: var(--color-ink);
-    box-shadow: 0 12px 28px rgba(201, 162, 39, 0.28);
+    box-shadow: 0 12px 28px rgba(198, 122, 98, 0.28);
   }
 
   .btn-accent:hover {
     transform: translateY(-1px);
-    box-shadow: 0 16px 34px rgba(201, 162, 39, 0.36);
+    box-shadow: 0 16px 34px rgba(198, 122, 98, 0.36);
   }
 
   .btn-ghost {
@@ -222,9 +228,9 @@
 
   .site-header {
     border-bottom: 1px solid transparent;
-    background: rgba(247, 244, 239, 0.72);
-    backdrop-filter: blur(18px) saturate(1.2);
-    -webkit-backdrop-filter: blur(18px) saturate(1.2);
+    background: rgba(246, 241, 235, 0.72);
+    backdrop-filter: blur(18px) saturate(1.15);
+    -webkit-backdrop-filter: blur(18px) saturate(1.15);
     transition:
       background 0.35s ease,
       border-color 0.35s ease,
@@ -232,9 +238,9 @@
   }
 
   .site-header.is-scrolled {
-    border-color: rgba(26, 26, 26, 0.06);
-    background: rgba(247, 244, 239, 0.92);
-    box-shadow: 0 10px 30px rgba(27, 58, 92, 0.06);
+    border-color: rgba(42, 33, 30, 0.08);
+    background: rgba(246, 241, 235, 0.94);
+    box-shadow: 0 10px 30px rgba(107, 69, 56, 0.08);
   }
 
   .header-progress {
@@ -753,9 +759,9 @@
   }
 
   .offer-ribbon {
-    background: linear-gradient(90deg, var(--color-mustard), #d4b44a, var(--color-mustard-deep));
+    background: linear-gradient(90deg, var(--color-mustard), var(--color-peach), var(--color-mustard-deep));
     color: var(--color-ink);
-    box-shadow: 0 10px 24px rgba(201, 162, 39, 0.28);
+    box-shadow: 0 10px 24px rgba(198, 122, 98, 0.28);
   }
 
   .life-spark {

@@ -109,9 +109,10 @@ const seedClients: ClientWork[] = [
   {
     id: 'c1',
     name: 'Maria G.',
-    city: 'Harrisburg, PA',
+    city: 'Orlando, FL',
     service: 'Deep cleaning',
-    blurb: 'My home finally feels like a boutique hotel. Spotless and calm.',
+    blurb:
+      'Our Winter Park home finally feels calm again. Spotless kitchens, sparkling baths — best cleaning team in Central Florida.',
     rating: 5,
     date: '2026-05-12',
     featured: true,
@@ -119,9 +120,10 @@ const seedClients: ClientWork[] = [
   {
     id: 'c2',
     name: 'James & Ana',
-    city: 'Lancaster, PA',
-    service: 'Home cleaning',
-    blurb: 'Weekly service that never misses a detail. Highly recommend.',
+    city: 'Winter Park, FL',
+    service: 'House cleaning',
+    blurb:
+      'Weekly service that never misses a detail. If you need reliable house cleaning in Orlando, call ZAV.',
     rating: 5,
     date: '2026-04-28',
     featured: true,
@@ -129,22 +131,32 @@ const seedClients: ClientWork[] = [
   {
     id: 'c3',
     name: 'Sofia R.',
-    city: 'York, PA',
+    city: 'Lake Nona, FL',
     service: 'Move-out',
-    blurb: 'Got our full deposit back. Professional and on time.',
+    blurb:
+      'Got our full deposit back after move-out. Professional, on time, and clearly know Central Florida rentals.',
     rating: 5,
     date: '2026-03-19',
   },
   {
     id: 'c4',
     name: 'Daniel K.',
-    city: 'Carlisle, PA',
-    service: 'Interior refresh',
-    blurb: 'They reset the whole living room vibe. Clean architecture energy.',
+    city: 'Dr. Phillips, FL',
+    service: 'Office cleaning',
+    blurb:
+      'They keep our small Orlando office immaculate. Flexible scheduling and a warm, professional team.',
     rating: 5,
     date: '2026-02-08',
   },
 ];
+
+const PA_CITY_HINT = /\b(PA|Pennsylvania|Harrisburg|Lancaster|York|Carlisle)\b/i;
+
+function looksLikeLegacyPaSeed(clients: ClientWork[]) {
+  if (!Array.isArray(clients) || clients.length === 0) return false;
+  const paHits = clients.filter((c) => PA_CITY_HINT.test(c.city || '')).length;
+  return paHits >= Math.ceil(clients.length / 2);
+}
 
 async function ensureDataDir() {
   await fs.mkdir(DATA_DIR, { recursive: true });
@@ -585,7 +597,11 @@ export async function getClients(): Promise<ClientWork[]> {
   if (clientsCache && now - clientsCache.at < CLIENTS_TTL_MS) {
     return clientsCache.data;
   }
-  const data = await readJson<ClientWork[]>('clients.json', seedClients);
+  let data = await readJson<ClientWork[]>('clients.json', seedClients);
+  if (looksLikeLegacyPaSeed(data)) {
+    data = seedClients;
+    await writeJson('clients.json', data);
+  }
   clientsCache = { data, at: now };
   return data;
 }

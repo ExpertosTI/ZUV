@@ -13,8 +13,9 @@ const { locale, m } = Astro.props;
 const wa = whatsappUrl(m.whatsappMsg);
 
 const links = [
-  { href: '#quote', label: m.navQuote, id: 'quote' },
+  { href: '#services', label: m.navServices, id: 'services' },
   { href: '#work', label: m.navWork, id: 'work' },
+  { href: '#quote', label: m.navQuote, id: 'quote' },
 ];
 ---
 
@@ -149,7 +150,7 @@ const links = [
     header?.classList.toggle('is-scrolled', scrollY > 12);
   };
 
-  const sections = ['quote', 'work']
+  const sections = ['services', 'work', 'quote']
     .map((id) => document.getElementById(id))
     .filter(Boolean);
 

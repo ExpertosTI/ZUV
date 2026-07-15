@@ -2,8 +2,12 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Header from '../components/Header.astro';
 import Hero from '../components/Hero.astro';
+import SpecialtyIntro from '../components/SpecialtyIntro.astro';
+import ServicesGrid from '../components/ServicesGrid.astro';
+import CtaStrip from '../components/CtaStrip.astro';
 import QuoteWizard from '../components/QuoteWizard.astro';
 import ClientFeed from '../components/ClientFeed.astro';
+import AboutTeaser from '../components/AboutTeaser.astro';
 import Footer from '../components/Footer.astro';
 import WhatsAppFab from '../components/WhatsAppFab.astro';
 import ThemeMotifs from '../components/ThemeMotifs.astro';
@@ -32,8 +36,12 @@ const clients = await getClients();
   <ThemeMotifs />
   <main id="main-content">
     <Hero m={m} />
-    <QuoteWizard m={m} locale={locale} />
+    <SpecialtyIntro m={m} />
+    <ServicesGrid m={m} />
+    <CtaStrip m={m} />
     <ClientFeed m={m} clients={clients} />
+    <AboutTeaser m={m} />
+    <QuoteWizard m={m} locale={locale} />
   </main>
   <Footer m={m} />
   <WhatsAppFab m={m} />

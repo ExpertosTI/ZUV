@@ -1,0 +1,30 @@
+---
+import type { Messages } from '../i18n/messages';
+
+interface Props {
+  m: Messages;
+}
+
+const { m } = Astro.props;
+---
+
+<section class="specialty-block px-4 py-16 sm:px-6 sm:py-20" aria-labelledby="specialty-title">
+  <div class="mx-auto max-w-3xl text-center">
+    <h2 id="specialty-title" class="font-display reveal text-3xl font-semibold tracking-tight text-ink sm:text-4xl">
+      {m.specialtyTitle}
+    </h2>
+    <p class="reveal reveal-delay-1 mx-auto mt-5 max-w-2xl text-base leading-relaxed text-muted sm:text-lg">
+      {m.specialtyBody}
+    </p>
+    <a href="#work" class="reveal reveal-delay-2 mt-6 inline-flex text-sm font-semibold text-mustard-deep underline-offset-4 hover:underline">
+      {m.specialtyLink}
+    </a>
+  </div>
+</section>
+
+<style>
+  .specialty-block {
+    background:
+      linear-gradient(180deg, rgba(232, 208, 192, 0.35), rgba(246, 241, 235, 0.9));
+  }
+</style>

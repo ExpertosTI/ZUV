@@ -1,12 +1,18 @@
 import type { Quote } from './store';
 import { formatSchedule } from './schedule';
 import { PHONE_DISPLAY } from './contact';
-import { adminWhatsAppNumber, sendAdminWhatsApp, sendWhatsAppMessage } from './whatsapp';
+import {
+  adminWhatsAppNumber,
+  queueGapMs,
+  sendAdminWhatsApp,
+  sendWhatsAppMessage,
+  sleep,
+} from './whatsapp';
 
 const labels = {
   en: {
     services: {
-      home: 'Home cleaning',
+      home: 'House cleaning',
       deep: 'Deep cleaning',
       move: 'Move-in / move-out',
       interior: 'Interior refresh',
@@ -23,12 +29,12 @@ const labels = {
       weekly: 'Weekly',
       monthly: 'Monthly',
     },
-    clientTitle: '✨ ZAV Interior & Clean',
+    clientTitle: 'ZAV Interior & Clean',
     clientHello: 'Hi',
     clientBody:
-      'We received your free estimate request and confirmed your preferred visit window. We will honor this schedule as closely as possible.',
+      'We received your free estimate request for cleaning in Central Florida and noted your preferred visit window. We will honor this schedule as closely as possible.',
     clientFooter: `Questions? Call or WhatsApp us at ${PHONE_DISPLAY}.`,
-    adminTitle: '📬 New quote · ZAV',
+    adminTitle: 'New quote · ZAV',
     adminLead: 'New free-estimate request — contact the client to finalize details.',
     scheduleLabel: 'Preferred schedule',
   },
@@ -51,12 +57,12 @@ const labels = {
       weekly: 'Semanal',
       monthly: 'Mensual',
     },
-    clientTitle: '✨ ZAV Interior & Clean',
+    clientTitle: 'ZAV Interior & Clean',
     clientHello: 'Hola',
     clientBody:
-      'Recibimos tu solicitud de cotización gratuita y confirmamos tu ventana de visita preferida. Respetaremos este horario lo más posible.',
+      'Recibimos tu solicitud de cotización en Central Florida y confirmamos tu ventana de visita preferida. Respetaremos este horario lo más posible.',
     clientFooter: `¿Preguntas? Llámanos o escríbenos por WhatsApp al ${PHONE_DISPLAY}.`,
-    adminTitle: '📬 Nueva cotización · ZAV',
+    adminTitle: 'Nueva cotización · ZAV',
     adminLead: 'Nueva solicitud de cotización — contacta al cliente para ultimar detalles.',
     scheduleLabel: 'Horario preferido',
   },
@@ -79,12 +85,12 @@ const labels = {
       weekly: 'Semanal',
       monthly: 'Mensal',
     },
-    clientTitle: '✨ ZAV Interior & Clean',
+    clientTitle: 'ZAV Interior & Clean',
     clientHello: 'Olá',
     clientBody:
-      'Recebemos seu pedido de orçamento gratuito e confirmamos sua janela de visita preferida. Honraremos este horário o mais próximo possível.',
+      'Recebemos seu pedido de orçamento em Central Florida e confirmamos sua janela de visita preferida. Honraremos este horário o mais próximo possível.',
     clientFooter: `Dúvidas? Ligue ou fale no WhatsApp: ${PHONE_DISPLAY}.`,
-    adminTitle: '📬 Novo orçamento · ZAV',
+    adminTitle: 'Novo orçamento · ZAV',
     adminLead: 'Nova solicitação — entre em contato com o cliente para finalizar detalhes.',
     scheduleLabel: 'Horário preferido',
   },
@@ -145,8 +151,8 @@ export function buildAdminWhatsAppMessage(quote: Quote) {
     '',
     t.adminLead,
     '',
-    `📞 Client: ${quote.phone}`,
-    `✉️ ${quote.email}`,
+    `Client: ${quote.phone}`,
+    `Email: ${quote.email}`,
     '',
     ...lines,
     '',
@@ -168,6 +174,9 @@ export async function sendQuoteWhatsAppNotifications(quote: Quote) {
     error = err instanceof Error ? err.message : 'client_wa_failed';
     console.error('[whatsapp] client quote notify failed:', error);
   }
+
+  // Queue gap: avoid rapid back-to-back sends from the same number
+  await sleep(queueGapMs());
 
   try {
     const r = await sendAdminWhatsApp(buildAdminWhatsAppMessage(quote));

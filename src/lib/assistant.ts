@@ -2,7 +2,7 @@ import { generateWithTools, type ChatTurn, turnsToContents } from './gemini';
 import { getDashboard } from './store';
 import { adminWhatsAppNumber, getWhatsAppConfigStatus, sendAdminWhatsApp } from './whatsapp';
 
-const SYSTEM = `You are ZAV Admin Assistant — an operations copilot for ZAV Interior & Clean (Pennsylvania, US).
+const SYSTEM = `You are ZAV Admin Assistant — an operations copilot for ZAV Interior & Clean (Orlando & Central Florida, US).
 You have real tools to read the business dashboard and send WhatsApp messages to the ZAV admin.
 
 Rules:

@@ -1,0 +1,48 @@
+---
+import type { Messages } from '../i18n/messages';
+
+interface Props {
+  m: Messages;
+}
+
+const { m } = Astro.props;
+---
+
+<section class="cta-strip" aria-label={m.ctaStrip}>
+  <a href="#quote" class="cta-strip__link interactive">
+    <span>{m.ctaStrip}</span>
+    <span class="cta-strip__arrow" aria-hidden="true">→</span>
+  </a>
+</section>
+
+<style>
+  .cta-strip {
+    background: linear-gradient(90deg, var(--color-navy-deep), var(--color-navy));
+  }
+  .cta-strip__link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    padding: 1.1rem 1.25rem;
+    color: var(--color-cream);
+    text-decoration: none;
+    font-size: 0.95rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    text-align: center;
+  }
+  .cta-strip__arrow {
+    display: inline-flex;
+    width: 2rem;
+    height: 2rem;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    border: 1px solid rgba(246, 241, 235, 0.35);
+    transition: transform 280ms ease;
+  }
+  .cta-strip__link:hover .cta-strip__arrow {
+    transform: translateX(4px);
+  }
+</style>
