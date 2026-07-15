@@ -119,24 +119,44 @@ function formatReviewDate(iso: string) {
           <span>{m.reviewCity}</span>
           <input class="field" name="city" type="text" required maxlength="80" placeholder="Orlando, FL" />
         </label>
-        <label class="review-field">
+
+        <div class="review-field sm:col-span-2">
           <span>{m.reviewService}</span>
-          <select class="field" name="service" required>
-            {serviceOptions.map((s) => (
-              <option value={s}>{s}</option>
+          <input type="hidden" name="service" id="review-service" value={serviceOptions[0]} required />
+          <div class="service-picks" role="group" aria-label={m.reviewService}>
+            {serviceOptions.map((s, i) => (
+              <button
+                type="button"
+                class:list={['service-pick', i === 0 && 'is-active']}
+                data-service={s}
+              >
+                {s}
+              </button>
             ))}
-          </select>
-        </label>
-        <label class="review-field">
+          </div>
+        </div>
+
+        <div class="review-field sm:col-span-2">
           <span>{m.reviewRating}</span>
-          <select class="field" name="rating" required>
-            <option value="5">★★★★★</option>
-            <option value="4">★★★★</option>
-            <option value="3">★★★</option>
-            <option value="2">★★</option>
-            <option value="1">★</option>
-          </select>
-        </label>
+          <input type="hidden" name="rating" id="review-rating" value="5" required />
+          <div class="rating-picks" role="radiogroup" aria-label={m.reviewRating}>
+            {[1, 2, 3, 4, 5].map((n) => (
+              <button
+                type="button"
+                class:list={['rating-star', 'is-on', n >= 4 && 'is-big']}
+                data-rating={n}
+                aria-label={`${n} stars`}
+                aria-checked={n === 5 ? 'true' : 'false'}
+                role="radio"
+              >
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d={starPath} />
+                </svg>
+              </button>
+            ))}
+          </div>
+        </div>
+
         <label class="review-field sm:col-span-2">
           <span>{m.reviewBody}</span>
           <textarea class="field min-h-[110px]" name="blurb" required maxlength="500" rows="4"></textarea>
@@ -152,13 +172,59 @@ function formatReviewDate(iso: string) {
   </div>
 </section>
 
-<script define:vars={{ labels: { sending: m.reviewSending, submit: m.reviewSubmit, success: m.reviewSuccess, error: m.reviewError }, starPath }}>
+<script define:vars={{ labels: { sending: m.reviewSending, submit: m.reviewSubmit, success: m.reviewSuccess, error: m.reviewError }, starPath, defaultService: serviceOptions[0] }}>
   const form = document.getElementById('review-form');
   const btn = form?.querySelector('[data-review-submit]');
   const msg = document.querySelector('[data-review-msg]');
   const grid = document.getElementById('reviews-grid');
+  const ratingInput = document.getElementById('review-rating');
+  const serviceInput = document.getElementById('review-service');
+  const starBtns = [...(form?.querySelectorAll('.rating-star') || [])];
+  const serviceBtns = [...(form?.querySelectorAll('.service-pick') || [])];
 
   const colors = ['#6b4538', '#c67a62', '#8a5a3c', '#4a2f28', '#b8845a', '#7a4e3a'];
+
+  function setRating(value) {
+    const n = Math.max(1, Math.min(5, Number(value) || 5));
+    if (ratingInput) ratingInput.value = String(n);
+    starBtns.forEach((el) => {
+      const v = Number(el.getAttribute('data-rating') || 0);
+      const on = v <= n;
+      el.classList.toggle('is-on', on);
+      el.setAttribute('aria-checked', v === n ? 'true' : 'false');
+      if (on) {
+        el.classList.remove('is-pop');
+        void el.offsetWidth;
+        el.classList.add('is-pop');
+      }
+    });
+  }
+
+  function setService(value) {
+    if (serviceInput) serviceInput.value = value;
+    serviceBtns.forEach((el) => {
+      el.classList.toggle('is-active', el.getAttribute('data-service') === value);
+    });
+  }
+
+  starBtns.forEach((el) => {
+    el.addEventListener('click', () => setRating(el.getAttribute('data-rating')));
+    el.addEventListener('mouseenter', () => {
+      const hover = Number(el.getAttribute('data-rating') || 0);
+      starBtns.forEach((s) => {
+        const v = Number(s.getAttribute('data-rating') || 0);
+        s.classList.toggle('is-hover', v <= hover);
+      });
+    });
+  });
+
+  form?.querySelector('.rating-picks')?.addEventListener('mouseleave', () => {
+    starBtns.forEach((s) => s.classList.remove('is-hover'));
+  });
+
+  serviceBtns.forEach((el) => {
+    el.addEventListener('click', () => setService(el.getAttribute('data-service') || defaultService));
+  });
 
   function initials(name) {
     const parts = String(name).trim().split(/\s+/).filter(Boolean);
@@ -255,6 +321,8 @@ function formatReviewDate(iso: string) {
       if (!res.ok) throw new Error(data.error || labels.error);
       prependCard(data.review);
       form.reset();
+      setRating(5);
+      setService(defaultService);
       if (msg) {
         msg.textContent = labels.success;
         msg.classList.add('is-ok');
@@ -288,6 +356,94 @@ function formatReviewDate(iso: string) {
     font-size: 0.78rem;
     font-weight: 600;
     color: var(--color-muted);
+  }
+
+  .service-picks {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+  }
+
+  .service-pick {
+    border: 1px solid rgba(42, 33, 30, 0.12);
+    background: #fff;
+    color: var(--color-ink);
+    border-radius: 999px;
+    padding: 0.55rem 0.9rem;
+    font-size: 0.78rem;
+    font-weight: 600;
+    transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+  }
+
+  .service-pick:hover {
+    transform: translateY(-1px);
+    border-color: rgba(198, 122, 98, 0.45);
+  }
+
+  .service-pick.is-active {
+    background: linear-gradient(135deg, #f5c84b, #efa978);
+    border-color: transparent;
+    color: #2a211e;
+    box-shadow: 0 8px 18px rgba(245, 200, 75, 0.28);
+  }
+
+  .rating-picks {
+    display: flex;
+    align-items: flex-end;
+    gap: 0.35rem;
+    padding: 0.35rem 0.15rem;
+  }
+
+  .rating-star {
+    appearance: none;
+    border: 0;
+    background: transparent;
+    padding: 0.15rem;
+    cursor: pointer;
+    line-height: 0;
+  }
+
+  .rating-star svg {
+    width: 1.55rem;
+    height: 1.55rem;
+    fill: rgba(42, 33, 30, 0.14);
+    transition: transform 0.22s ease, fill 0.22s ease, filter 0.22s ease;
+    transform-origin: center bottom;
+  }
+
+  .rating-star.is-big svg {
+    width: 2.05rem;
+    height: 2.05rem;
+  }
+
+  .rating-star.is-on svg,
+  .rating-star.is-hover svg {
+    fill: #fbbc04;
+    filter: drop-shadow(0 0 4px rgba(251, 188, 4, 0.55));
+  }
+
+  .rating-star.is-pop svg {
+    animation: rating-pop 0.42s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .rating-star:hover svg {
+    transform: scale(1.12);
+  }
+
+  .rating-star.is-big:hover svg {
+    transform: scale(1.18);
+  }
+
+  @keyframes rating-pop {
+    0% {
+      transform: scale(0.8);
+    }
+    55% {
+      transform: scale(1.28);
+    }
+    100% {
+      transform: scale(1);
+    }
   }
 
   .review-form [data-review-msg].is-ok {
