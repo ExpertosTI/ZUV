@@ -82,7 +82,7 @@ export PUBLIC_SITE_URL="${PUBLIC_SITE_URL:-https://zavinteriorclean.com}"
 export ADMIN_EMAIL="${ADMIN_EMAIL:-azhaliaestepan@gmail.com}"
 export EVOLUTION_API_URL="${EVOLUTION_API_URL:-https://evoapi.renace.tech}"
 export EVOLUTION_API_KEY="${EVOLUTION_API_KEY:-}"
-export EVOLUTION_INSTANCE="${EVOLUTION_INSTANCE:-RENACE.TECH}"
+export EVOLUTION_INSTANCE="${EVOLUTION_INSTANCE:-renace}"
 export ADMIN_WHATSAPP="${ADMIN_WHATSAPP:-17174156171}"
 export GEMINI_API_KEY="${GEMINI_API_KEY:-}"
 export GEMINI_MODEL="${GEMINI_MODEL:-gemini-2.5-flash}"
@@ -111,7 +111,7 @@ fi
 # Re-apply defaults after merge (do not wipe loaded keys)
 export EVOLUTION_API_URL="${EVOLUTION_API_URL:-https://evoapi.renace.tech}"
 export EVOLUTION_API_KEY="${EVOLUTION_API_KEY:-}"
-export EVOLUTION_INSTANCE="${EVOLUTION_INSTANCE:-RENACE.TECH}"
+export EVOLUTION_INSTANCE="${EVOLUTION_INSTANCE:-renace}"
 export ADMIN_WHATSAPP="${ADMIN_WHATSAPP:-17174156171}"
 
 if [ -n "$EVOLUTION_API_URL" ] && [ -n "$EVOLUTION_API_KEY" ]; then

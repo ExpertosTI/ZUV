@@ -5,7 +5,7 @@ import { maskPhone, normalizePhoneDigits } from './phone';
 
 const DATA_DIR = process.env.ZAV_DATA_DIR || path.join(process.cwd(), 'data');
 const STATE_FILE = 'whatsapp.json';
-const DEFAULT_INSTANCE = 'RENACE.TECH';
+const DEFAULT_INSTANCE = 'renace';
 const DEFAULT_API_URL = 'https://evoapi.renace.tech';
 const TEXT_DELAY_MS = 1200;
 
@@ -158,7 +158,7 @@ function humanizeEvolutionError(err?: string, status?: number): string {
     );
   }
   if (status === 404 || e.includes('not found')) {
-    return 'WhatsApp instance not found on Evolution. Check EVOLUTION_INSTANCE (RENACE.TECH) in .evolution.local.';
+    return 'WhatsApp instance not found on Evolution. Check EVOLUTION_INSTANCE (renace) in .evolution.local.';
   }
   if (e.includes('timeout') || e.includes('fetch failed') || e.includes('network')) {
     return 'Could not reach evoapi.renace.tech. Check server outbound HTTPS.';
@@ -200,17 +200,15 @@ export async function probeEvolutionAdmin() {
 }
 
 /**
- * Connect existing Evolution instance (RENACE.TECH by default) and return QR if needed.
+ * Connect existing Evolution instance (`renace` by default) and return QR if needed.
  * Prefer connect over create — shared Renace instances already exist on evoapi.
  */
 export async function startWhatsAppSession(instanceName?: string) {
   const name = (instanceName || (await activeInstanceName())).trim() || DEFAULT_INSTANCE;
   await saveWhatsAppState({ instanceName: name, connected: false });
 
+  // Soft probe — continue even if list fails; connectionState/connect may still work
   const probe = await probeEvolutionAdmin();
-  if (!probe.ok) {
-    return { ok: false as const, instanceName: name, qrcode: null as string | null, error: probe.error };
-  }
 
   // Already linked?
   const live = await evoFetch(`/instance/connectionState/${encodeURIComponent(name)}`);
@@ -237,6 +235,16 @@ export async function startWhatsAppSession(instanceName?: string) {
     }
   }
 
+  // If probe failed and connect failed, surface the clearer admin-key error
+  if (!probe.ok && (conn.status === 401 || live.status === 401)) {
+    return {
+      ok: false as const,
+      instanceName: name,
+      qrcode: null as string | null,
+      error: probe.error,
+    };
+  }
+
   // Missing instance only → create (requires global Evolution key)
   const missing =
     conn.status === 404 ||
@@ -250,6 +258,15 @@ export async function startWhatsAppSession(instanceName?: string) {
       instanceName: name,
       qrcode: null as string | null,
       error: humanizeEvolutionError(conn.error || live.error, conn.status || live.status),
+    };
+  }
+
+  if (!probe.ok) {
+    return {
+      ok: false as const,
+      instanceName: name,
+      qrcode: null as string | null,
+      error: probe.error,
     };
   }
 

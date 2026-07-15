@@ -3,7 +3,7 @@
 
 EVOLUTION_API_URL=https://evoapi.renace.tech
 EVOLUTION_API_KEY=
-EVOLUTION_INSTANCE=RENACE.TECH
+EVOLUTION_INSTANCE=renace
 
 # Admin WhatsApp (default: business line 717-415-6171)
 # ADMIN_WHATSAPP=17174156171

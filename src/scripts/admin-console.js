@@ -1021,10 +1021,10 @@ export function initAdminConsole() {
       const line = !data?.configured
         ? `⚠️ ${data?.reason || 'EVOLUTION_* not set on server'}`
         : connected
-          ? `✅ Connected · ${data.instance || 'RENACE.TECH'}${data.phone ? ` · ${data.phone}` : ''} → admin ${data.adminTo || ''}`
+          ? `✅ Connected · ${data.instance || 'renace'}${data.phone ? ` · ${data.phone}` : ''} → admin ${data.adminTo || ''}`
           : missing
-            ? `🟡 Instance missing · click Connect for ${data.instance || 'RENACE.TECH'}`
-            : `🟡 Waiting for QR scan · ${data.instance || 'RENACE.TECH'} · admin ${data.adminTo || ''}`;
+            ? `🟡 Instance missing · click Connect for ${data.instance || 'renace'}`
+            : `🟡 Waiting for QR scan · ${data.instance || 'renace'} · admin ${data.adminTo || ''}`;
 
       [waStatusEl, waDetailStatusEl].forEach((el) => {
         if (!el) return;
@@ -1081,10 +1081,10 @@ export function initAdminConsole() {
   };
 
   const connectWhatsApp = async (forceQrOnly = false) => {
-    setWaMsg(forceQrOnly ? 'Refreshing QR…' : 'Connecting RENACE.TECH / fetching QR…');
+    setWaMsg(forceQrOnly ? 'Refreshing QR…' : 'Connecting renace / fetching QR…');
     try {
       const status = await refreshWhatsAppPanel();
-      const instanceName = status?.instance || 'RENACE.TECH';
+      const instanceName = status?.instance || 'renace';
       const res = await fetch(forceQrOnly ? '/api/whatsapp/instance/qr' : '/api/whatsapp/instance', {
         method: forceQrOnly ? 'GET' : 'POST',
         headers: forceQrOnly
