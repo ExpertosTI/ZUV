@@ -14,6 +14,13 @@ const starPath =
 
 const AVATAR_COLORS = ['#6b4538', '#c67a62', '#8a5a3c', '#4a2f28', '#b8845a', '#7a4e3a'];
 
+const serviceOptions = [
+  m.services.home,
+  m.services.deep,
+  m.services.move,
+  m.servicesOffice,
+];
+
 function initials(name: string) {
   const parts = name.replace(/[^a-zA-ZÀ-ÿ&\s.]/g, ' ').trim().split(/\s+/).filter(Boolean);
   if (parts.length === 0) return 'Z';
@@ -38,18 +45,19 @@ function formatReviewDate(iso: string) {
 
 <section id="work" class="section-block px-4 py-14 sm:px-6 sm:py-20">
   <div class="mx-auto max-w-6xl">
-    <div class="reveal mb-8 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+    <div class="reveal mb-8 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
       <div>
         <p class="font-accent text-lg text-mustard-deep sm:text-xl">{m.navWork}</p>
         <h2 class="font-display mt-2 text-3xl tracking-tight text-ink sm:text-4xl">{m.feedTitle}</h2>
         <p class="mt-2 text-sm text-muted sm:text-base">{m.feedSub}</p>
       </div>
+      <a href="#leave-review" class="btn-accent !px-4 !py-2.5 text-xs">{m.reviewCta}</a>
     </div>
 
     {clients.length === 0 ? (
       <p class="reveal text-center text-muted">{m.feedEmpty}</p>
     ) : (
-      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3" translate="no">
+      <div id="reviews-grid" class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3" translate="no">
         {clients.map((client, i) => (
           <article
             class:list={['review-profile reveal', i === 1 && 'reveal-delay-1', i === 2 && 'reveal-delay-2']}
@@ -65,11 +73,9 @@ function formatReviewDate(iso: string) {
                 {initials(client.name)}
               </div>
               <div class="min-w-0 flex-1">
-                <div class="flex items-start justify-between gap-2">
-                  <div class="min-w-0">
-                    <p class="review-profile__name">{client.name}</p>
-                    <p class="review-profile__meta">{client.city}</p>
-                  </div>
+                <div class="min-w-0">
+                  <p class="review-profile__name">{client.name}</p>
+                  <p class="review-profile__meta">{client.city}</p>
                 </div>
                 <div class="mt-1.5 flex items-center gap-2">
                   <span class="star-row" aria-label={`${client.rating} stars`}>
@@ -101,10 +107,197 @@ function formatReviewDate(iso: string) {
         ))}
       </div>
     )}
+
+    <div id="leave-review" class="review-form-wrap reveal mt-10 scroll-mt-28">
+      <h3 class="font-display text-2xl tracking-tight text-ink">{m.reviewTitle}</h3>
+      <form id="review-form" class="review-form mt-5 grid gap-3 sm:grid-cols-2">
+        <label class="review-field">
+          <span>{m.reviewName}</span>
+          <input class="field" name="name" type="text" required maxlength="80" autocomplete="name" />
+        </label>
+        <label class="review-field">
+          <span>{m.reviewCity}</span>
+          <input class="field" name="city" type="text" required maxlength="80" placeholder="Orlando, FL" />
+        </label>
+        <label class="review-field">
+          <span>{m.reviewService}</span>
+          <select class="field" name="service" required>
+            {serviceOptions.map((s) => (
+              <option value={s}>{s}</option>
+            ))}
+          </select>
+        </label>
+        <label class="review-field">
+          <span>{m.reviewRating}</span>
+          <select class="field" name="rating" required>
+            <option value="5">★★★★★</option>
+            <option value="4">★★★★</option>
+            <option value="3">★★★</option>
+            <option value="2">★★</option>
+            <option value="1">★</option>
+          </select>
+        </label>
+        <label class="review-field sm:col-span-2">
+          <span>{m.reviewBody}</span>
+          <textarea class="field min-h-[110px]" name="blurb" required maxlength="500" rows="4"></textarea>
+        </label>
+        <div class="sm:col-span-2 flex flex-wrap items-center gap-3">
+          <button type="submit" class="btn-accent" data-review-submit>
+            {m.reviewSubmit}
+          </button>
+          <p class="text-sm text-muted" data-review-msg hidden></p>
+        </div>
+      </form>
+    </div>
   </div>
 </section>
 
+<script define:vars={{ labels: { sending: m.reviewSending, submit: m.reviewSubmit, success: m.reviewSuccess, error: m.reviewError }, starPath }}>
+  const form = document.getElementById('review-form');
+  const btn = form?.querySelector('[data-review-submit]');
+  const msg = document.querySelector('[data-review-msg]');
+  const grid = document.getElementById('reviews-grid');
+
+  const colors = ['#6b4538', '#c67a62', '#8a5a3c', '#4a2f28', '#b8845a', '#7a4e3a'];
+
+  function initials(name) {
+    const parts = String(name).trim().split(/\s+/).filter(Boolean);
+    if (!parts.length) return 'Z';
+    if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+    return `${parts[0][0] || 'Z'}${parts[parts.length - 1][0] || ''}`.toUpperCase();
+  }
+
+  function avatarColor(name) {
+    let hash = 0;
+    for (let i = 0; i < name.length; i++) hash = (hash + name.charCodeAt(i) * (i + 1)) % 997;
+    return colors[hash % colors.length];
+  }
+
+  function formatDate(iso) {
+    const d = new Date(`${iso}T12:00:00`);
+    if (Number.isNaN(d.getTime())) return iso;
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  }
+
+  function starsHtml(rating) {
+    return Array.from({ length: rating })
+      .map(
+        (_, si) =>
+          `<svg class="star-icon" style="--i:${si}" viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path d="${starPath}"/></svg>`,
+      )
+      .join('');
+  }
+
+  function prependCard(review) {
+    if (!grid) {
+      location.reload();
+      return;
+    }
+    const article = document.createElement('article');
+    article.className = 'review-profile reveal is-in';
+    article.lang = 'en';
+    article.translate = false;
+    article.innerHTML = `
+      <header class="review-profile__head">
+        <div class="review-profile__avatar" style="background:${avatarColor(review.name)}" aria-hidden="true">${initials(review.name)}</div>
+        <div class="min-w-0 flex-1">
+          <div class="min-w-0">
+            <p class="review-profile__name"></p>
+            <p class="review-profile__meta"></p>
+          </div>
+          <div class="mt-1.5 flex items-center gap-2">
+            <span class="star-row">${starsHtml(review.rating || 5)}</span>
+            <span class="review-profile__service"></span>
+          </div>
+        </div>
+      </header>
+      <p class="review-profile__body"></p>
+      <footer class="review-profile__foot">
+        <time datetime="${review.date}">${formatDate(review.date)}</time>
+        <span class="review-profile__src">Local customer</span>
+      </footer>`;
+    article.querySelector('.review-profile__name').textContent = review.name;
+    article.querySelector('.review-profile__meta').textContent = review.city;
+    article.querySelector('.review-profile__service').textContent = review.service;
+    article.querySelector('.review-profile__body').textContent = `“${review.blurb}”`;
+    grid.prepend(article);
+  }
+
+  form?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (!(form instanceof HTMLFormElement)) return;
+    const fd = new FormData(form);
+    const payload = {
+      name: String(fd.get('name') || '').trim(),
+      city: String(fd.get('city') || '').trim(),
+      service: String(fd.get('service') || '').trim(),
+      blurb: String(fd.get('blurb') || '').trim(),
+      rating: Number(fd.get('rating') || 5),
+    };
+
+    if (btn) {
+      btn.disabled = true;
+      btn.textContent = labels.sending;
+    }
+    if (msg) {
+      msg.hidden = false;
+      msg.textContent = '';
+      msg.classList.remove('is-ok', 'is-err');
+    }
+
+    try {
+      const res = await fetch('/api/reviews', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || labels.error);
+      prependCard(data.review);
+      form.reset();
+      if (msg) {
+        msg.textContent = labels.success;
+        msg.classList.add('is-ok');
+      }
+    } catch (err) {
+      if (msg) {
+        msg.textContent = err instanceof Error ? err.message : labels.error;
+        msg.classList.add('is-err');
+      }
+    } finally {
+      if (btn) {
+        btn.disabled = false;
+        btn.textContent = labels.submit;
+      }
+    }
+  });
+</script>
+
 <style>
+  .review-form-wrap {
+    border-radius: 1.25rem;
+    border: 1px solid rgba(42, 33, 30, 0.08);
+    background: rgba(255, 255, 255, 0.72);
+    padding: 1.25rem 1.25rem 1.35rem;
+  }
+
+  .review-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--color-muted);
+  }
+
+  .review-form [data-review-msg].is-ok {
+    color: #1f7a4d;
+  }
+
+  .review-form [data-review-msg].is-err {
+    color: #a33b2b;
+  }
+
   .review-profile {
     border-radius: 1.1rem;
     border: 1px solid rgba(42, 33, 30, 0.07);

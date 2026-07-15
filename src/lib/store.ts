@@ -619,6 +619,29 @@ export async function saveClients(clients: ClientWork[]) {
   await writeJson('clients.json', clients);
 }
 
+export async function addPublicReview(input: {
+  name: string;
+  city: string;
+  service: string;
+  blurb: string;
+  rating: number;
+}) {
+  const clients = await getClients();
+  const client: ClientWork = {
+    id: `r_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 7)}`,
+    name: input.name,
+    city: input.city,
+    service: input.service,
+    blurb: input.blurb,
+    rating: input.rating,
+    date: new Date().toISOString().slice(0, 10),
+    featured: false,
+  };
+  clients.unshift(client);
+  await saveClients(clients);
+  return client;
+}
+
 export async function getPublicStats() {
   const [metrics, clients] = await Promise.all([getMetrics(), getClients()]);
   return {
