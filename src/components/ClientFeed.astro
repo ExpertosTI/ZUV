@@ -8,6 +8,9 @@ interface Props {
 }
 
 const { m, clients } = Astro.props;
+
+const starPath =
+  'M12 2.4l2.7 5.5 6.1.9-4.4 4.3 1 6.1L12 16.3 6.6 19.2l1-6.1L3.2 8.8l6.1-.9L12 2.4z';
 ---
 
 <section id="work" class="section-block px-4 py-14 sm:px-6 sm:py-20">
@@ -41,7 +44,20 @@ const { m, clients } = Astro.props;
             </div>
             <p class="text-sm leading-relaxed text-ink-soft">“{client.blurb}”</p>
             <div class="mt-4 flex items-center justify-between text-xs text-muted">
-              <span aria-label={`${client.rating} stars`}>{'★'.repeat(client.rating)}</span>
+              <span class="star-row" aria-label={`${client.rating} stars`}>
+                {Array.from({ length: Math.max(0, Math.min(5, client.rating || 0)) }).map((_, si) => (
+                  <svg
+                    class="star-icon"
+                    style={`--i:${si}`}
+                    viewBox="0 0 24 24"
+                    width="16"
+                    height="16"
+                    aria-hidden="true"
+                  >
+                    <path d={starPath} />
+                  </svg>
+                ))}
+              </span>
               <time datetime={client.date}>{client.date}</time>
             </div>
           </article>
@@ -50,3 +66,47 @@ const { m, clients } = Astro.props;
     )}
   </div>
 </section>
+
+<style>
+  .star-row {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.18rem;
+  }
+
+  .star-icon {
+    fill: #f5c84b;
+    color: #f5c84b;
+    filter: drop-shadow(0 0 2px rgba(245, 200, 75, 0.45));
+    transform-origin: center;
+    animation: star-twinkle 2.4s ease-in-out infinite;
+    animation-delay: calc(var(--i, 0) * 0.18s);
+  }
+
+  .feed-card:hover .star-icon {
+    animation-duration: 1.4s;
+    filter: drop-shadow(0 0 5px rgba(245, 200, 75, 0.7));
+  }
+
+  @keyframes star-twinkle {
+    0%,
+    100% {
+      transform: scale(1);
+      opacity: 0.88;
+    }
+    40% {
+      transform: scale(1.12);
+      opacity: 1;
+    }
+    70% {
+      transform: scale(0.96);
+      opacity: 0.95;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .star-icon {
+      animation: none;
+    }
+  }
+</style>

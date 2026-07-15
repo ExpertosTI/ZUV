@@ -20,7 +20,10 @@ export const onRequest = defineMiddleware(async (context, next) => {
       headers.set('Cache-Control', 'public, max-age=31536000, immutable');
     }
   } else if (type.includes('text/html')) {
-    headers.set('Cache-Control', 'public, max-age=0, must-revalidate');
+    headers.set('Cache-Control', 'private, no-cache, no-store, must-revalidate, max-age=0');
+    headers.set('Pragma', 'no-cache');
+    headers.set('Expires', '0');
+    headers.set('Surrogate-Control', 'no-store');
   }
 
   return new Response(response.body, {
