@@ -10,15 +10,23 @@ interface Props {
 const { m, clients } = Astro.props;
 
 const starPath =
-  'M12 2.4l2.7 5.5 6.1.9-4.4 4.3 1 6.1L12 16.3 6.6 19.2l1-6.1L3.2 8.8l6.1-.9L12 2.4z';
+  'M12 2l2.9 5.9 6.5.9-4.7 4.6 1.1 6.5L12 16.5 6.2 19.9l1.1-6.5L2.6 8.8l6.5-.9L12 2z';
 
 const AVATAR_COLORS = ['#6b4538', '#c67a62', '#8a5a3c', '#4a2f28', '#b8845a', '#7a4e3a'];
 
+const serviceIcons = {
+  home: 'M4 10.5 12 3.5l8 7V21a.8.8 0 0 1-.8.8h-4.7v-6.2H9.5v6.2H4.8A.8.8 0 0 1 4 21v-10.5z',
+  deep: 'M12 2.2l1.2 3.7 3.9.2-3.1 2.4 1 3.7L12 10.2 8.9 12.1l1-3.7L6.9 6.1l3.9-.2L12 2.2zm-6.8 9.4.9 2.7 2.9.1-2.3 1.8.7 2.8L5.2 17.3 2.7 19l.7-2.8-2.3-1.8 2.9-.1.9-2.7zm13.6 0 .9 2.7 2.9.1-2.3 1.8.7 2.8-2.5-1.7-2.5 1.7.7-2.8-2.3-1.8 2.9-.1.9-2.7zM5.5 20.2h13v1.3H5.5z',
+  move: 'M3.5 8.2h10.2a1.6 1.6 0 0 1 1.6 1.6V19H3.5V8.2zm11.8 1.7h2.6l1.9 2.4V19h-4.5V9.9zM6.2 5h5.5v3.2H6.2V5zm1.8 6.2h3v1.5h-3V11.2z',
+  office:
+    'M3.8 21V4.8A.8.8 0 0 1 4.6 4h8.2a.8.8 0 0 1 .8.8V21H3.8zm11.2 0V9.2h4.4a.8.8 0 0 1 .8.8V21h-5.2zM6.2 7.2h2v2h-2v-2zm0 3.6h2v2h-2v-2zm0 3.6h2v2h-2v-2zm3.6-7.2h2v2h-2v-2zm0 3.6h2v2h-2v-2z',
+} as const;
+
 const serviceOptions = [
-  m.services.home,
-  m.services.deep,
-  m.services.move,
-  m.servicesOffice,
+  { label: m.services.home, icon: serviceIcons.home },
+  { label: m.services.deep, icon: serviceIcons.deep },
+  { label: m.services.move, icon: serviceIcons.move },
+  { label: m.servicesOffice, icon: serviceIcons.office },
 ];
 
 function initials(name: string) {
@@ -122,15 +130,18 @@ function formatReviewDate(iso: string) {
 
         <div class="review-field sm:col-span-2">
           <span>{m.reviewService}</span>
-          <input type="hidden" name="service" id="review-service" value={serviceOptions[0]} required />
+          <input type="hidden" name="service" id="review-service" value={serviceOptions[0].label} required />
           <div class="service-picks" role="group" aria-label={m.reviewService}>
             {serviceOptions.map((s, i) => (
               <button
                 type="button"
                 class:list={['service-pick', i === 0 && 'is-active']}
-                data-service={s}
+                data-service={s.label}
               >
-                {s}
+                <svg class="service-pick__icon" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d={s.icon} />
+                </svg>
+                <span>{s.label}</span>
               </button>
             ))}
           </div>
@@ -140,17 +151,27 @@ function formatReviewDate(iso: string) {
           <span>{m.reviewRating}</span>
           <input type="hidden" name="rating" id="review-rating" value="5" required />
           <div class="rating-picks" role="radiogroup" aria-label={m.reviewRating}>
+            <svg class="rating-defs" width="0" height="0" aria-hidden="true">
+              <defs>
+                <linearGradient id="rating-star-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#ffe566" />
+                  <stop offset="50%" stop-color="#fbbc04" />
+                  <stop offset="100%" stop-color="#f09a1a" />
+                </linearGradient>
+              </defs>
+            </svg>
             {[1, 2, 3, 4, 5].map((n) => (
               <button
                 type="button"
                 class:list={['rating-star', 'is-on', n >= 4 && 'is-big']}
                 data-rating={n}
+                style={`--i:${n - 1}`}
                 aria-label={`${n} stars`}
                 aria-checked={n === 5 ? 'true' : 'false'}
                 role="radio"
               >
                 <svg viewBox="0 0 24 24" aria-hidden="true">
-                  <path d={starPath} />
+                  <path class="rating-star__shape" d={starPath} />
                 </svg>
               </button>
             ))}
@@ -172,7 +193,7 @@ function formatReviewDate(iso: string) {
   </div>
 </section>
 
-<script define:vars={{ labels: { sending: m.reviewSending, submit: m.reviewSubmit, success: m.reviewSuccess, error: m.reviewError }, starPath, defaultService: serviceOptions[0] }}>
+<script define:vars={{ labels: { sending: m.reviewSending, submit: m.reviewSubmit, success: m.reviewSuccess, error: m.reviewError }, starPath, defaultService: serviceOptions[0].label }}>
   const form = document.getElementById('review-form');
   const btn = form?.querySelector('[data-review-submit]');
   const msg = document.querySelector('[data-review-msg]');
@@ -365,14 +386,26 @@ function formatReviewDate(iso: string) {
   }
 
   .service-pick {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
     border: 1px solid rgba(42, 33, 30, 0.12);
     background: #fff;
     color: var(--color-ink);
     border-radius: 999px;
-    padding: 0.55rem 0.9rem;
+    padding: 0.55rem 0.95rem 0.55rem 0.75rem;
     font-size: 0.78rem;
     font-weight: 600;
-    transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+    transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease, color 0.2s ease,
+      box-shadow 0.2s ease;
+  }
+
+  .service-pick__icon {
+    width: 1.05rem;
+    height: 1.05rem;
+    flex-shrink: 0;
+    fill: currentColor;
+    opacity: 0.72;
   }
 
   .service-pick:hover {
@@ -387,62 +420,101 @@ function formatReviewDate(iso: string) {
     box-shadow: 0 8px 18px rgba(245, 200, 75, 0.28);
   }
 
+  .service-pick.is-active .service-pick__icon {
+    opacity: 1;
+  }
+
+  .rating-defs {
+    position: absolute;
+    width: 0;
+    height: 0;
+    overflow: hidden;
+  }
+
   .rating-picks {
+    position: relative;
     display: flex;
     align-items: flex-end;
-    gap: 0.35rem;
-    padding: 0.35rem 0.15rem;
+    gap: 0.15rem;
+    padding: 0.45rem 0.1rem 0.2rem;
   }
 
   .rating-star {
     appearance: none;
     border: 0;
     background: transparent;
-    padding: 0.15rem;
+    padding: 0.2rem;
     cursor: pointer;
     line-height: 0;
   }
 
   .rating-star svg {
-    width: 1.55rem;
-    height: 1.55rem;
-    fill: rgba(42, 33, 30, 0.14);
-    transition: transform 0.22s ease, fill 0.22s ease, filter 0.22s ease;
+    width: 1.7rem;
+    height: 1.7rem;
+    overflow: visible;
+    transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1), filter 0.25s ease;
     transform-origin: center bottom;
   }
 
+  .rating-star__shape {
+    fill: rgba(42, 33, 30, 0.12);
+    stroke: rgba(42, 33, 30, 0.08);
+    stroke-width: 0.6;
+    transition: fill 0.2s ease, stroke 0.2s ease, filter 0.2s ease;
+  }
+
   .rating-star.is-big svg {
-    width: 2.05rem;
-    height: 2.05rem;
+    width: 2.4rem;
+    height: 2.4rem;
+  }
+
+  .rating-star.is-on .rating-star__shape,
+  .rating-star.is-hover .rating-star__shape {
+    fill: url(#rating-star-grad);
+    stroke: #e8a200;
+    stroke-width: 0.35;
+    filter: drop-shadow(0 0 5px rgba(251, 188, 4, 0.7));
   }
 
   .rating-star.is-on svg,
   .rating-star.is-hover svg {
-    fill: #fbbc04;
-    filter: drop-shadow(0 0 4px rgba(251, 188, 4, 0.55));
+    animation: star-live 2.2s ease-in-out infinite;
+    animation-delay: calc(var(--i, 0) * 0.14s);
   }
 
   .rating-star.is-pop svg {
-    animation: rating-pop 0.42s cubic-bezier(0.22, 1, 0.36, 1);
+    animation: rating-pop 0.48s cubic-bezier(0.22, 1, 0.36, 1);
   }
 
   .rating-star:hover svg {
-    transform: scale(1.12);
+    transform: scale(1.14) rotate(-4deg);
   }
 
   .rating-star.is-big:hover svg {
-    transform: scale(1.18);
+    transform: scale(1.22) rotate(-5deg);
   }
 
   @keyframes rating-pop {
     0% {
-      transform: scale(0.8);
+      transform: scale(0.72) rotate(-8deg);
     }
     55% {
-      transform: scale(1.28);
+      transform: scale(1.35) rotate(4deg);
     }
     100% {
+      transform: scale(1) rotate(0);
+    }
+  }
+
+  @keyframes star-live {
+    0%,
+    100% {
       transform: scale(1);
+      filter: drop-shadow(0 0 3px rgba(251, 188, 4, 0.4));
+    }
+    50% {
+      transform: scale(1.1);
+      filter: drop-shadow(0 0 8px rgba(251, 188, 4, 0.85));
     }
   }
 
@@ -569,7 +641,10 @@ function formatReviewDate(iso: string) {
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .star-icon {
+    .star-icon,
+    .rating-star.is-on svg,
+    .rating-star.is-hover svg,
+    .rating-star.is-pop svg {
       animation: none;
     }
     .review-profile:hover {
