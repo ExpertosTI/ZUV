@@ -29,7 +29,7 @@ const wa = whatsappUrl(m.whatsappMsg);
     </div>
 
     <address class="reveal reveal-delay-1 not-italic space-y-3">
-      <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-mustard-deep">{m.contactTitle}</p>
+      <p class="font-accent text-lg text-mustard-deep sm:text-xl">{m.contactTitle}</p>
       <a href={`tel:${PHONE_E164}`} class="contact-row interactive" aria-label={`Call ${PHONE_DISPLAY}`}>
         <span class="contact-icon" aria-hidden="true">☎</span>
         {PHONE_DISPLAY}

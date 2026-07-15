@@ -17,7 +17,9 @@
   --color-sand: #e4c8b8;
 
   --font-sans: "DM Sans", system-ui, -apple-system, sans-serif;
-  --font-display: "Nunito", "DM Sans", system-ui, sans-serif;
+  /* IG graphic line: rounded heavy titles + elegant serif accents */
+  --font-display: "Fredoka", "Nunito", system-ui, sans-serif;
+  --font-accent: "Cormorant Garamond", Georgia, "Times New Roman", serif;
 }
 
 @layer base {
@@ -99,8 +101,16 @@
 @layer components {
   .font-display {
     font-family: var(--font-display);
-    letter-spacing: -0.02em;
-    font-weight: 700;
+    letter-spacing: -0.01em;
+    font-weight: 600;
+    font-optical-sizing: auto;
+  }
+
+  .font-accent {
+    font-family: var(--font-accent);
+    font-style: italic;
+    font-weight: 500;
+    letter-spacing: 0.01em;
   }
 
   .glass {

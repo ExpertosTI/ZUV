@@ -17,8 +17,8 @@ const minDate = tomorrow.toISOString().slice(0, 10);
 <section id="quote" class="section-block relative px-4 py-14 sm:px-6 sm:py-20">
   <div class="mx-auto max-w-xl">
     <div class="reveal mb-6 text-center">
-      <p class="text-[11px] font-semibold uppercase tracking-[0.2em] text-mustard-deep">{m.navQuote}</p>
-      <h2 class="font-display mt-2 text-3xl font-semibold tracking-tight text-ink sm:text-4xl">{m.formTitle}</h2>
+      <p class="font-accent text-lg text-mustard-deep sm:text-xl">{m.navQuote}</p>
+      <h2 class="font-display mt-2 text-3xl tracking-tight text-ink sm:text-4xl">{m.formTitle}</h2>
       <p class="mt-2 text-sm text-muted sm:text-base">{m.formSub}</p>
     </div>
 
@@ -40,7 +40,7 @@ const minDate = tomorrow.toISOString().slice(0, 10);
 
       <form id="quote-form" novalidate>
         <fieldset data-step="1" class="step-panel space-y-3">
-          <legend class="mb-3 font-display text-xl font-semibold text-ink">{m.step1Title}</legend>
+          <legend class="mb-3 font-display text-xl text-ink">{m.step1Title}</legend>
           <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
             {Object.entries(m.services).map(([value, label]) => (
               <label class="choice-card interactive cursor-pointer">
@@ -52,7 +52,7 @@ const minDate = tomorrow.toISOString().slice(0, 10);
         </fieldset>
 
         <fieldset data-step="2" class="step-panel hidden space-y-3">
-          <legend class="mb-3 font-display text-xl font-semibold text-ink">{m.step2Title}</legend>
+          <legend class="mb-3 font-display text-xl text-ink">{m.step2Title}</legend>
           <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
             {Object.entries(m.sizes).map(([value, label]) => (
               <label class="choice-card interactive cursor-pointer">
@@ -64,7 +64,7 @@ const minDate = tomorrow.toISOString().slice(0, 10);
         </fieldset>
 
         <fieldset data-step="3" class="step-panel hidden space-y-3">
-          <legend class="mb-3 font-display text-xl font-semibold text-ink">{m.step3Title}</legend>
+          <legend class="mb-3 font-display text-xl text-ink">{m.step3Title}</legend>
           <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
             {Object.entries(m.frequencies).map(([value, label]) => (
               <label class="choice-card interactive cursor-pointer">
@@ -76,7 +76,7 @@ const minDate = tomorrow.toISOString().slice(0, 10);
         </fieldset>
 
         <fieldset data-step="4" class="step-panel hidden space-y-3">
-          <legend class="mb-3 font-display text-xl font-semibold text-ink">{m.step4Title}</legend>
+          <legend class="mb-3 font-display text-xl text-ink">{m.step4Title}</legend>
           <label class="block">
             <span class="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-muted">{m.fields.date}</span>
             <input class="field" type="date" name="preferredDate" min={minDate} required />
@@ -93,7 +93,7 @@ const minDate = tomorrow.toISOString().slice(0, 10);
         </fieldset>
 
         <fieldset data-step="5" class="step-panel hidden space-y-3">
-          <legend class="mb-3 font-display text-xl font-semibold text-ink">{m.step5Title}</legend>
+          <legend class="mb-3 font-display text-xl text-ink">{m.step5Title}</legend>
           <div class="space-y-3">
             <label class="block">
               <span class="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-muted">{m.fields.name}</span>
@@ -131,7 +131,7 @@ const minDate = tomorrow.toISOString().slice(0, 10);
 
       <div id="quote-success" class="hidden py-8 text-center">
         <div class="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-mustard/20 text-2xl">✓</div>
-        <h3 class="font-display text-2xl font-semibold text-ink">{m.successTitle}</h3>
+        <h3 class="font-display text-2xl text-ink">{m.successTitle}</h3>
         <p class="mx-auto mt-2 max-w-sm text-sm text-muted">{m.successBody}</p>
         <p id="success-schedule" class="mx-auto mt-3 hidden max-w-sm text-sm font-semibold text-navy"></p>
         <div class="mt-6 flex flex-col gap-3 sm:mx-auto sm:max-w-sm">
