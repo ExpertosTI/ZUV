@@ -10,6 +10,7 @@ export function initInteract() {
 
   initSmoothAnchors();
   initReveals();
+  initSectionFlow();
   initRipples();
 
   if (isTouch || prefersReduce) {
@@ -156,16 +157,51 @@ function initReveals() {
     return;
   }
 
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (reduce) {
+    els.forEach((el) => el.classList.add('is-in'));
+    return;
+  }
+
   const io = new IntersectionObserver(
     (entries) => {
       entries.forEach((entry) => {
-        if (!entry.isIntersecting) return;
-        entry.target.classList.add('is-in');
-        io.unobserve(entry.target);
+        // Soft bidirectional fade — feels fluid scrolling up or down
+        if (entry.isIntersecting && entry.intersectionRatio >= 0.08) {
+          entry.target.classList.add('is-in');
+        } else if (entry.boundingClientRect.top > innerHeight * 0.92) {
+          entry.target.classList.remove('is-in');
+        }
+      });
+    },
+    { threshold: [0, 0.08, 0.18, 0.35], rootMargin: '0px 0px -4% 0px' },
+  );
+
+  els.forEach((el) => io.observe(el));
+}
+
+function initSectionFlow() {
+  const sections = [...document.querySelectorAll('main > section')];
+  if (!sections.length) return;
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  // Keep mobile scroll light — only soft reveals there
+  if (matchMedia('(hover: none), (pointer: coarse), (max-width: 900px)').matches) {
+    sections.forEach((section) => {
+      section.classList.add('section-flow', 'is-flowing');
+    });
+    return;
+  }
+
+  sections.forEach((section) => section.classList.add('section-flow'));
+
+  const io = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        entry.target.classList.toggle('is-flowing', entry.isIntersecting);
       });
     },
     { threshold: 0.12, rootMargin: '0px 0px -6% 0px' },
   );
 
-  els.forEach((el) => io.observe(el));
+  sections.forEach((section) => io.observe(section));
 }

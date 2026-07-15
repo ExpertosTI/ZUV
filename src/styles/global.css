@@ -614,10 +614,10 @@
 
   .reveal {
     opacity: 0;
-    transform: translateY(18px);
+    transform: translate3d(0, 16px, 0);
     transition:
-      opacity 0.55s cubic-bezier(0.16, 1, 0.3, 1),
-      transform 0.55s cubic-bezier(0.16, 1, 0.3, 1);
+      opacity 0.85s cubic-bezier(0.22, 1, 0.36, 1),
+      transform 0.85s cubic-bezier(0.22, 1, 0.36, 1);
   }
 
   .reveal.is-in {
@@ -625,9 +625,36 @@
     transform: none;
   }
 
-  .reveal-delay-1 { transition-delay: 0.1s; }
-  .reveal-delay-2 { transition-delay: 0.2s; }
-  .reveal-delay-3 { transition-delay: 0.3s; }
+  .reveal-delay-1 { transition-delay: 0.08s; }
+  .reveal-delay-2 { transition-delay: 0.16s; }
+  .reveal-delay-3 { transition-delay: 0.24s; }
+
+  .soft-rise.is-in {
+    transform: none;
+  }
+
+  main > section {
+    scroll-margin-top: 5.5rem;
+  }
+
+  .section-flow {
+    opacity: 0.72;
+    transform: translate3d(0, 8px, 0);
+    transition:
+      opacity 0.95s cubic-bezier(0.22, 1, 0.36, 1),
+      transform 0.95s cubic-bezier(0.22, 1, 0.36, 1);
+    will-change: auto;
+  }
+
+  .section-flow.is-flowing {
+    opacity: 1;
+    transform: none;
+  }
+
+  #top.section-flow {
+    opacity: 1;
+    transform: none;
+  }
 
   .magnet {
     display: inline-flex;
@@ -814,6 +841,7 @@
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
   .reveal { opacity: 1; transform: none; filter: none; transition: none; }
+  .section-flow { opacity: 1; transform: none; transition: none; }
   .life-spark,
   .hero-shine,
   .hero-chip,
