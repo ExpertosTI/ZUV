@@ -97,8 +97,5 @@ export const POST: APIRoute = async ({ request, clientAddress }) => {
     ok: true,
     id: quote.id,
     stored: true,
-    schedule: { date: preferredDate, slot: preferredSlot, at: scheduledAt },
-    mail: { sent: mail.sent, client: mail.client, admin: mail.admin },
-    whatsapp: mail.whatsapp,
   }, 201);
 };

@@ -17,7 +17,7 @@ function mailEnv() {
     pass: env('SMTP_PASS'),
     host: env('SMTP_HOST', 'smtp.hostinger.com'),
     port: Number(env('SMTP_PORT', '465')) || 465,
-    admin: env('ADMIN_EMAIL', 'azhaliaestepan@gmail.com'),
+    admin: env('ADMIN_EMAIL'),
     fromName: env('SMTP_FROM_NAME', 'ZAV Interior & Clean'),
     from: env('SMTP_FROM', 'hello@zavinteriorclean.com'),
     siteUrl: env('PUBLIC_SITE_URL', 'https://zavinteriorclean.com').replace(/\/$/, ''),
@@ -44,7 +44,7 @@ async function getMailBranding(): Promise<MailBranding> {
     email: m.replyTo,
     phone: '(717) 415-6171',
     website: m.siteUrl,
-    notes: 'Homes that feel alive — and stay immaculate.',
+    notes: 'House and office cleaning in Orlando.',
   };
 
   try {
@@ -135,19 +135,19 @@ const labels = {
       weekly: 'Weekly',
       monthly: 'Monthly',
     },
-    clientSubject: 'We confirmed your preferred schedule',
+    clientSubject: 'We got your estimate request',
     clientHello: 'Hi',
     clientBody:
-      'Thanks for booking a preferred visit window with ZAV Interior & Clean. We received your request and will honor this schedule as closely as possible.',
+      'Thanks for requesting an estimate with ZAV Interior & Clean. We will confirm timing soon.',
     clientDetails: 'Your request',
     clientFooter: 'Questions? Reply to this email or WhatsApp us at (717) 415-6171.',
-    adminSubject: 'New quote + schedule',
+    adminSubject: 'New quote',
     reminderSubject: 'Reminder: your cleaning visit is coming up',
-    reminderBody: 'This is a friendly reminder about your preferred visit window with ZAV Interior & Clean.',
+    reminderBody: 'Friendly reminder about your upcoming visit with ZAV Interior & Clean.',
     scheduleLabel: 'Preferred schedule',
     invoiceSubject: 'Your invoice from ZAV Interior & Clean',
     invoiceHello: 'Hi',
-    invoiceBody: 'Your invoice is ready. You can review the details below or open the full invoice online.',
+    invoiceBody: 'Your invoice is ready. Review the details below or open it online.',
     invoiceOpen: 'View invoice',
   },
   es: {
@@ -172,12 +172,12 @@ const labels = {
     clientSubject: 'Confirmamos tu horario preferido',
     clientHello: 'Hola',
     clientBody:
-      'Gracias por agendar una ventana de visita con ZAV Interior & Clean. Recibimos tu solicitud y respetaremos este horario lo más posible.',
+      'Gracias por pedir cotización con ZAV Interior & Clean. Confirmamos el horario pronto.',
     clientDetails: 'Tu solicitud',
     clientFooter: '¿Preguntas? Responde este correo o escríbenos por WhatsApp al (717) 415-6171.',
-    adminSubject: 'Nueva cotización + horario',
+    adminSubject: 'Nueva cotización',
     reminderSubject: 'Recordatorio: tu visita de limpieza se acerca',
-    reminderBody: 'Este es un recordatorio amable de tu ventana de visita preferida con ZAV Interior & Clean.',
+    reminderBody: 'Recordatorio de tu próxima visita con ZAV Interior & Clean.',
     scheduleLabel: 'Horario preferido',
     invoiceSubject: 'Tu factura de ZAV Interior & Clean',
     invoiceHello: 'Hola',
@@ -203,19 +203,19 @@ const labels = {
       weekly: 'Semanal',
       monthly: 'Mensal',
     },
-    clientSubject: 'Confirmamos seu horário preferido',
+    clientSubject: 'Recebemos seu pedido de orçamento',
     clientHello: 'Olá',
     clientBody:
-      'Obrigado por agendar uma janela de visita com a ZAV Interior & Clean. Recebemos seu pedido e vamos respeitar esse horário o máximo possível.',
+      'Obrigado por pedir orçamento com a ZAV Interior & Clean. Confirmamos o horário em breve.',
     clientDetails: 'Seu pedido',
     clientFooter: 'Dúvidas? Responda este e-mail ou fale no WhatsApp: (717) 415-6171.',
-    adminSubject: 'Novo orçamento + horário',
+    adminSubject: 'Novo orçamento',
     reminderSubject: 'Lembrete: sua visita de limpeza está chegando',
-    reminderBody: 'Este é um lembrete amigável da sua janela de visita preferida com a ZAV Interior & Clean.',
+    reminderBody: 'Lembrete da sua próxima visita com a ZAV Interior & Clean.',
     scheduleLabel: 'Horário preferido',
     invoiceSubject: 'Sua fatura da ZAV Interior & Clean',
     invoiceHello: 'Olá',
-    invoiceBody: 'Sua fatura está pronta. Veja os detalhes abaixo ou abra a fatura completa online.',
+    invoiceBody: 'Sua fatura está pronta. Veja os detalhes abaixo ou abra online.',
     invoiceOpen: 'Ver fatura',
   },
 } as const;
@@ -516,7 +516,7 @@ export async function sendQuoteNotifications(quote: Quote) {
        ·
        <a href="mailto:${escapeHtml(quote.email)}" style="color:#1b3a5c">${escapeHtml(quote.email)}</a>
      </p>
-     <p style="margin-top:12px;font-size:12px;color:#6b6560">Open the site, type <strong>ZAV</strong> + PIN to manage the inbox.</p>`,
+     <p style="margin-top:12px;font-size:12px;color:#6b6560">Manage this lead from the site admin inbox.</p>`,
     brand,
   );
 

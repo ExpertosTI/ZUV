@@ -19,7 +19,7 @@ services:
       HOST: 0.0.0.0
       PORT: 4321
       ZAV_DATA_DIR: /app/data
-      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-04J27}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?set ADMIN_PASSWORD}
       SMTP_HOST: ${SMTP_HOST:-smtp.hostinger.com}
       SMTP_PORT: ${SMTP_PORT:-465}
       SMTP_USER: ${SMTP_USER:-info@renace.tech}
@@ -29,7 +29,7 @@ services:
       SMTP_FROM_NAME: ${SMTP_FROM_NAME:-ZAV Interior & Clean}
       SMTP_REPLY_TO: ${SMTP_REPLY_TO:-hello@zavinteriorclean.com}
       PUBLIC_SITE_URL: ${PUBLIC_SITE_URL:-https://zavinteriorclean.com}
-      ADMIN_EMAIL: ${ADMIN_EMAIL:-azhaliaestepan@gmail.com}
+      ADMIN_EMAIL: ${ADMIN_EMAIL}
       EVOLUTION_API_URL: ${EVOLUTION_API_URL:-https://evoapi.renace.tech}
       EVOLUTION_API_KEY: ${EVOLUTION_API_KEY:-}
       EVOLUTION_INSTANCE: ${EVOLUTION_INSTANCE:-renace}

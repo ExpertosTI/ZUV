@@ -13,27 +13,27 @@ export const SEO_COPY: Record<
   { title: string; description: string; keywords: string; ogLocale: string }
 > = {
   en: {
-    title: 'ZAV Interior & Clean | Home Cleaning & Free Estimates in Orlando, FL',
+    title: 'ZAV Interior & Clean | House Cleaning in Orlando, FL',
     description:
-      'Professional home cleaning, deep cleaning, move-in/out, and office cleaning in Orlando & Central Florida (FL). Book a free estimate online. 10% off your first cleaning.',
+      'House, office, deep, and move-out cleaning in Orlando, FL. Free online estimate. 10% off your first cleaning.',
     keywords:
-      'house cleaning Orlando FL, home cleaning Orlando, Central Florida cleaning service, office cleaning Orlando, move out cleaning Florida, deep cleaning Orlando, free cleaning estimate Orlando, ZAV Interior Clean Florida, Winter Park cleaning, Lake Nona cleaning',
+      'house cleaning Orlando FL, office cleaning Orlando, move out cleaning Orlando, deep cleaning Orlando, free cleaning estimate, ZAV Interior Clean',
     ogLocale: 'en_US',
   },
   es: {
-    title: 'ZAV Interior & Clean | Limpieza del hogar y cotización gratis en Orlando, FL',
+    title: 'ZAV Interior & Clean | Limpieza del hogar en Orlando, FL',
     description:
-      'Limpieza del hogar, profunda, mudanzas y oficinas en Orlando y Central Florida (FL). Cotización gratis en línea. 10% en tu primera limpieza.',
+      'Limpieza de hogar, oficinas, profunda y mudanzas en Orlando, FL. Cotización gratis en línea. 10% en la primera limpieza.',
     keywords:
-      'limpieza del hogar Orlando FL, limpieza Central Florida, limpieza de oficinas Orlando, limpieza mudanza Florida, cotización gratis limpieza Orlando, ZAV Interior Clean Florida',
+      'limpieza del hogar Orlando FL, limpieza de oficinas Orlando, limpieza mudanza Orlando, cotización gratis limpieza, ZAV Interior Clean',
     ogLocale: 'es_US',
   },
   pt: {
-    title: 'ZAV Interior & Clean | Limpeza residencial e orçamento grátis em Orlando, FL',
+    title: 'ZAV Interior & Clean | Limpeza residencial em Orlando, FL',
     description:
-      'Limpeza residencial, profunda, mudança e escritórios em Orlando e Central Florida (FL). Orçamento grátis online. 10% na primeira limpeza.',
+      'Limpeza residencial, escritórios, profunda e mudança em Orlando, FL. Orçamento grátis online. 10% na primeira limpeza.',
     keywords:
-      'limpeza residencial Orlando FL, limpeza Central Florida, limpeza de escritório Orlando, limpeza de mudança Florida, orçamento grátis limpeza Orlando, ZAV Interior Clean Florida',
+      'limpeza residencial Orlando FL, limpeza de escritório Orlando, limpeza de mudança Orlando, orçamento grátis limpeza, ZAV Interior Clean',
     ogLocale: 'pt_BR',
   },
 };
@@ -61,7 +61,6 @@ export function buildLocalBusinessJsonLd() {
     paymentAccepted: 'Cash, Credit Card',
     areaServed: [
       { '@type': 'City', name: 'Orlando' },
-      { '@type': 'AdministrativeArea', name: 'Central Florida' },
       { '@type': 'State', name: 'Florida' },
     ],
     address: {
@@ -75,7 +74,7 @@ export function buildLocalBusinessJsonLd() {
         '@type': 'ContactPoint',
         telephone: PHONE_E164,
         contactType: 'customer service',
-        areaServed: ['US-FL', 'Orlando', 'Central Florida'],
+        areaServed: 'US-FL',
         availableLanguage: ['English', 'Spanish', 'Portuguese'],
       },
     ],
@@ -129,15 +128,7 @@ export function buildFaqJsonLd() {
         name: 'Do you offer free estimates in Orlando?',
         acceptedAnswer: {
           '@type': 'Answer',
-          text: `Yes. Request a free estimate online at ${SITE_URL} or call ${PHONE_DISPLAY}. We serve Orlando and Central Florida.`,
-        },
-      },
-      {
-        '@type': 'Question',
-        name: 'What areas of Central Florida do you cover?',
-        acceptedAnswer: {
-          '@type': 'Answer',
-          text: 'ZAV Interior & Clean serves Orlando and surrounding Central Florida communities with residential and office cleaning.',
+          text: `Yes. Request a free estimate online at ${SITE_URL} or call ${PHONE_DISPLAY}.`,
         },
       },
       {
@@ -145,7 +136,7 @@ export function buildFaqJsonLd() {
         name: 'What cleaning services do you provide?',
         acceptedAnswer: {
           '@type': 'Answer',
-          text: 'House cleaning, office cleaning, deep cleaning, and move-in/move-out cleaning across Central Florida.',
+          text: 'House cleaning, office cleaning, deep cleaning, and move-in/move-out cleaning in Orlando, FL.',
         },
       },
       {
@@ -153,7 +144,7 @@ export function buildFaqJsonLd() {
         name: 'Is there a discount for first-time customers?',
         acceptedAnswer: {
           '@type': 'Answer',
-          text: 'Yes. Enjoy 10% off your first home cleaning.',
+          text: 'Yes. 10% off your first home cleaning.',
         },
       },
     ],

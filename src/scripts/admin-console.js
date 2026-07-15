@@ -1,7 +1,6 @@
 /**
- * Hidden admin console (Moonshadows Sentinel pattern).
- * Type "ZAV" anywhere → PIN pad → modern cleaning-ops dashboard.
- * PIN: 04J27
+ * Hidden admin console.
+ * Type "ZAV" anywhere → PIN pad → ops dashboard.
  */
 
 import { initAdminShare } from './admin-share.js';

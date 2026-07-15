@@ -1,10 +1,11 @@
 import { createHmac, randomBytes, timingSafeEqual } from 'node:crypto';
 
-const ADMIN_PIN = process.env.ADMIN_PASSWORD || '04J27';
+const ADMIN_PIN = (process.env.ADMIN_PASSWORD || '').trim();
 const TOKEN_TTL_MS = 12 * 60 * 60 * 1000; // 12 hours
 
 function secret() {
-  return process.env.ADMIN_SECRET || ADMIN_PIN;
+  const s = (process.env.ADMIN_SECRET || ADMIN_PIN).trim();
+  return s || 'zav-unconfigured-secret';
 }
 
 function safeEqual(a: string, b: string) {
@@ -15,6 +16,7 @@ function safeEqual(a: string, b: string) {
 }
 
 export function isValidPin(pin: string) {
+  if (!ADMIN_PIN) return false;
   return safeEqual(String(pin || ''), ADMIN_PIN);
 }
 

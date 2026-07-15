@@ -53,7 +53,7 @@ load_env_file() {
   done < "$file"
 }
 load_env_file "$PROJECT_DIR/.env"
-export ADMIN_PASSWORD="${ADMIN_PASSWORD:-04J27}"
+export ADMIN_PASSWORD="${ADMIN_PASSWORD:?ADMIN_PASSWORD missing in .env}"
 export SMTP_USER="${SMTP_USER:-info@renace.tech}"
 # Hostinger relay for @renace.tech · Google Workspace for @zavinteriorclean.com
 export SMTP_PROFILE="${SMTP_PROFILE:-}"
@@ -79,7 +79,7 @@ export SMTP_FROM="${SMTP_FROM:-hello@zavinteriorclean.com}"
 export SMTP_FROM_NAME="${SMTP_FROM_NAME:-ZAV Interior & Clean}"
 export SMTP_REPLY_TO="${SMTP_REPLY_TO:-hello@zavinteriorclean.com}"
 export PUBLIC_SITE_URL="${PUBLIC_SITE_URL:-https://zavinteriorclean.com}"
-export ADMIN_EMAIL="${ADMIN_EMAIL:-azhaliaestepan@gmail.com}"
+export ADMIN_EMAIL="${ADMIN_EMAIL:?ADMIN_EMAIL missing in .env}"
 export EVOLUTION_API_URL="${EVOLUTION_API_URL:-https://evoapi.renace.tech}"
 export EVOLUTION_API_KEY="${EVOLUTION_API_KEY:-}"
 export EVOLUTION_INSTANCE="${EVOLUTION_INSTANCE:-renace}"
