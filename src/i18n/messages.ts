@@ -25,8 +25,9 @@ const messages = {
     whatsappMsg:
       'Hi ZAV Interior & Clean! I would like a free estimate for home cleaning in Central Florida.',
     heroEyebrow: 'Free up valuable time with',
-    heroTitle: 'Impeccable cleaning for home & office',
-    heroSub: 'Detail-oriented care that leaves every room calm, bright, and ready.',
+    heroTitle: 'The best cleaning in Orlando & Central Florida',
+    heroSub:
+      'Impeccable, detail-oriented house & office cleaning across Orlando and Central Florida.',
     heroCta: 'Get an estimate',
     heroPhone: 'Or call',
     heroBadge: 'Orlando · Central Florida',
@@ -148,8 +149,9 @@ const messages = {
     whatsappMsg:
       '¡Hola ZAV Interior & Clean! Quiero una cotización gratis de limpieza en Central Florida.',
     heroEyebrow: 'Libera tiempo valioso con',
-    heroTitle: 'Limpieza impecable para hogar y oficina',
-    heroSub: 'Cuidado con detalle que deja cada espacio en calma, luminoso y listo.',
+    heroTitle: 'La mejor limpieza en Orlando y Central Florida',
+    heroSub:
+      'Limpieza impecable y profesional de hogares y oficinas en Orlando y Central Florida.',
     heroCta: 'Pedir cotización',
     heroPhone: 'O llama al',
     heroBadge: 'Orlando · Central Florida',
@@ -271,8 +273,9 @@ const messages = {
     whatsappMsg:
       'Olá ZAV Interior & Clean! Quero um orçamento grátis de limpeza em Central Florida.',
     heroEyebrow: 'Liberte tempo valioso com',
-    heroTitle: 'Limpeza impecável para casa e escritório',
-    heroSub: 'Cuidado com detalhe que deixa cada espaço calmo, luminoso e pronto.',
+    heroTitle: 'A melhor limpeza em Orlando e Central Florida',
+    heroSub:
+      'Limpeza impecável e profissional de casas e escritórios em Orlando e Central Florida.',
     heroCta: 'Pedir orçamento',
     heroPhone: 'Ou ligue',
     heroBadge: 'Orlando · Central Florida',
