@@ -13,27 +13,27 @@ export const SEO_COPY: Record<
   { title: string; description: string; keywords: string; ogLocale: string }
 > = {
   en: {
-    title: 'ZAV Interior & Clean | House Cleaning in Orlando & Central Florida',
+    title: 'ZAV Interior & Clean | Home Cleaning & Free Estimates in Orlando, FL',
     description:
-      'Professional house, office, deep, and move-in/out cleaning across Orlando and Central Florida. Free online estimates. 10% off your first cleaning. Call (717) 415-6171.',
+      'Professional home cleaning, deep cleaning, move-in/out, and office cleaning in Orlando & Central Florida (FL). Book a free estimate online. 10% off your first cleaning.',
     keywords:
-      'house cleaning Orlando, home cleaning Central Florida, office cleaning Orlando FL, move out cleaning Orlando, deep cleaning Florida, free cleaning estimate Orlando, ZAV Interior Clean, residential cleaning Central Florida',
+      'house cleaning Orlando FL, home cleaning Orlando, Central Florida cleaning service, office cleaning Orlando, move out cleaning Florida, deep cleaning Orlando, free cleaning estimate Orlando, ZAV Interior Clean Florida, Winter Park cleaning, Lake Nona cleaning',
     ogLocale: 'en_US',
   },
   es: {
-    title: 'ZAV Interior & Clean | Limpieza del hogar en Orlando y Central Florida',
+    title: 'ZAV Interior & Clean | Limpieza del hogar y cotización gratis en Orlando, FL',
     description:
-      'Limpieza profesional del hogar, oficinas, profunda y mudanzas en Orlando y Central Florida. Cotización gratis en línea. 10% en tu primera limpieza. (717) 415-6171.',
+      'Limpieza del hogar, profunda, mudanzas y oficinas en Orlando y Central Florida (FL). Cotización gratis en línea. 10% en tu primera limpieza.',
     keywords:
-      'limpieza del hogar Orlando, limpieza Central Florida, limpieza de oficinas Orlando, limpieza mudanza Florida, cotización gratis limpieza, ZAV Interior Clean',
+      'limpieza del hogar Orlando FL, limpieza Central Florida, limpieza de oficinas Orlando, limpieza mudanza Florida, cotización gratis limpieza Orlando, ZAV Interior Clean Florida',
     ogLocale: 'es_US',
   },
   pt: {
-    title: 'ZAV Interior & Clean | Limpeza residencial em Orlando e Central Florida',
+    title: 'ZAV Interior & Clean | Limpeza residencial e orçamento grátis em Orlando, FL',
     description:
-      'Limpeza residencial, escritórios, profunda e mudança em Orlando e Central Florida. Orçamento grátis online. 10% na primeira limpeza. (717) 415-6171.',
+      'Limpeza residencial, profunda, mudança e escritórios em Orlando e Central Florida (FL). Orçamento grátis online. 10% na primeira limpeza.',
     keywords:
-      'limpeza residencial Orlando, limpeza Central Florida, limpeza de escritório Orlando, limpeza de mudança Florida, orçamento grátis limpeza, ZAV Interior Clean',
+      'limpeza residencial Orlando FL, limpeza Central Florida, limpeza de escritório Orlando, limpeza de mudança Florida, orçamento grátis limpeza Orlando, ZAV Interior Clean Florida',
     ogLocale: 'pt_BR',
   },
 };
