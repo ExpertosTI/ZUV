@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+/* cache-bust 2026-07-15: force new _astro CSS hash after sticky HTML-as-CSS cache */
+
 @theme {
   /* Warm ZAV identity — yellow / terracotta / peach / cocoa */
   --color-cream: #f6f1eb;
