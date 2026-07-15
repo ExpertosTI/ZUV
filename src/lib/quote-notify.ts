@@ -15,7 +15,7 @@ const labels = {
       home: 'House cleaning',
       deep: 'Deep cleaning',
       move: 'Move-in / move-out',
-      interior: 'Interior refresh',
+      interior: 'Home decor styling',
     },
     sizes: {
       studio: 'Studio / 1 bed',
@@ -43,7 +43,7 @@ const labels = {
       home: 'Limpieza del hogar',
       deep: 'Limpieza profunda',
       move: 'Mudanza (entrada / salida)',
-      interior: 'Refresco de interiores',
+      interior: 'Estilo y decoración',
     },
     sizes: {
       studio: 'Estudio / 1 habitación',
@@ -71,7 +71,7 @@ const labels = {
       home: 'Limpeza residencial',
       deep: 'Limpeza profunda',
       move: 'Mudança (entrada / saída)',
-      interior: 'Refresh de interiores',
+      interior: 'Estilo e decoração',
     },
     sizes: {
       studio: 'Studio / 1 quarto',
