@@ -8,19 +8,32 @@ interface Props {
 
 const { m } = Astro.props;
 const wa = whatsappUrl(m.whatsappMsg);
+
+const heroSlides = [
+  { src: '/hero-bedroom.jpg', w: 932, h: 1400, pos: 'center 22%' },
+  { src: '/service-home-v3.jpg', w: 480, h: 600, pos: 'center 40%' },
+  { src: '/service-move.jpg', w: 480, h: 600, pos: 'center 30%' },
+  { src: '/service-decor-v3.jpg', w: 480, h: 600, pos: 'center 45%' },
+  { src: '/amenities-zav.jpg', w: 900, h: 798, pos: 'center 40%' },
+] as const;
 ---
 
 <section class="hero-bleed relative overflow-hidden" id="top">
-  <div class="hero-bleed__media" aria-hidden="true">
-    <img
-      src="/hero-bedroom.jpg"
-      alt=""
-      width="932"
-      height="1400"
-      loading="eager"
-      fetchpriority="high"
-      decoding="async"
-    />
+  <div class="hero-bleed__media" aria-hidden="true" data-hero-slides>
+    {heroSlides.map((slide, i) => (
+      <img
+        class:list={['hero-bleed__slide', i === 0 && 'is-active']}
+        src={slide.src}
+        alt=""
+        width={slide.w}
+        height={slide.h}
+        loading={i === 0 ? 'eager' : 'lazy'}
+        fetchpriority={i === 0 ? 'high' : 'low'}
+        decoding="async"
+        style={`--pos:${slide.pos}`}
+        data-hero-slide
+      />
+    ))}
     <div class="hero-bleed__veil"></div>
   </div>
 
@@ -54,20 +67,48 @@ const wa = whatsappUrl(m.whatsappMsg);
   </div>
 </section>
 
+<script>
+  const root = document.querySelector('[data-hero-slides]');
+  const slides = [...(root?.querySelectorAll('[data-hero-slide]') || [])];
+  if (slides.length > 1 && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    let i = 0;
+    const INTERVAL_MS = 5500;
+    window.setInterval(() => {
+      slides[i]?.classList.remove('is-active');
+      i = (i + 1) % slides.length;
+      slides[i]?.classList.add('is-active');
+    }, INTERVAL_MS);
+  }
+</script>
+
 <style>
   .hero-bleed__media {
     position: absolute;
     inset: 0;
   }
-  .hero-bleed__media img {
+  .hero-bleed__slide {
+    position: absolute;
+    inset: 0;
     width: 100%;
     height: 100%;
     object-fit: cover;
-    object-position: center 22%;
+    object-position: var(--pos, center 22%);
+    opacity: 0;
+    transform: scale(1.04);
+    transition:
+      opacity 1.15s ease,
+      transform 7s ease;
+    will-change: opacity, transform;
+  }
+  .hero-bleed__slide.is-active {
+    opacity: 1;
+    transform: scale(1.12);
+    z-index: 1;
   }
   .hero-bleed__veil {
     position: absolute;
     inset: 0;
+    z-index: 2;
     background:
       linear-gradient(180deg, rgba(42, 33, 30, 0.22) 0%, rgba(42, 33, 30, 0.42) 40%, rgba(42, 33, 30, 0.78) 100%),
       linear-gradient(90deg, rgba(42, 33, 30, 0.5) 0%, rgba(42, 33, 30, 0.25) 52%, transparent 78%);
@@ -106,8 +147,18 @@ const wa = whatsappUrl(m.whatsappMsg);
     .hero-phone {
       justify-content: center;
     }
-    .hero-bleed__media img {
-      object-position: center 18%;
+    .hero-bleed__slide {
+      object-position: var(--pos, center 18%);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .hero-bleed__slide {
+      transition: none;
+      transform: none;
+    }
+    .hero-bleed__slide.is-active {
+      transform: none;
     }
   }
 </style>
