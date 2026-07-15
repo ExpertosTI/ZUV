@@ -32,10 +32,10 @@ const labels = {
     clientTitle: 'ZAV Interior & Clean',
     clientHello: 'Hi',
     clientBody:
-      'We got your estimate request. We will reach out soon to confirm timing.',
-    clientFooter: `Questions? Call or WhatsApp ${PHONE_DISPLAY}.`,
+      'We received your free estimate request for cleaning in Central Florida and noted your preferred visit window. We will honor this schedule as closely as possible.',
+    clientFooter: `Questions? Call or WhatsApp us at ${PHONE_DISPLAY}.`,
     adminTitle: 'New quote · ZAV',
-    adminLead: 'New estimate request — contact the client to finalize.',
+    adminLead: 'New free-estimate request — contact the client to finalize details.',
     scheduleLabel: 'Preferred schedule',
   },
   es: {
@@ -60,10 +60,10 @@ const labels = {
     clientTitle: 'ZAV Interior & Clean',
     clientHello: 'Hola',
     clientBody:
-      'Recibimos tu cotización. Te escribimos pronto para confirmar el horario.',
-    clientFooter: `¿Preguntas? Llama o WhatsApp al ${PHONE_DISPLAY}.`,
+      'Recibimos tu solicitud de cotización en Central Florida y confirmamos tu ventana de visita preferida. Respetaremos este horario lo más posible.',
+    clientFooter: `¿Preguntas? Llámanos o escríbenos por WhatsApp al ${PHONE_DISPLAY}.`,
     adminTitle: 'Nueva cotización · ZAV',
-    adminLead: 'Nueva solicitud — contacta al cliente para confirmar.',
+    adminLead: 'Nueva solicitud de cotización — contacta al cliente para ultimar detalles.',
     scheduleLabel: 'Horario preferido',
   },
   pt: {
@@ -88,10 +88,10 @@ const labels = {
     clientTitle: 'ZAV Interior & Clean',
     clientHello: 'Olá',
     clientBody:
-      'Recebemos seu pedido. Entramos em contato em breve para confirmar o horário.',
-    clientFooter: `Dúvidas? Ligue ou WhatsApp: ${PHONE_DISPLAY}.`,
+      'Recebemos seu pedido de orçamento em Central Florida e confirmamos sua janela de visita preferida. Honraremos este horário o mais próximo possível.',
+    clientFooter: `Dúvidas? Ligue ou fale no WhatsApp: ${PHONE_DISPLAY}.`,
     adminTitle: 'Novo orçamento · ZAV',
-    adminLead: 'Nova solicitação — fale com o cliente para confirmar.',
+    adminLead: 'Nova solicitação — entre em contato com o cliente para finalizar detalhes.',
     scheduleLabel: 'Horário preferido',
   },
 } as const;

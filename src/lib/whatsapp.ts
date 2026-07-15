@@ -484,7 +484,7 @@ export function buildWhatsAppTestMessage(toLabel?: string) {
   const when = new Date().toLocaleString('en-US', { timeZone: 'America/New_York' });
   return [
     'ZAV Interior & Clean',
-    'WhatsApp notifications are active.',
+    'WhatsApp notifications are active for Orlando & Central Florida.',
     '',
     'This channel will send:',
     '- Quote confirmations to clients',

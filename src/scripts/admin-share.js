@@ -11,7 +11,7 @@ const COPY = {
     label: 'Sitio web',
     hint: 'Página principal — ideal para tarjetas y volantes',
     message:
-      'ZAV Interior & Clean — house and office cleaning in Orlando. Visit:',
+      'ZAV Interior & Clean — professional house & office cleaning in Orlando and Central Florida. Visit:',
   },
   quote: {
     label: 'Cotización gratis',
@@ -23,7 +23,7 @@ const COPY = {
     label: 'WhatsApp',
     hint: 'Abre chat con mensaje prellenado al escanear',
     message:
-      'Hola, me interesa una cotización de limpieza con ZAV Interior & Clean.',
+      'Hola, me interesa una cotización de limpieza con ZAV Interior & Clean en Orlando / Central Florida.',
   },
 };
 

@@ -109,9 +109,10 @@ const seedClients: ClientWork[] = [
   {
     id: 'c1',
     name: 'Maria G.',
-    city: 'Winter Park, FL',
+    city: 'Orlando, FL',
     service: 'Deep cleaning',
-    blurb: 'Kitchen and baths finally look the way they should. Already booked them again.',
+    blurb:
+      'Our Winter Park home finally feels calm again. Spotless kitchens, sparkling baths — best cleaning team in Central Florida.',
     rating: 5,
     date: '2026-05-12',
     featured: true,
@@ -119,9 +120,10 @@ const seedClients: ClientWork[] = [
   {
     id: 'c2',
     name: 'James & Ana',
-    city: 'Orlando, FL',
+    city: 'Winter Park, FL',
     service: 'House cleaning',
-    blurb: 'They come every week and we do not have to re-clean after. That is rare.',
+    blurb:
+      'Weekly service that never misses a detail. If you need reliable house cleaning in Orlando, call ZAV.',
     rating: 5,
     date: '2026-04-28',
     featured: true,
@@ -131,7 +133,8 @@ const seedClients: ClientWork[] = [
     name: 'Sofia R.',
     city: 'Lake Nona, FL',
     service: 'Move-out',
-    blurb: 'Move-out clean — landlord signed off and we got the deposit back.',
+    blurb:
+      'Got our full deposit back after move-out. Professional, on time, and clearly know Central Florida rentals.',
     rating: 5,
     date: '2026-03-19',
   },
@@ -140,18 +143,26 @@ const seedClients: ClientWork[] = [
     name: 'Daniel K.',
     city: 'Dr. Phillips, FL',
     service: 'Office cleaning',
-    blurb: 'Small office. Trash, floors, restrooms — ready for Monday every time.',
+    blurb:
+      'They keep our small Orlando office immaculate. Flexible scheduling and a warm, professional team.',
     rating: 5,
     date: '2026-02-08',
   },
 ];
 
-const LEGACY_REVIEW_HINT =
-  /\b(PA|Pennsylvania|Harrisburg|Lancaster|York|Carlisle|Central Florida|immaculate|boutique hotel)\b/i;
+const PA_CITY_HINT = /\b(PA|Pennsylvania|Harrisburg|Lancaster|York|Carlisle)\b/i;
+const CLEANED_SEED_HINT =
+  /\b(do not have to re-clean|Kitchen and baths finally look the way they should|That is rare\.|ready for Monday every time)\b/i;
 
-function looksLikeLegacySeed(clients: ClientWork[]) {
+function looksLikeLegacyPaSeed(clients: ClientWork[]) {
   if (!Array.isArray(clients) || clients.length === 0) return false;
-  const hits = clients.filter((c) => LEGACY_REVIEW_HINT.test(`${c.city || ''} ${c.blurb || ''}`)).length;
+  const paHits = clients.filter((c) => PA_CITY_HINT.test(c.city || '')).length;
+  return paHits >= Math.ceil(clients.length / 2);
+}
+
+function looksLikeCleanedDownSeed(clients: ClientWork[]) {
+  if (!Array.isArray(clients) || clients.length === 0) return false;
+  const hits = clients.filter((c) => CLEANED_SEED_HINT.test(c.blurb || '')).length;
   return hits >= Math.ceil(clients.length / 2);
 }
 
@@ -595,7 +606,7 @@ export async function getClients(): Promise<ClientWork[]> {
     return clientsCache.data;
   }
   let data = await readJson<ClientWork[]>('clients.json', seedClients);
-  if (looksLikeLegacySeed(data)) {
+  if (looksLikeLegacyPaSeed(data) || looksLikeCleanedDownSeed(data)) {
     data = seedClients;
     await writeJson('clients.json', data);
   }
