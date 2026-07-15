@@ -73,11 +73,11 @@ const wa = whatsappUrl(m.whatsappMsg);
       linear-gradient(90deg, rgba(42, 33, 30, 0.5) 0%, rgba(42, 33, 30, 0.25) 52%, transparent 78%);
   }
 
-  /* Mobile: centered block, higher in the viewport */
+  /* Mobile: centered block, mid-upper viewport */
   @media (max-width: 639px) {
     .hero-bleed__content {
       justify-content: flex-start;
-      padding-top: 5.5rem;
+      padding-top: clamp(7.5rem, 22vh, 11rem);
       align-items: center;
       text-align: center;
     }
